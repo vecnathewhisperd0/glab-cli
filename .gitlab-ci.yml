@@ -37,3 +37,13 @@ code_navigation:
   artifacts:
     reports:
       lsif: dump.lsif
+
+build_docs:
+  allow_failure: true
+  script:
+    - git config user.name github-actions
+    - git config user.email github-actions@github.com
+    - make gen-docs
+    - git add docs
+    - git commit -m "docs(update): ${{ steps.get_version.outputs.version }}" || echo "No document(s) updates found!"
+    - git push
