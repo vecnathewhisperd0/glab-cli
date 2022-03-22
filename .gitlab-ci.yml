@@ -39,6 +39,7 @@ code_navigation:
       lsif: dump.lsif
 
 build_docs:
+  image: golang:latest
   allow_failure: true
   script:
     - git config user.name github-actions
