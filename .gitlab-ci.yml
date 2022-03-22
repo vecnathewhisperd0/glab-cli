@@ -46,5 +46,7 @@ build_docs:
     - git config user.email github-actions@github.com
     - make gen-docs
     - git add docs
-    - 'git commit -m "docs(update): ${{ git describe --abbrev=0 --tags }}" || echo "No document(s) updates found!"'
+    - > 
+      version=$(echo git describe --abbrev=0 --tags)
+      'git commit -m "docs(update): ${version}" || echo "No document(s) updates found!"'
     - git push
