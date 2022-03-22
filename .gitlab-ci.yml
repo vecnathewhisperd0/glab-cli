@@ -47,6 +47,6 @@ build_docs:
     - make gen-docs
     - git add docs
     - > 
-      version=$(echo git describe --abbrev=0 --tags)
+      version=$(echo "git describe --abbrev=0 --tags")
       'git commit -m "docs(update): ${version}" || echo "No document(s) updates found!"'
     - git push
