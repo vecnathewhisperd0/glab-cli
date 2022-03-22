@@ -42,11 +42,11 @@ build_docs:
   image: golang:latest
   allow_failure: true
   script:
-    - git config user.name github-actions
-    - git config user.email github-actions@github.com
-    - make gen-docs
-    - git add docs
-    - > 
+    - |
+      git config user.name github-actions
+      git config user.email github-actions@github.com
+      make gen-docs
+      git add docs 
       version=$(echo "git describe --abbrev=0 --tags")
       'git commit -m "docs(update): ${version}" || echo "No document(s) updates found!"'
-    - git push
+      git push
