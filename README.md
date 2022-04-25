@@ -248,7 +248,7 @@ If a supported binary for your OS is not found at the [releases page](https://gi
 2. Clone this repository
 
    ```sh
-   git clone https://github.com/profclems/glab.git
+   git clone https://gitlab.com/gitlab-org/cli.git
    cd glab
    ```
    If you have $GOPATH/bin or $GOBIN in your $PATH, you can just install with `make install` (install glab in $GOPATH/bin) and **skip steps 3 and 4**.
