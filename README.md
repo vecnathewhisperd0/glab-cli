@@ -64,7 +64,7 @@ Table of Contents
 Read the [documentation](https://glab.readthedocs.io/) for usage instructions.
 
 ## Installation
-Download a binary suitable for your OS at the [releases page](https://github.com/profclems/glab/releases/latest).
+Download a binary suitable for your OS at the [releases page](https://gitlab.com/gitlab-org/cli/-/releases).
 
 ### Quick Install
 **Supported Platforms**: Linux and macOS
@@ -116,10 +116,10 @@ scoop update glab
 ```
 #### EXE Installer
 
-EXE installers are available for download on the [releases page](https://github.com/profclems/glab/releases/latest).
+EXE installers are available for download on the [releases page](https://gitlab.com/gitlab-org/cli/-/releases).
 
 ### Linux
-Prebuilt binaries available at the [releases page](https://github.com/profclems/glab/releases/latest).
+Prebuilt binaries available at the [releases page](https://gitlab.com/gitlab-org/cli/-/releases).
 
 #### Linuxbrew (Homebrew)
 ```sh
@@ -138,7 +138,7 @@ Make sure you have [snap installed on your Linux Distro](https://snapcraft.io/do
 1. `sudo snap connect glab:ssh-keys` to grant ssh access
 
 #### Arch Linux
-`glab` is available through the [community/glab](https://archlinux.org/packages/community/x86_64/glab/) package or download and install an archive from the [releases page](https://github.com/profclems/glab/releases/latest). Arch Linux also supports [snap](https://snapcraft.io/docs/installing-snap-on-arch-linux).
+`glab` is available through the [community/glab](https://archlinux.org/packages/community/x86_64/glab/) package or download and install an archive from the [releases page](https://gitlab.com/gitlab-org/cli/-/releases). Arch Linux also supports [snap](https://snapcraft.io/docs/installing-snap-on-arch-linux).
 ```sh
 pacman -S glab
 ```
@@ -230,7 +230,7 @@ sudo port selfupdate && sudo port upgrade glab
 ```
 
 ### Building From Source
-If a supported binary for your OS is not found at the [releases page](https://github.com/profclems/glab/releases/latest), you can build from source:
+If a supported binary for your OS is not found at the [releases page](https://gitlab.com/gitlab-org/cli/-/releases), you can build from source:
 
 #### Prerequisites for building from source
 - `make`
