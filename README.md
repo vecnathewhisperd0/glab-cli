@@ -43,6 +43,7 @@ Table of Contents
     * [Prerequisites](#prerequisites-for-building-from-source-are)
 * [Authentication](#authentication)
 * [Configuration](#configuration)
+* [Usage](#usage)
 * [Environment Variables](#environment-variables)
 * [What about lab](#what-about-lab)
 * [Issues](#issues)
@@ -268,7 +269,7 @@ If a supported binary for your OS is not found at the [releases page](https://gi
 
 ## Authentication
 
-Get a GitLab access token at <https://gitlab.com/-/profile/personal_access_tokens> or <https://gitlab.example.com/-/profile/personal_access_tokens> if self-hosted
+Get a GitLab access token at <https://gitlab.com/-/profile/personal_access_tokens> or <https://gitlab.example.com/-/profile/personal_access_tokens> if self-hosted. The token needs to have the `api` scope.
 
 - start interactive setup
   ```sh
@@ -314,6 +315,38 @@ Use the `--host` flag to set configuration for a specific host. This is always s
 glab config set editor vim --host gitlab.example.org
 ```
 
+## Usage
+
+```
+$ glab help
+GLab is an open source GitLab CLI tool bringing GitLab to your command line
+
+USAGE
+  glab <command> <subcommand> [flags]
+
+CORE COMMANDS
+  alias:       Create, list and delete aliases
+  api:         Make an authenticated request to GitLab API
+  auth:        Manage glab's authentication state
+  check-update: Check for latest glab releases
+  ci:          Work with GitLab CI pipelines and jobs
+  completion:  Generate shell completion scripts
+  config:      Set and get glab settings
+  help:        Help about any command
+  issue:       Work with GitLab issues
+  label:       Manage labels on remote
+  mr:          Create, view and manage merge requests
+  release:     Manage GitLab releases
+  repo:        Work with GitLab repositories and projects
+  ssh-key:     Manage SSH keys
+  user:        Interact with user
+  variable:    Manage GitLab Project and Group Variables
+  version:     show glab version information
+
+FLAGS
+      --help      Show help for command
+  -v, --version   show glab version information
+```
 
 ## Environment Variables
   ```sh
