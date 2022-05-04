@@ -82,14 +82,14 @@ func (r *ResolvedRemotes) BaseRepo(interactive bool) (Interface, error) {
 			return NewWithHost(repo.RepoOwner(), repo.RepoName(), r.RepoHost()), nil
 		} else if r.Resolved != "" && !strings.HasPrefix(r.Resolved, "head") {
 			// Backward compatibility kludge for remoteless resolutions created before
-			// BaseRepo started creeating resolutions prefixed with `base:`
+			// BaseRepo started creating resolutions prefixed with `base:`
 			repo, err := FromFullName(r.Resolved)
 			if err != nil {
 				return nil, err
 			}
 			// Rewrite resolution, ignore the error as this will keep working
 			// in the future we might add a warning that we couldn't rewrite
-			// it for compatiblity
+			// it for compatibility
 			_ = git.SetRemoteResolution(r.Name, "base:"+r.Resolved)
 
 			return NewWithHost(repo.RepoOwner(), repo.RepoName(), r.RepoHost()), nil
