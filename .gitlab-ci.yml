@@ -13,7 +13,7 @@ workflow:
     #
 
 default:
-  image: golang:1.15
+  image: golang:1.17
 
 # Disable DIND for SAST because we need to execute a before_script in the gosec-sast job
 variables:
