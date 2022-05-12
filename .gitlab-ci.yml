@@ -4,8 +4,8 @@ workflow:
     - if: '$CI_MERGE_REQUEST_IID'
     # For default branch, create a pipeline (this includes on schedules, pushes, merges, etc.).
     # - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    # Temporarly create Ci for every branch:
-    - if: '$CI_COMMIT_BRANCH'
+    # # Temporarly create Ci for every branch:
+    # - if: '$CI_COMMIT_BRANCH'
     # For tags, create a pipeline.
     - if: '$CI_COMMIT_TAG'
     # For stable branches, create a pipeline.
