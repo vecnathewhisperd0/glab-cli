@@ -40,7 +40,7 @@ code_navigation:
 
 run_tests:
   variables:
-    GITLAB_TOKEN: "qRC87Xg9Wd46RhB8J8sp"
+    # GITLAB_TOKEN: "qRC87Xg9Wd46RhB8J8sp"
     # FROM_PACKAGE: "packages/easy-coding-standard"
     # TO_REPOSITORY: "https://github.com/symplify/easy-coding-standard"
   script:
