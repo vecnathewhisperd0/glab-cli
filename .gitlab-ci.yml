@@ -43,4 +43,4 @@ run_tests:
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
 
   script:
-    - make test
+    - GITLAB_TOKEN=$CI_JOB_TOKEN make test
