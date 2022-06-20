@@ -4,27 +4,29 @@ import (
 	"fmt"
 
 	"github.com/profclems/glab/api"
-	"github.com/profclems/glab/commands/cmdutils"
 	"github.com/profclems/glab/commands/mr/mrutils"
+	"github.com/profclems/glab/pkg/tableprinter"
+
+	"github.com/profclems/glab/commands/cmdutils"
 	"github.com/spf13/cobra"
+	"github.com/xanzy/go-gitlab"
 )
 
 func NewCmdApprovers(f *cmdutils.Factory) *cobra.Command {
 	var mrApproversCmd = &cobra.Command{
 		Use:     "approvers [<id> | <branch>] [flags]",
-		Short:   `List eligible approvers for merge requests in any state`,
+		Short:   `List merge request eligible approvers`,
 		Long:    ``,
 		Aliases: []string{},
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			c := f.IO.Color()
 			apiClient, err := f.HttpClient()
 			if err != nil {
 				return err
 			}
 
-			// Obtain the MR from the positional arguments, but allow users to find approvers for
-			// merge requests in any valid state
-			mr, repo, err := mrutils.MRFromArgs(f, args, "any")
+			mr, repo, err := mrutils.MRFromArgs(f, args, "opened")
 			if err != nil {
 				return err
 			}
@@ -35,9 +37,43 @@ func NewCmdApprovers(f *cmdutils.Factory) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if mrApprovals.ApprovalRulesOverwritten {
+				fmt.Fprintln(f.IO.StdOut, c.Yellow("Approval rules overwritten"))
+			}
+			for _, rule := range mrApprovals.Rules {
+				table := tableprinter.NewTablePrinter()
+				if rule.Approved {
+					fmt.Fprintln(f.IO.StdOut, c.Green(fmt.Sprintf("Rule %q sufficient approvals (%d/%d required):", rule.Name, len(rule.ApprovedBy), rule.ApprovalsRequired)))
+				} else {
+					fmt.Fprintln(f.IO.StdOut, c.Yellow(fmt.Sprintf("Rule %q insufficient approvals (%d/%d required):", rule.Name, len(rule.ApprovedBy), rule.ApprovalsRequired)))
+				}
 
-			mrutils.PrintMRApprovalState(f.IO, mrApprovals)
+				eligibleApprovers := rule.EligibleApprovers
 
+				approvedBy := map[string]*gitlab.BasicUser{}
+				for _, by := range rule.ApprovedBy {
+					approvedBy[by.Username] = by
+				}
+
+				for _, eligibleApprover := range eligibleApprovers {
+					approved := "-"
+					source := ""
+					if _, exists := approvedBy[eligibleApprover.Username]; exists {
+						approved = "👍"
+					}
+					if rule.SourceRule != nil {
+						source = rule.SourceRule.RuleType
+					}
+					table.AddRow(eligibleApprover.Name, eligibleApprover.Username, approved, source)
+					delete(approvedBy, eligibleApprover.Username)
+				}
+
+				for _, approver := range approvedBy {
+					approved := "👍"
+					table.AddRow(approver.Name, approver.Username, approved, "")
+				}
+				fmt.Fprintln(f.IO.StdOut, table)
+			}
 			return nil
 		},
 	}
