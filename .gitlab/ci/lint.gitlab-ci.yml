@@ -13,3 +13,11 @@ lint:
       codequality: gl-code-quality-report.json
     paths:
       - gl-code-quality-report.json
+
+commitlint:
+  image: node:lts-alpine3.15
+  stage: test
+  script:
+    - npx --yes commitlint --from=$CI_DEFAULT_BRANCH --verbose
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
