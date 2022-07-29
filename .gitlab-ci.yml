@@ -42,9 +42,9 @@ commitlint:
   image: node:lts-alpine3.15
   stage: test
   script:
-    - npx --yes commitlint --from=$CI_DEFAULT_BRANCH --verbose
+    - npx --yes commitlint --from=$CI_MERGE_REQUEST_TARGET_BRANCH --verbose
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_MERGE_REQUEST_ID
 
 run_tests:
   stage: test
