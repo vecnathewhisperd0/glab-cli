@@ -42,7 +42,7 @@ commitlint:
   image: node:lts-alpine3.15
   stage: test
   script:
-    - npx --yes commitlint --from=$CI_MERGE_REQUEST_TARGET_BRANCH --verbose
+    - npx --yes commitlint --from=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME --verbose
   variables:
     # Disable shallow cloning so that commitlint can view log between revisions.
     GIT_DEPTH: 0
