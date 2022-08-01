@@ -43,6 +43,9 @@ commitlint:
   stage: test
   script:
     - npx --yes commitlint --from=$CI_MERGE_REQUEST_TARGET_BRANCH --verbose
+  variables:
+    # Disable shallow cloning so that commitlint can view log between revisions.
+    GIT_DEPTH: 0
 
 run_tests:
   stage: test
