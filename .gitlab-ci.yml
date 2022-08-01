@@ -43,8 +43,6 @@ commitlint:
   stage: test
   script:
     - npx --yes commitlint --from=$CI_MERGE_REQUEST_TARGET_BRANCH --verbose
-  rules:
-    - if: $CI_MERGE_REQUEST_ID
 
 run_tests:
   stage: test
