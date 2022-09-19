@@ -3,6 +3,7 @@ package httpmock
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -80,6 +81,7 @@ func NewFileResponse(status int, filename string) Responder {
 }
 
 func httpResponse(status int, req *http.Request, body io.Reader) *http.Response {
+	fmt.Fprintf(os.Stderr, ">> %s\n", req.URL.String())
 	return &http.Response{
 		StatusCode: status,
 		Request:    req,

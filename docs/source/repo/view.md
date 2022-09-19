@@ -42,8 +42,9 @@ $ glab repo view https://gitlab.company.org/user/repo.git
 ## Options
 
 ```plaintext
-  -b, --branch string   View a specific branch of the repository
-  -w, --web             Open a project in the browser
+  -b, --branch string          View a specific branch of the repository
+  -F, --output-format string   Format output as: text, json (default "text")
+  -w, --web                    Open a project in the browser
 ```
 
 ## Options inherited from parent commands
