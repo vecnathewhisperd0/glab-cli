@@ -1,0 +1,32 @@
+## glab ci run
+
+Create or run a new CI pipeline
+
+```
+glab ci run [flags]
+```
+
+### Examples
+
+```
+$ glab ci run
+$ glab ci run -b main
+$ glab ci run -b main --variables MYKEY:some_value
+ 	$ glab ci run -b main --variables MYKEY:some_value --variables KEY2:another_value
+
+```
+
+### Options
+
+```
+  -b, --branch string       Create pipeline on branch/ref <string>
+      --variables strings   Pass variables to pipeline
+```
+
+### Options inherited from parent commands
+
+```
+      --help              Show help for command
+  -R, --repo OWNER/REPO   Select another repository using the OWNER/REPO or `GROUP/NAMESPACE/REPO` format or full URL or git URL
+```
+
