@@ -45,11 +45,6 @@ func Test_downloadAssets(t *testing.T) {
 			want:     "cli-v1.22.0.tar",
 		},
 		{
-			name:     "A regular filename with a path",
-			filename: "cli-v1.22.0.tar",
-			want:     "cli-v1.22.0.tar",
-		},
-		{
 			name:     "A filename with directory traversal",
 			filename: "cli-v1.../../22.0.tar",
 			want:     "cli-v1.22.0.tar",
