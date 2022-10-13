@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
@@ -189,13 +190,19 @@ func downloadAssets(httpClient *api.Client, io *iostreams.IOStreams, toDownload 
 			color.ProgressIcon(),
 			color.Blue("name"), *asset.Name,
 			color.Blue("url"), *asset.URL)
-		err := downloadAsset(httpClient, *asset.URL, filepath.Join(destDir, *asset.Name))
+
+    sanitizedAssetName := sanitizeAssetName(*asset.Name)
+		err := downloadAsset(httpClient, *asset.URL, filepath.Join(destDir, sanitizedAssetName))
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func sanitizeAssetName(asset string) string {
+  return strings.Replace(asset, "../", "", -1)
 }
 
 func downloadAsset(client *api.Client, assetURL, destinationPath string) error {
