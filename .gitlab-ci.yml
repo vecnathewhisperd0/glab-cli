@@ -16,6 +16,7 @@ default:
   image: golang:1.18
 
 stages:
+  - review-docs
   - test
   - release
 
@@ -26,6 +27,18 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
+
+check_docs_markdown:
+  image: registry.gitlab.com/gitlab-org/gitlab-docs/lint-markdown:alpine-3.16-vale-2.20.1-markdownlint-0.32.2
+  stage: review-docs
+  cache: {}
+  dependencies: []
+  before_script: []
+  script:
+    # Lint prose
+    - vale --minAlertLevel error docs
+    # Lint Markdown
+    - markdownlint --config .markdownlint.yml 'docs/**/*.md'
 
 code_navigation:
   stage: test
