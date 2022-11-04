@@ -11,6 +11,7 @@ import (
 	pipeStatusCmd "gitlab.com/gitlab-org/cli/commands/ci/status"
 	ciTraceCmd "gitlab.com/gitlab-org/cli/commands/ci/trace"
 	ciViewCmd "gitlab.com/gitlab-org/cli/commands/ci/view"
+	pipeWrapperCmd "gitlab.com/gitlab-org/cli/commands/ci/wrapper"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ func NewCmdCI(f *cmdutils.Factory) *cobra.Command {
 	ciCmd.AddCommand(pipeStatusCmd.NewCmdStatus(f))
 	ciCmd.AddCommand(pipeRetryCmd.NewCmdRetry(f))
 	ciCmd.AddCommand(pipeRunCmd.NewCmdRun(f))
+	ciCmd.AddCommand(pipeWrapperCmd.NewCmdWrapper(f))
 	ciCmd.AddCommand(jobArtifactCmd.NewCmdRun(f))
 	return ciCmd
 }
