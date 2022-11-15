@@ -35,9 +35,9 @@ func NewCmdView(f *cmdutils.Factory) *cobra.Command {
 	var projectViewCmd = &cobra.Command{
 		Use:   "view [repository] [flags]",
 		Short: "View a project/repository",
-		Long: heredoc.Doc(`Display the description and README of a project or open it in the browser.
+		Long:  heredoc.Doc(`Display the description and README of a project or open it in the browser.
 		`),
-		Args: cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Example: heredoc.Doc(`
 			# view project information for the current directory
 			$ glab repo view
