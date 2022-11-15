@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/xanzy/go-gitlab"
+
 	"gitlab.com/gitlab-org/cli/pkg/glinstance"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 )

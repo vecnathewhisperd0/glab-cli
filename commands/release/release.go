@@ -2,6 +2,7 @@ package release
 
 import (
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	releaseCreateCmd "gitlab.com/gitlab-org/cli/commands/release/create"
 	releaseDeleteCmd "gitlab.com/gitlab-org/cli/commands/release/delete"

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/spf13/cobra"
+
 	authLoginCmd "gitlab.com/gitlab-org/cli/commands/auth/login"
 	authStatusCmd "gitlab.com/gitlab-org/cli/commands/auth/status"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"

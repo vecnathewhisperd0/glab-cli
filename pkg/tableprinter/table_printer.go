@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cast"
+
 	"gitlab.com/gitlab-org/cli/pkg/text"
 )
 

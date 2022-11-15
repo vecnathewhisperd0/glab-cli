@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+
 	"gitlab.com/gitlab-org/cli/commands/alias"
 	"gitlab.com/gitlab-org/cli/commands/alias/set"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"

@@ -2,6 +2,7 @@ package board
 
 import (
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	boardCreateCmd "gitlab.com/gitlab-org/cli/commands/issue/board/create"
 	boardViewCmd "gitlab.com/gitlab-org/cli/commands/issue/board/view"

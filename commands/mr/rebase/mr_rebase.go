@@ -2,6 +2,7 @@ package rebase
 
 import (
 	"github.com/MakeNowJust/heredoc"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
 

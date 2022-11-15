@@ -9,17 +9,20 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+
 	"gitlab.com/gitlab-org/cli/commands/issue/issueutils"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
 
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"github.com/MakeNowJust/heredoc"
+
 	"gitlab.com/gitlab-org/cli/internal/config"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/internal/config"
 )
 

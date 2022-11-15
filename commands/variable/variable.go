@@ -2,6 +2,7 @@ package variable
 
 import (
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	deleteCmd "gitlab.com/gitlab-org/cli/commands/variable/delete"
 	getCmd "gitlab.com/gitlab-org/cli/commands/variable/get"

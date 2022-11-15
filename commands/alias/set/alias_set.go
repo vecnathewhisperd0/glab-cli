@@ -11,6 +11,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/internal/config"
 )
 

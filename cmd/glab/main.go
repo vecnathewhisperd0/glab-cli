@@ -14,6 +14,7 @@ import (
 	"github.com/mgutz/ansi"
 
 	surveyCore "github.com/AlecAivazis/survey/v2/core"
+
 	"gitlab.com/gitlab-org/cli/commands"
 	"gitlab.com/gitlab-org/cli/commands/alias/expand"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"

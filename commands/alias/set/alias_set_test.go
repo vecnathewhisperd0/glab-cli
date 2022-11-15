@@ -9,6 +9,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/google/shlex"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 
 	"gitlab.com/gitlab-org/cli/internal/config"

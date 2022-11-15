@@ -8,6 +8,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/google/shlex"
 	"github.com/xanzy/go-gitlab"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"

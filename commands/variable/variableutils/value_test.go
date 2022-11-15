@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
+
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 )
 

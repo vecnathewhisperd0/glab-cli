@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	cmdAdd "gitlab.com/gitlab-org/cli/commands/ssh-key/add"
 	cmdGet "gitlab.com/gitlab-org/cli/commands/ssh-key/get"

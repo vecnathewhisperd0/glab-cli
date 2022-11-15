@@ -6,6 +6,7 @@ import (
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"github.com/alecthomas/assert"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdtest"
 )
 

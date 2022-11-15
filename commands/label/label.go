@@ -2,6 +2,7 @@ package label
 
 import (
 	"github.com/spf13/cobra"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	labelCreateCmd "gitlab.com/gitlab-org/cli/commands/label/create"
 	labelListCmd "gitlab.com/gitlab-org/cli/commands/label/list"

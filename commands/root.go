@@ -6,6 +6,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
 	aliasCmd "gitlab.com/gitlab-org/cli/commands/alias"
 	apiCmd "gitlab.com/gitlab-org/cli/commands/api"
 	authCmd "gitlab.com/gitlab-org/cli/commands/auth"

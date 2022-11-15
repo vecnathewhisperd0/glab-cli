@@ -12,6 +12,7 @@ import (
 	"gitlab.com/gitlab-org/cli/pkg/execext"
 
 	"github.com/google/shlex"
+
 	"gitlab.com/gitlab-org/cli/internal/config"
 )
 

@@ -11,12 +11,13 @@ import (
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"github.com/xanzy/go-gitlab"
+	"golang.org/x/sync/errgroup"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
 	"gitlab.com/gitlab-org/cli/pkg/tableprinter"
-	"golang.org/x/sync/errgroup"
 )
 
 type MRCheckErrOptions struct {

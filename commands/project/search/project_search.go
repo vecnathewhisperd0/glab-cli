@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/MakeNowJust/heredoc"
+
 	"gitlab.com/gitlab-org/cli/pkg/tableprinter"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"

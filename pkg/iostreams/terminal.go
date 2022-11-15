@@ -9,8 +9,9 @@ import (
 	"strings"
 
 	"github.com/mattn/go-isatty"
-	"gitlab.com/gitlab-org/cli/pkg/execext"
 	"golang.org/x/term"
+
+	"gitlab.com/gitlab-org/cli/pkg/execext"
 )
 
 var (

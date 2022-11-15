@@ -2,6 +2,7 @@ package mr
 
 import (
 	"github.com/MakeNowJust/heredoc"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	mrApproveCmd "gitlab.com/gitlab-org/cli/commands/mr/approve"
 	mrApproversCmd "gitlab.com/gitlab-org/cli/commands/mr/approvers"

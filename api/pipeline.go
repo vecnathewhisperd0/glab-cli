@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/xanzy/go-gitlab"
+
 	"gitlab.com/gitlab-org/cli/pkg/git"
 )
 

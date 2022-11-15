@@ -10,10 +10,11 @@ import (
 
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
+	"golang.org/x/sync/errgroup"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/internal/config"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
-	"golang.org/x/sync/errgroup"
 
 	"gitlab.com/gitlab-org/cli/pkg/tableprinter"
 	"gitlab.com/gitlab-org/cli/pkg/utils"
