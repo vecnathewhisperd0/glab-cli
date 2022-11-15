@@ -71,8 +71,8 @@ lint_commit:
 go_fmt:
   stage: test
   script:
-    - gofmt -d .
-    - '[ -z "$(git diff)" ] || exit 1'
+    - go fmt ./...
+    - git diff --exit-code
 
 code_navigation:
   stage: test
