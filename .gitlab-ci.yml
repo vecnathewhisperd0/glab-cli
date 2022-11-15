@@ -74,6 +74,12 @@ lint_commit:
     - if: '$CI_MERGE_REQUEST_IID && $CI_PROJECT_VISIBILITY == "public"' # lint.js script makes an API call without authentication
       when: always
 
+go_fmt:
+  stage: test
+  script:
+    - go fmt ./...
+    - git diff --exit-code
+
 code_navigation:
   stage: test
   image: golang:latest
