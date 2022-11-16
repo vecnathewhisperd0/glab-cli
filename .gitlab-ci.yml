@@ -20,6 +20,7 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
+  - local: ".gitlab/ci/lint.gitlab-ci.yml"
 
 
 # From: https://docs.gitlab.com/ee/ci/caching/#cache-go-dependencies
