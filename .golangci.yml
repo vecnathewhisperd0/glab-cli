@@ -2,6 +2,7 @@ linters:
     enable:
         - errcheck
         - gosimple
+        - gofmt
         - govet
         - ineffassign
         - staticcheck
