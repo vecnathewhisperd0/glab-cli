@@ -41,9 +41,15 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			l.Page = 1
 			l.PerPage = 30
 
+			if m, _ := cmd.Flags().GetString("scope"); m != "" {
+				l.Scope = gitlab.String(m)
+			}
 			if m, _ := cmd.Flags().GetString("status"); m != "" {
 				l.Status = gitlab.BuildState(gitlab.BuildStateValue(m))
 				titleQualifier = m
+			}
+			if m, _ := cmd.Flags().GetString("source"); m != "" {
+				l.Source = gitlab.String(m)
 			}
 			if m, _ := cmd.Flags().GetString("orderBy"); m != "" {
 				l.OrderBy = gitlab.String(m)
@@ -72,7 +78,9 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			return nil
 		},
 	}
+	pipelineListCmd.Flags().StringP("scope", "", "", "Get pipeline by scope: {running|pending|finished|branches|tags}")
 	pipelineListCmd.Flags().StringP("status", "s", "", "Get pipeline with status: {running|pending|success|failed|canceled|skipped|created|manual}")
+	pipelineListCmd.Flags().StringP("source", "", "", "Get pipeline from source: {push|web|trigger|schedule|api|external|pipeline|chat|webide|merge_request_event|external_pull_request_event|parent_pipeline|ondemand_dast_scan|ondemand_dast_validation}")
 	pipelineListCmd.Flags().StringP("orderBy", "o", "", "Order pipeline by <string>")
 	pipelineListCmd.Flags().StringP("sort", "", "desc", "Sort pipeline by {asc|desc}. (Defaults to desc)")
 	pipelineListCmd.Flags().IntP("page", "p", 1, "Page number")

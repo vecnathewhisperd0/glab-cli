@@ -31,7 +31,9 @@ glab ci list --status=failed
   -o, --orderBy string   Order pipeline by <string>
   -p, --page int         Page number (default 1)
   -P, --per-page int     Number of items to list per page. (default 30) (default 30)
+      --scope string     Get pipeline by scope: {running|pending|finished|branches|tags}
       --sort string      Sort pipeline by {asc|desc}. (Defaults to desc) (default "desc")
+      --source string    Get pipeline from source: {push|web|trigger|schedule|api|external|pipeline|chat|webide|merge_request_event|external_pull_request_event|parent_pipeline|ondemand_dast_scan|ondemand_dast_validation}
   -s, --status string    Get pipeline with status: {running|pending|success|failed|canceled|skipped|created|manual}
 ```
 
