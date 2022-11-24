@@ -287,10 +287,11 @@ func createRun(opts *CreateOpts) error {
 		if opts.CopyIssueLabels {
 			mrCreateOpts.Labels = &issue.Labels
 		}
-		opts.Description = fmt.Sprintf("Closes #%d", issue.IID)
-		opts.Title = fmt.Sprintf("Resolve \"%s\"", issue.Title)
-		if !opts.IsDraft && !opts.IsWIP {
-			opts.IsDraft = true
+
+		opts.Description += fmt.Sprintf("\n\nCloses #%d", issue.IID)
+
+		if opts.Title == "" {
+			opts.Title = fmt.Sprintf("Resolve \"%s\"", issue.Title)
 		}
 
 		if opts.SourceBranch == "" {
