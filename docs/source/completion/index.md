@@ -52,7 +52,15 @@ echo "autoload -U compinit; compinit" >> ~/.zshrc
 To load completions in your current shell session:
 
 ```plaintext
-source "$(glab completion -s zsh); compdef _glab glab
+source <(glab completion -s zsh); compdef _glab glab
+```
+
+If using the 1Password shell plugin <https://developer.1password.com/docs/cli/shell-plugins/gitlab/>
+to authenticate, you may need to add the following to your ~/.zshrc file so zsh does not expand
+aliases before performing completion:
+
+```plaintext
+setopt completealiases
 ```
 
 To load completions for every new session, execute once:

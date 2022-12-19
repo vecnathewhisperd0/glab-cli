@@ -58,7 +58,15 @@ func NewCmdCompletion(io *iostreams.IOStreams) *cobra.Command {
 		To load completions in your current shell session:
 		
 		%[2]splaintext
-		source "$(glab completion -s zsh); compdef _glab glab
+		source <(glab completion -s zsh); compdef _glab glab
+		%[2]s
+
+		If using the 1Password shell plugin <https://developer.1password.com/docs/cli/shell-plugins/gitlab/>
+		to authenticate, you may need to add the following to your ~/.zshrc file so zsh does not expand
+		aliases before performing completion:
+		
+		%[2]splaintext
+		setopt completealiases
 		%[2]s
 		
 		To load completions for every new session, execute once:
