@@ -198,5 +198,17 @@ release:
         goreleaser release
       "
 
+homebrew-release:
+  image: golang:1.18
+  stage: release
+  before_script:
+    - bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  script:
+     - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+     - brew doctor
+     - brew gcc
+     - brew install git
+     - brew install coreutils
+
 secret_detection:
   dependencies: [] # Don't download artifacts, especially `./public/`
