@@ -190,6 +190,19 @@ var GetMRLinkedIssues = func(client *gitlab.Client, projectID interface{}, mrID 
 	return mrIssues, nil
 }
 
+var CreateMRAwardEmoji = func(client *gitlab.Client, projectID interface{}, mrID int, opts *gitlab.CreateAwardEmojiOptions) (*gitlab.AwardEmoji, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+
+	emoji, _, err := client.AwardEmoji.CreateMergeRequestAwardEmoji(projectID, mrID, opts)
+	if err != nil {
+		return emoji, err
+	}
+
+	return emoji, nil
+}
+
 var CreateMRNote = func(client *gitlab.Client, projectID interface{}, mrID int, opts *gitlab.CreateMergeRequestNoteOptions) (*gitlab.Note, error) {
 	if client == nil {
 		client = apiClient.Lab()

@@ -129,6 +129,19 @@ var DeleteIssue = func(client *gitlab.Client, projectID interface{}, issueID int
 	return nil
 }
 
+var CreateIssueAwardEmoji = func(client *gitlab.Client, projectID interface{}, mrID int, opts *gitlab.CreateAwardEmojiOptions) (*gitlab.AwardEmoji, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+
+	emoji, _, err := client.AwardEmoji.CreateIssueAwardEmoji(projectID, mrID, opts)
+	if err != nil {
+		return emoji, err
+	}
+
+	return emoji, nil
+}
+
 var CreateIssueNote = func(client *gitlab.Client, projectID interface{}, mrID int, opts *gitlab.CreateIssueNoteOptions) (*gitlab.Note, error) {
 	if client == nil {
 		client = apiClient.Lab()

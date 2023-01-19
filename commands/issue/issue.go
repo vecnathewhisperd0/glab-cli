@@ -3,6 +3,7 @@ package issue
 import (
 	"github.com/MakeNowJust/heredoc"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	issueAwardEmojiCmd "gitlab.com/gitlab-org/cli/commands/issue/award-emoji"
 	issueBoardCmd "gitlab.com/gitlab-org/cli/commands/issue/board"
 	issueCloseCmd "gitlab.com/gitlab-org/cli/commands/issue/close"
 	issueCreateCmd "gitlab.com/gitlab-org/cli/commands/issue/create"
@@ -40,6 +41,7 @@ func NewCmdIssue(f *cmdutils.Factory) *cobra.Command {
 
 	cmdutils.EnableRepoOverride(issueCmd, f)
 
+	issueCmd.AddCommand(issueAwardEmojiCmd.NewCmdAwardEmoji(f))
 	issueCmd.AddCommand(issueCloseCmd.NewCmdClose(f))
 	issueCmd.AddCommand(issueBoardCmd.NewCmdBoard(f))
 	issueCmd.AddCommand(issueCreateCmd.NewCmdCreate(f))

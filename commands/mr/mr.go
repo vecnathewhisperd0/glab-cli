@@ -5,6 +5,7 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	mrApproveCmd "gitlab.com/gitlab-org/cli/commands/mr/approve"
 	mrApproversCmd "gitlab.com/gitlab-org/cli/commands/mr/approvers"
+	mrAwardEmojiCmd "gitlab.com/gitlab-org/cli/commands/mr/award-emoji"
 	mrCheckoutCmd "gitlab.com/gitlab-org/cli/commands/mr/checkout"
 	mrCloseCmd "gitlab.com/gitlab-org/cli/commands/mr/close"
 	mrCreateCmd "gitlab.com/gitlab-org/cli/commands/mr/create"
@@ -50,6 +51,7 @@ func NewCmdMR(f *cmdutils.Factory) *cobra.Command {
 
 	mrCmd.AddCommand(mrApproveCmd.NewCmdApprove(f))
 	mrCmd.AddCommand(mrApproversCmd.NewCmdApprovers(f))
+	mrCmd.AddCommand(mrAwardEmojiCmd.NewCmdAwardEmoji(f))
 	mrCmd.AddCommand(mrCheckoutCmd.NewCmdCheckout(f))
 	mrCmd.AddCommand(mrCloseCmd.NewCmdClose(f))
 	mrCmd.AddCommand(mrCreateCmd.NewCmdCreate(f, nil))
