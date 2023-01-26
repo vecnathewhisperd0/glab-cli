@@ -206,7 +206,7 @@ homebrew-release:
   script:
      - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
      - brew doctor
-     - brew gcc
+     - brew install gcc
      - brew install git
      - brew install coreutils
      - curl "https://gitlab.com/gitlab-org/cli/-/archive/$CI_COMMIT_TAG/cli-$CI_COMMIT_TAG.zip" --output "cli-$CI_COMMIT_TAG.zip"
