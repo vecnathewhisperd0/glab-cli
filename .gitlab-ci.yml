@@ -211,7 +211,7 @@ homebrew-release:
      - brew install coreutils
      - curl "https://gitlab.com/gitlab-org/cli/-/archive/v1.24.1/cli-v1.24.1.tar.gz" --output "cli-v1.24.1.tar.gz"
      - sha256sum "cli-v1.24.1.tar.gz"
-     - brew bump-formula-pr --dry-run glab --url="https://gitlab.com/gitlab-org/cli/-/archive/v1.24.1/cli-v1.24.2.tar.gz"--sha256="$(sha256sum cli.v1.24.1.tar.gz | cut -d ' ' -f 1)"
+     - brew bump-formula-pr --dry-run glab --url="https://gitlab.com/gitlab-org/cli/-/archive/v1.24.1/cli-v1.24.2.tar.gz" --sha256="$(sha256sum cli.v1.24.1.tar.gz | cut -d ' ' -f 1)"
 
 secret_detection:
   dependencies: [] # Don't download artifacts, especially `./public/`
