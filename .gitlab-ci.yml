@@ -71,7 +71,7 @@ check_docs_markdown:
 lint_commit:
   stage: test
   image: node:16-slim
-  script: 
+  script:
     - apt-get update && apt-get install -y git
     - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME && git checkout $CI_MERGE_REQUEST_TARGET_BRANCH_NAME && git checkout $CI_COMMIT_SHA
     - cd scripts/commit-lint && npm ci
@@ -152,7 +152,7 @@ release_test:
       -v $PWD:/go/src/gitlab.com/gitlab-org/cli \
       -w /go/src/gitlab.com/gitlab-org/cli \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      goreleaser/goreleaser release --snapshot 
+      goreleaser/goreleaser release --snapshot
 
 build_windows:
   stage: test
@@ -199,16 +199,16 @@ release:
       "
 
 homebrew-release:
-  image: golang:1.18
+  image: homebrew/ubuntu22.04:latest
   stage: release
-  rules:
-    - if: $CI_COMMIT_TAG
-  before_script:
-    - bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  # rules:
+  #   - if: $CI_COMMIT_TAG
+  # before_script:
+  #   - bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   script:
-     - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-     - curl "https://gitlab.com/gitlab-org/cli/-/archive/$CI_COMMIT_TAG/cli-$CI_COMMIT_TAG.tar.gz" --output "cli-$CI_COMMIT_TAG.tar.gz"
-     - brew bump-formula-pr glab --url="https://gitlab.com/gitlab-org/cli/-/archive/$CI_COMMIT_TAG/cli-$CI_COMMIT_TAG.tar.gz" --sha256="$(sha256sum cli-$CI_COMMIT_TAG.tar.gz | cut -d ' ' -f 1)"
+     # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+     - curl "https://gitlab.com/gitlab-org/cli/-/archive/v.1.24.1/cli-v.1.24.1.tar.gz" --output "cli-v.1.24.1.tar.gz"
+     - brew bump-formula-pr glab --dry-run --url="https://gitlab.com/gitlab-org/cli/-/archive/v.1.24.1/cli-v.1.24.1.tar.gz" --sha256="$(sha256sum cli-v.1.24.1.tar.gz | cut -d ' ' -f 1)"
 
 secret_detection:
   dependencies: [] # Don't download artifacts, especially `./public/`
