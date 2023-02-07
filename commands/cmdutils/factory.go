@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	graphql "github.com/hasura/go-graphql-client"
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/internal/config"
@@ -133,4 +134,30 @@ func initConfig() (config.Config, error) {
 		return nil, err
 	}
 	return config.Init()
+}
+
+func (f *Factory) GraphQLClient() (*graphql.Client, error) {
+
+	cfg, err := configFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := baseRepoFunc()
+	if err != nil {
+		// use default hostname if remote resolver fails
+		repo = glrepo.NewWithHost("", "", glinstance.OverridableDefault())
+	}
+	OverrideAPIProtocol(cfg, repo)
+
+	c, err := api.NewClientWithCfg(repo.RepoHost(), cfg, true)
+	if err != nil {
+		return nil, err
+	}
+
+	url := glinstance.GraphQLEndpoint(repo.RepoHost(), c.Protocol)
+
+	client := graphql.NewClient(url, c.HTTPClient())
+
+	return client, nil
 }

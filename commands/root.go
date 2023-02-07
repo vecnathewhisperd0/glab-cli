@@ -27,6 +27,7 @@ import (
 	userCmd "gitlab.com/gitlab-org/cli/commands/user"
 	variableCmd "gitlab.com/gitlab-org/cli/commands/variable"
 	versionCmd "gitlab.com/gitlab-org/cli/commands/version"
+	workspaceCmd "gitlab.com/gitlab-org/cli/commands/workspace"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 )
 
@@ -120,6 +121,7 @@ func NewCmdRoot(f *cmdutils.Factory, version, buildDate string) *cobra.Command {
 	rootCmd.AddCommand(apiCmd.NewCmdApi(f, nil))
 	rootCmd.AddCommand(scheduleCmd.NewCmdSchedule(f))
 	rootCmd.AddCommand(snippetCmd.NewCmdSnippet(f))
+	rootCmd.AddCommand(workspaceCmd.NewCmdWorkspace(f))
 
 	rootCmd.Flags().BoolP("version", "v", false, "show glab version information")
 	return rootCmd
