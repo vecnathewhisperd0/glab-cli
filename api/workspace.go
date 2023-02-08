@@ -15,6 +15,7 @@ type Workspace struct {
 	Url         string
 	Editor      string
 	ActualState string
+	Devfile     string
 }
 
 type WorkspaceCreateInput struct {

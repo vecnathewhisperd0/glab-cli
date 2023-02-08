@@ -15,7 +15,7 @@ func NewCmdWorkspace(f *cmdutils.Factory) *cobra.Command {
 		Example: heredoc.Doc(`
 			glab workspace list --group=gitlab-org 
 			glab workspace create --group=gitlab-org --agent=1 -f devfile.yaml --editor=ttyd
-			glab workspace get --group=gitlab-org --id=1
+			glab workspace view--group=gitlab-org 1
 		`),
 		Annotations: map[string]string{
 			"help:arguments": heredoc.Doc(`

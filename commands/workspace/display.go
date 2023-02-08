@@ -31,6 +31,7 @@ func DisplayWorkspace(streams *iostreams.IOStreams, workspace *api.Workspace) {
 	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("Editor"), workspace.Editor)
 	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("Actual State"), GetStatusWithColor(c, workspace.ActualState))
 	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("URL"), workspace.Url)
+	fmt.Fprintf(streams.StdOut, "%s:\n%s\n", c.Bold("Devfile"), workspace.Devfile)
 }
 
 func GetStatusWithColor(cp *iostreams.ColorPalette, status string) string {
@@ -39,7 +40,7 @@ func GetStatusWithColor(cp *iostreams.ColorPalette, status string) string {
 	case "Running":
 		return cp.Green(status)
 	case "Stopped":
-		return cp.Gray(status)
+		return cp.Red(status)
 	case "Terminated":
 		return cp.Gray(status)
 	case "Failed":
