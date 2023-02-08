@@ -3,6 +3,7 @@ package cmdutils
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	graphql "github.com/hasura/go-graphql-client"
@@ -155,9 +156,24 @@ func (f *Factory) GraphQLClient() (*graphql.Client, error) {
 		return nil, err
 	}
 
+	client := c.HTTPClient()
+	client.Transport = addTokenTransport{
+		T:     client.Transport,
+		Token: c.Token(),
+	}
 	url := glinstance.GraphQLEndpoint(repo.RepoHost(), c.Protocol)
 
-	client := graphql.NewClient(url, c.HTTPClient())
+	gqlClient := graphql.NewClient(url, c.HTTPClient())
 
-	return client, nil
+	return gqlClient, nil
+}
+
+type addTokenTransport struct {
+	T     http.RoundTripper
+	Token string
+}
+
+func (att addTokenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", att.Token))
+	return att.T.RoundTrip(req)
 }
