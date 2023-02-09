@@ -20,6 +20,7 @@ import (
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"github.com/google/shlex"
+	"github.com/hasura/go-graphql-client"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
@@ -163,6 +164,10 @@ func InitFactory(ios *iostreams.IOStreams, rt http.RoundTripper) *cmdutils.Facto
 		},
 		BaseRepo: func() (glrepo.Interface, error) {
 			return glrepo.New("OWNER", "REPO"), nil
+		},
+		GraphQLClient: func() (*graphql.Client, error) {
+			client := &http.Client{Transport: rt}
+			return graphql.NewClient("/api/graphql", client), nil
 		},
 	}
 }

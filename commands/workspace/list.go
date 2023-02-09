@@ -73,11 +73,16 @@ func listRun(opts *ListOptions) error {
 	}
 
 	title := utils.NewListTitle("Workspace")
+	title.EmptyMessage = fmt.Sprintf("No workspaces were found for group %s", opts.Group)
 	title.Page = 1
 	title.CurrentPageTotal = len(workspaces)
 	title.Total = len(workspaces)
 
-	fmt.Fprintf(opts.IO.StdOut, "%s\n%s\n", title.Describe(), DisplayList(opts.IO, workspaces))
+	fmt.Fprintf(opts.IO.StdOut, "%s\n", title.Describe())
+
+	if len(workspaces) != 0 {
+		DisplayList(opts.IO, workspaces)
+	}
 
 	return nil
 }

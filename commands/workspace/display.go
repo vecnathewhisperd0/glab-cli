@@ -8,7 +8,7 @@ import (
 	"gitlab.com/gitlab-org/cli/pkg/tableprinter"
 )
 
-func DisplayList(streams *iostreams.IOStreams, workspaces []api.Workspace) string {
+func DisplayList(streams *iostreams.IOStreams, workspaces []api.Workspace) {
 	c := streams.Color()
 	table := tableprinter.NewTablePrinter()
 	table.SetIsTTY(streams.IsOutputTTY())
@@ -21,7 +21,7 @@ func DisplayList(streams *iostreams.IOStreams, workspaces []api.Workspace) strin
 		table.EndRow()
 	}
 
-	return table.Render()
+	fmt.Fprintf(streams.StdOut, "%s\n", table.Render())
 }
 
 func DisplayWorkspace(streams *iostreams.IOStreams, workspace *api.Workspace) {

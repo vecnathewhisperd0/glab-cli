@@ -22,12 +22,13 @@ var (
 )
 
 type Factory struct {
-	HttpClient func() (*gitlab.Client, error)
-	BaseRepo   func() (glrepo.Interface, error)
-	Remotes    func() (glrepo.Remotes, error)
-	Config     func() (config.Config, error)
-	Branch     func() (string, error)
-	IO         *iostreams.IOStreams
+	HttpClient    func() (*gitlab.Client, error)
+	BaseRepo      func() (glrepo.Interface, error)
+	Remotes       func() (glrepo.Remotes, error)
+	Config        func() (config.Config, error)
+	Branch        func() (string, error)
+	GraphQLClient func() (*graphql.Client, error)
+	IO            *iostreams.IOStreams
 }
 
 func (f *Factory) RepoOverride(repo string) error {
@@ -127,6 +128,36 @@ func NewFactory() *Factory {
 			return currentBranch, nil
 		},
 		IO: iostreams.Init(),
+		GraphQLClient: func() (*graphql.Client, error) {
+
+			cfg, err := configFunc()
+			if err != nil {
+				return nil, err
+			}
+
+			repo, err := baseRepoFunc()
+			if err != nil {
+				// use default hostname if remote resolver fails
+				repo = glrepo.NewWithHost("", "", glinstance.OverridableDefault())
+			}
+			OverrideAPIProtocol(cfg, repo)
+
+			c, err := api.NewClientWithCfg(repo.RepoHost(), cfg, true)
+			if err != nil {
+				return nil, err
+			}
+
+			client := c.HTTPClient()
+			client.Transport = addTokenTransport{
+				T:     client.Transport,
+				Token: c.Token(),
+			}
+			url := glinstance.GraphQLEndpoint(repo.RepoHost(), c.Protocol)
+
+			gqlClient := graphql.NewClient(url, c.HTTPClient())
+
+			return gqlClient, nil
+		},
 	}
 }
 
@@ -135,37 +166,6 @@ func initConfig() (config.Config, error) {
 		return nil, err
 	}
 	return config.Init()
-}
-
-func (f *Factory) GraphQLClient() (*graphql.Client, error) {
-
-	cfg, err := configFunc()
-	if err != nil {
-		return nil, err
-	}
-
-	repo, err := baseRepoFunc()
-	if err != nil {
-		// use default hostname if remote resolver fails
-		repo = glrepo.NewWithHost("", "", glinstance.OverridableDefault())
-	}
-	OverrideAPIProtocol(cfg, repo)
-
-	c, err := api.NewClientWithCfg(repo.RepoHost(), cfg, true)
-	if err != nil {
-		return nil, err
-	}
-
-	client := c.HTTPClient()
-	client.Transport = addTokenTransport{
-		T:     client.Transport,
-		Token: c.Token(),
-	}
-	url := glinstance.GraphQLEndpoint(repo.RepoHost(), c.Protocol)
-
-	gqlClient := graphql.NewClient(url, c.HTTPClient())
-
-	return gqlClient, nil
 }
 
 type addTokenTransport struct {

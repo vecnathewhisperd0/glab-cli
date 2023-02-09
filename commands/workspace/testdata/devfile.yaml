@@ -1,0 +1,14 @@
+attributes:
+  controller.devfile.io/storage-type: ephemeral
+projects:
+  - name: microservices-demo-frontend
+    git:
+      remotes:
+        origin: "https://github.com/l0rd/microservices-demo-frontend"
+components:
+  - name: tooling-container
+    attributes:
+      controller.devfile.io/merge-contribution: true
+    container:
+      image: quay.io/mloriedo/universal-developer-image:ubi8-dw-demo
+
