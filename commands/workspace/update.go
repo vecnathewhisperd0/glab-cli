@@ -30,7 +30,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 		IO: f.IO,
 	}
 
-	workspaceCreateCmd := &cobra.Command{
+	workspaceUpdateCmd := &cobra.Command{
 		Use:   "update [flags]",
 		Short: `Update a workspace`,
 		Long:  ``,
@@ -120,14 +120,14 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 		},
 	}
 
-	workspaceCreateCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
-	workspaceCreateCmd.PersistentFlags().StringP("workspaceId", "i", "", "Set the ID of the workspace to update")
-	workspaceCreateCmd.Flags().StringP("editor", "e", "", "The editor to be injected")
-	workspaceCreateCmd.Flags().StringP("status", "s", "", "The desired status of the workspace")
-	workspaceCreateCmd.Flags().StringP("devfile", "f", "", "The path of the devfile")
-	workspaceCreateCmd.MarkFlagRequired("workspaceId")
+	workspaceUpdateCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
+	workspaceUpdateCmd.PersistentFlags().StringP("workspaceId", "i", "", "Set the ID of the workspace to update")
+	workspaceUpdateCmd.Flags().StringP("editor", "e", "", "The editor to be injected")
+	workspaceUpdateCmd.Flags().StringP("status", "s", "", "The desired status of the workspace")
+	workspaceUpdateCmd.Flags().StringP("devfile", "f", "", "The path of the devfile")
+	workspaceUpdateCmd.MarkFlagRequired("workspaceId")
 
-	return workspaceCreateCmd
+	return workspaceUpdateCmd
 }
 func updateRun(ctx context.Context, opts *UpdateOptions) error {
 	err := api.UpdateWorkspace(ctx, opts.GraphQLClient, opts.UpdateWorkspaceInput)
