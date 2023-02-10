@@ -35,7 +35,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 		Short: `Update a workspace`,
 		Long:  ``,
 		Example: heredoc.Doc(`
-			glab workspace update --workspaceId=1 --editor=ttyd -f devfile.yaml
+			glab workspace update --group=gitlab-org --workspaceId=1 --editor=ttyd -f devfile.yaml
 		`),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {

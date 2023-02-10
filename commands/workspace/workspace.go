@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"github.com/MakeNowJust/heredoc"
+
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ func NewCmdWorkspace(f *cmdutils.Factory) *cobra.Command {
 			glab workspace list --group=gitlab-org 
 			glab workspace create --group=gitlab-org --agent=1 -f devfile.yaml --editor=ttyd
 			glab workspace view--group=gitlab-org 1
+			glab workspace update --group=gitlab-org --workspaceId=1 --editor=ttyd -f devfile.yaml
 		`),
 		Annotations: map[string]string{
 			"help:arguments": heredoc.Doc(`
