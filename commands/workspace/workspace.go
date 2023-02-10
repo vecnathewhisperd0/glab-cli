@@ -28,6 +28,7 @@ func NewCmdWorkspace(f *cmdutils.Factory) *cobra.Command {
 	workspaceCmd.AddCommand(NewCmdList(f))
 	workspaceCmd.AddCommand(NewCmdCreate(f))
 	workspaceCmd.AddCommand(NewCmdView(f))
+	workspaceCmd.AddCommand(NewCmdUpdate(f))
 
 	return workspaceCmd
 }

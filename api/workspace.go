@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/hasura/go-graphql-client"
 )
@@ -10,12 +11,13 @@ import (
 var ErrWorkspaceNotFound = errors.New("Workspace not found")
 
 type Workspace struct {
-	ID          string
-	Name        string
-	Url         string
-	Editor      string
-	ActualState string
-	Devfile     string
+	ID           string
+	Name         string
+	Url          string
+	Editor       string
+	ActualState  string
+	Devfile      string
+	DesiredState string
 }
 
 type WorkspaceCreateInput struct {
@@ -24,6 +26,14 @@ type WorkspaceCreateInput struct {
 	ClusterAgentID string `json:"clusterAgentId"`
 	Devfile        string `json:"devfile"`
 	DesiredState   string `json:"desiredState"`
+}
+
+type WorkspaceUpdateInput struct {
+	WorkspaceId      RemoteDevelopmentWorkspaceID `json:"id"`
+	Editor           string                       `json:"editor"`
+	Devfile          string                       `json:"devfile"`
+	DesiredState     string                       `json:"desiredState"`
+	ClientMutationId string                       `json:"clientMutationId"`
 }
 
 func ListWorkspaces(ctx context.Context, client *graphql.Client, group string) ([]Workspace, error) {
@@ -90,4 +100,26 @@ func CreateWorkspace(ctx context.Context, client *graphql.Client, input Workspac
 	}
 
 	return &mutation.WorkspaceCreate.Workspace, nil
+}
+func UpdateWorkspace(ctx context.Context, client *graphql.Client, input WorkspaceUpdateInput) error {
+	var mutation struct {
+		WorkspaceUpdate struct {
+			Errors []string
+		} `graphql:"workspaceUpdate(input: $input)"`
+	}
+
+	err := client.Mutate(ctx, &mutation, map[string]interface{}{
+		"input": input,
+	})
+	if err != nil {
+		return err
+	}
+
+	apiErrors := mutation.WorkspaceUpdate.Errors
+	if len(apiErrors) != 0 {
+		mergedErrors := strings.Join(apiErrors, "\n")
+		return errors.New(mergedErrors)
+	}
+
+	return nil
 }
