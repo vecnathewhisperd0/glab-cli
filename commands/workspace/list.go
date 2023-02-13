@@ -56,7 +56,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			}
 			opts.Group = group
 
-			watchCount, err := cmd.Flags().GetCount("watchWriter")
+			watchCount, err := cmd.Flags().GetCount("watch")
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 
 	cmdutils.EnableRepoOverride(workspaceListCmd, f)
 	workspaceListCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
-	workspaceListCmd.Flags().CountP("watchWriter", "w", "Watch for updates")
+	workspaceListCmd.Flags().CountP("watch", "w", "Watch for updates")
 
 	return workspaceListCmd
 }
