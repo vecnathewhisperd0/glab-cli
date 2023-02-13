@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -23,6 +24,7 @@ const (
 type ListOptions struct {
 	Group string
 	Watch bool
+	Json  bool
 
 	IO            *iostreams.IOStreams
 	GraphQLClient *graphql.Client
@@ -62,6 +64,12 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			}
 			opts.Watch = watchCount > 0
 
+			jsonCount, err := cmd.Flags().GetCount("json")
+			if err != nil {
+				return err
+			}
+			opts.Json = jsonCount > 0
+
 			return listRun(opts)
 		},
 	}
@@ -69,6 +77,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 	cmdutils.EnableRepoOverride(workspaceListCmd, f)
 	workspaceListCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
 	workspaceListCmd.Flags().CountP("watch", "w", "Watch for updates")
+	workspaceListCmd.Flags().Count("json", "Render data as json")
 
 	return workspaceListCmd
 }
@@ -85,6 +94,16 @@ func listRun(opts *ListOptions) error {
 		workspaces, err := fetchData()
 		if err != nil {
 			return "", err
+		}
+
+		if opts.Json {
+			var raw []byte
+			raw, err = json.Marshal(workspaces)
+			if err != nil {
+				return "", err
+			}
+
+			return string(raw), nil
 		}
 
 		title := utils.NewListTitle("Workspace")
