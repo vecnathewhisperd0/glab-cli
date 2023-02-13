@@ -4,24 +4,26 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/gitlab-org/cli/pkg/iostreams"
-	"golang.org/x/net/context"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/hasura/go-graphql-client"
+	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/flag"
-
-	"github.com/spf13/cobra"
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 )
 
-const gidWorkspaceFormat = "gid://gitlab/RemoteDevelopment::Workspace/%s"
+const (
+	gidWorkspaceFormat                = "gid://gitlab/RemoteDevelopment::Workspace/%s"
+	defaultWatchIntervalWorkspaceView = 5 * time.Second
+)
 
 type ViewOptions struct {
 	Group string
 	ID    string
+	Watch bool
 
 	IO            *iostreams.IOStreams
 	GraphQLClient *graphql.Client
@@ -56,26 +58,50 @@ func NewCmdView(f *cmdutils.Factory) *cobra.Command {
 			}
 			opts.Group = group
 
+			watchCount, err := cmd.Flags().GetCount("watch")
+			if err != nil {
+				return err
+			}
+			opts.Watch = watchCount > 0
+
 			return viewRun(opts)
 		},
 	}
 
 	cmdutils.EnableRepoOverride(workspaceViewCmd, f)
 	workspaceViewCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
+	workspaceViewCmd.Flags().CountP("watch", "w", "Watch for updates")
 
 	return workspaceViewCmd
 }
 
 func viewRun(opts *ViewOptions) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
+	fetchAndRender := func() (string, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+		defer cancel()
 
-	workspace, err := api.ViewWorkspace(ctx, opts.GraphQLClient, opts.Group, opts.ID)
-	if err != nil {
-		return err
+		workspace, err := api.ViewWorkspace(ctx, opts.GraphQLClient, opts.Group, opts.ID)
+		if err != nil {
+			return "", err
+		}
+
+		var output string
+		output += RenderWorkspace(opts.IO, workspace)
+		output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
+
+		return output, nil
 	}
 
-	DisplayWorkspace(opts.IO, workspace)
-
+	if opts.Watch {
+		writer := newWatchWriter(opts.IO.StdOut, defaultWatchIntervalWorkspaceView)
+		return writer.runRenderLoop(fetchAndRender)
+	} else {
+		toRender, err := fetchAndRender()
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(opts.IO.StdOut, toRender)
+		return err
+	}
 	return nil
 }

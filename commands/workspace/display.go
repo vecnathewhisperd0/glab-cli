@@ -24,14 +24,17 @@ func RenderWorkspaces(streams *iostreams.IOStreams, workspaces []api.Workspace) 
 	return table.Render()
 }
 
-func DisplayWorkspace(streams *iostreams.IOStreams, workspace *api.Workspace) {
+func RenderWorkspace(streams *iostreams.IOStreams, workspace *api.Workspace) string {
 	c := streams.Color()
 
-	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("Workspace"), workspace.ID)
-	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("Editor"), workspace.Editor)
-	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("Actual State"), GetStatusWithColor(c, workspace.ActualState))
-	fmt.Fprintf(streams.StdOut, "%s: %s\n", c.Bold("URL"), workspace.Url)
-	fmt.Fprintf(streams.StdOut, "%s:\n%s\n", c.Bold("Devfile"), workspace.Devfile)
+	var output string
+	output += fmt.Sprintf("%s: %s\n", c.Bold("Workspace"), workspace.ID)
+	output += fmt.Sprintf("%s: %s\n", c.Bold("Editor"), workspace.Editor)
+	output += fmt.Sprintf("%s: %s\n", c.Bold("Actual State"), GetStatusWithColor(c, workspace.ActualState))
+	output += fmt.Sprintf("%s: %s\n", c.Bold("URL"), workspace.Url)
+	output += fmt.Sprintf("%s:\n%s\n", c.Bold("Devfile"), workspace.Devfile)
+
+	return output
 }
 
 func GetStatusWithColor(cp *iostreams.ColorPalette, status string) string {

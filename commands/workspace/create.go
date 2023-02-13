@@ -5,17 +5,15 @@ import (
 	"os"
 	"time"
 
-	"gitlab.com/gitlab-org/cli/pkg/iostreams"
-	"golang.org/x/net/context"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/hasura/go-graphql-client"
+	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/flag"
-
-	"github.com/spf13/cobra"
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 )
 
 const DesiredStateRunning = "Running"
@@ -96,7 +94,7 @@ func createRun(opts *CreateOptions) error {
 		return err
 	}
 
-	DisplayWorkspace(opts.IO, workspace)
+	fmt.Fprintf(opts.IO.StdOut, "%s\n", RenderWorkspace(opts.IO, workspace))
 
 	// fmt.Fprintf(opts.IO.StdOut, "%s\n%s\n", title.Describe(), DisplayList(opts.IO, workspaces))
 
