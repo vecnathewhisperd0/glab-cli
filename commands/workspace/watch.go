@@ -32,14 +32,12 @@ func (w *watchWriter) runRenderLoop(dataGenerator func() (string, error)) error 
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			toRender, err := dataGenerator()
-			if err != nil {
-				return err
-			}
-
-			fmt.Fprint(w.writer, toRender)
+		toRender, err := dataGenerator()
+		if err != nil {
+			return err
 		}
+
+		fmt.Fprint(w.writer, toRender)
+		<-ticker.C
 	}
 }
