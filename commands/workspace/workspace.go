@@ -2,10 +2,9 @@ package workspace
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/spf13/cobra"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
-
-	"github.com/spf13/cobra"
 )
 
 func NewCmdWorkspace(f *cmdutils.Factory) *cobra.Command {
