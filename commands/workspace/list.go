@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/gitlab-org/cli/pkg/iostreams"
-	"golang.org/x/net/context"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/hasura/go-graphql-client"
+	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/flag"
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 	"gitlab.com/gitlab-org/cli/pkg/utils"
-
-	"github.com/spf13/cobra"
 )
 
 const (
