@@ -117,7 +117,7 @@ func viewRun(opts *ViewOptions) error {
 	}
 
 	if opts.Watch {
-		writer := newWatchWriter(opts.IO.StdOut, defaultWatchIntervalWorkspaceView)
+		writer := newPollingWriter(opts.IO.StdOut, defaultWatchIntervalWorkspaceView)
 		return writer.runRenderLoop(fetchAndRender)
 	} else {
 		toRender, err := fetchAndRender()
