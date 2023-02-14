@@ -28,10 +28,14 @@ func New() *Mocker {
 }
 
 func (r *Mocker) RegisterResponder(method, path string, resp Responder) {
-	r.stubs = append(r.stubs, &Stub{
+	r.RegisterStub(Stub{
 		Matcher:   newRequest(method, path, r.MatchURL),
 		Responder: resp,
 	})
+}
+
+func (r *Mocker) RegisterStub(stub Stub) {
+	r.stubs = append(r.stubs, &stub)
 }
 
 type Testing interface {

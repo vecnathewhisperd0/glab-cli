@@ -119,6 +119,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 		},
 	}
 
+	cmdutils.EnableRepoOverride(workspaceUpdateCmd, f)
 	workspaceUpdateCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
 	workspaceUpdateCmd.PersistentFlags().StringP("workspaceId", "i", "", "Set the ID of the workspace to update")
 	workspaceUpdateCmd.Flags().StringP("editor", "e", "", "The editor to be injected")
