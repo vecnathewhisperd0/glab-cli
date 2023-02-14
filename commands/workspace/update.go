@@ -96,11 +96,10 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			updatePayload := api.WorkspaceUpdateInput{
-				WorkspaceId:      api.RemoteDevelopmentWorkspaceID(workspace.ID),
-				Editor:           workspace.Editor,
-				Devfile:          workspace.Devfile,
-				DesiredState:     workspace.DesiredState,
-				ClientMutationId: "glab", // todo: figure out what needs to go here
+				WorkspaceId:  api.RemoteDevelopmentWorkspaceID(workspace.ID),
+				Editor:       workspace.Editor,
+				Devfile:      workspace.Devfile,
+				DesiredState: workspace.DesiredState,
 			}
 
 			if status != nil && *status != workspace.DesiredState {
