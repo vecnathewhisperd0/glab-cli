@@ -125,10 +125,6 @@ func listRun(opts *ListOptions) error {
 			output += fmt.Sprintf("%s\n", RenderWorkspaces(opts.IO, workspaces))
 		}
 
-		if opts.Watch {
-			output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
-		}
-
 		return output, nil
 	}
 

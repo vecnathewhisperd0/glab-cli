@@ -32,16 +32,21 @@ func (w *pollingWriter) runRenderLoop(dataGenerator func() (string, error)) erro
 	ticker := time.NewTicker(w.pollingInterval)
 	defer ticker.Stop()
 
+	var lastRendered *string
 	for {
 		toRender, err := dataGenerator()
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprint(w.writer, toRender)
+		if lastRendered == nil || *lastRendered != toRender {
+			fmt.Fprint(w.writer, toRender)
 
-		// calling Flush() clears the previous output and re-renders the terminal with the latest output
-		w.writer.Flush()
+			// calling Flush() clears the previous output and re-renders the terminal with the latest output
+			w.writer.Flush()
+
+			lastRendered = &toRender
+		}
 
 		<-ticker.C
 	}
