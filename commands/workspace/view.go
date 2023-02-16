@@ -66,11 +66,17 @@ func NewCmdView(f *cmdutils.Factory) *cobra.Command {
 			}
 			opts.Watch = watchCount > 0
 
-			jsonCount, err := cmd.Flags().GetCount("json")
+			outputFormat, err := cmd.Flags().GetString("output")
 			if err != nil {
 				return err
 			}
-			opts.Json = jsonCount > 0
+			switch outputFormat {
+			case "json":
+				opts.Json = true
+			case "": // default
+			default:
+				return fmt.Errorf("unsupported output format: %s", outputFormat)
+			}
 
 			return viewRun(opts)
 		},
@@ -79,7 +85,7 @@ func NewCmdView(f *cmdutils.Factory) *cobra.Command {
 	cmdutils.EnableRepoOverride(workspaceViewCmd, f)
 	workspaceViewCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
 	workspaceViewCmd.Flags().CountP("watch", "w", "Watch for updates")
-	workspaceViewCmd.Flags().Count("json", "Render data as json")
+	workspaceViewCmd.Flags().StringP("output", "o", "", "Render data in different formats. Supported formats: json")
 
 	return workspaceViewCmd
 }
@@ -96,7 +102,7 @@ func viewRun(opts *ViewOptions) error {
 
 		var output string
 
-		// todo: watch mode doesn't particularly well with json
+		// todo: watch mode doesn't work particularly well with json
 		// 	leads to errors in parsing and therefore rendering (maybe due to \n embedded in the devfiles being serialized)
 		//
 		//  need to discuss this
