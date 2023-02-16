@@ -1,14 +1,15 @@
 package workspace
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
-	"gitlab.com/gitlab-org/cli/commands/cmdtest"
-	"gitlab.com/gitlab-org/cli/commands/cmdutils"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	"gitlab.com/gitlab-org/cli/commands/cmdtest"
+	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/pkg/httpmock"
 	"gitlab.com/gitlab-org/cli/test"
 )
@@ -41,6 +42,12 @@ func TestWorkspaceList(t *testing.T) {
 		expectedError error
 		expectedOut   string
 	}{
+		{
+			name:          "when unsupported output options are provided",
+			args:          "-g=MyGroup --output=non-existent",
+			httpMocks:     nil,
+			expectedError: errors.New("unsupported output format: non-existent"),
+		},
 		{
 			name: "when no workspaces exist and list is called",
 			args: "-g=MyGroup",
@@ -94,6 +101,37 @@ func TestWorkspaceList(t *testing.T) {
 			},
 			expectedError: nil,
 			expectedOut:   "Showing 1 of 1 Workspace on  (Page 1)\n\nId\tEditor\tActual State\tURL\n123\tttyd\tRunning\thttp://something.remotedev.com\n\n",
+		},
+		{
+			name: "when workspaces exist and list is called with json output",
+			args: "-g=MyGroup -o=json",
+			httpMocks: []httpMock{
+				{
+					http.MethodPost,
+					"/api/graphql",
+					http.StatusOK,
+					`{
+						"data": {
+							"group": {
+								"workspaces": {
+									"nodes": [
+										{
+											"id": "123",
+											"name": "test",
+											"editor": "ttyd",
+											"url": "http://something.remotedev.com",
+											"actualState": "Running",
+											"devfile": "test"
+										}						
+									]
+								}
+							}
+						}
+					}`,
+				},
+			},
+			expectedError: nil,
+			expectedOut:   "[{\"ID\":\"123\",\"Name\":\"test\",\"Url\":\"http://something.remotedev.com\",\"Editor\":\"ttyd\",\"ActualState\":\"Running\",\"Devfile\":\"test\",\"DesiredState\":\"\"}]",
 		},
 	}
 

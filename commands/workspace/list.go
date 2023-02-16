@@ -64,11 +64,17 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			}
 			opts.Watch = watchCount > 0
 
-			jsonCount, err := cmd.Flags().GetCount("json")
+			outputFormat, err := cmd.Flags().GetString("output")
 			if err != nil {
 				return err
 			}
-			opts.Json = jsonCount > 0
+			switch outputFormat {
+			case "json":
+				opts.Json = true
+			case "": // default
+			default:
+				return fmt.Errorf("unsupported output format: %s", outputFormat)
+			}
 
 			return listRun(opts)
 		},
@@ -77,7 +83,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 	cmdutils.EnableRepoOverride(workspaceListCmd, f)
 	workspaceListCmd.PersistentFlags().StringP("group", "g", "", "Select a group/subgroup. This option is ignored if a repo argument is set.")
 	workspaceListCmd.Flags().CountP("watch", "w", "Watch for updates")
-	workspaceListCmd.Flags().Count("json", "Render data as json")
+	workspaceListCmd.Flags().StringP("output", "o", "", "Render data in different formats. Supported formats: json")
 
 	return workspaceListCmd
 }
@@ -119,7 +125,9 @@ func listRun(opts *ListOptions) error {
 			output += fmt.Sprintf("%s\n", RenderWorkspaces(opts.IO, workspaces))
 		}
 
-		output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
+		if opts.Watch {
+			output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
+		}
 
 		return output, nil
 	}
