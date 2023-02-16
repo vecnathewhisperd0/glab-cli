@@ -110,7 +110,10 @@ func viewRun(opts *ViewOptions) error {
 			output += string(raw)
 		} else {
 			output += RenderWorkspace(opts.IO, workspace)
-			output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
+
+			if opts.Watch {
+				output += fmt.Sprintf("\nLatest data as of %s\n", time.Now().Format(time.Stamp))
+			}
 		}
 
 		return output, nil
@@ -127,5 +130,4 @@ func viewRun(opts *ViewOptions) error {
 		_, err = fmt.Fprintf(opts.IO.StdOut, toRender)
 		return err
 	}
-	return nil
 }
