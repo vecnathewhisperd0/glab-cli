@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"github.com/mgutz/ansi"
@@ -34,6 +35,9 @@ var version = "DEV"
 // build is set dynamically at build
 var build string
 
+// platform is set dynamically at build
+var platform string
+
 // debug is set dynamically at build and can be overridden by
 // the configuration file or environment variable
 // sets to "true" or "false" or "1" or "0" as string
@@ -53,6 +57,7 @@ func main() {
 		os.Exit(2)
 	}
 
+	api.SetUserAgent(version, build, platform)
 	maybeOverrideDefaultHost(cmdFactory, cfg)
 
 	if !cmdFactory.IO.ColorEnabled() {

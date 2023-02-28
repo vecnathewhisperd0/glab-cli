@@ -47,6 +47,7 @@ endif
 
 GO_LDFLAGS := -X main.build=$(BUILD_DATE) $(GO_LDFLAGS)
 GO_LDFLAGS := $(GO_LDFLAGS) -X main.version=$(GLAB_VERSION)
+GO_LDFLAGS := $(GO_LDFLAGS) -X main.platform=$(GOOS)
 GOURL ?= gitlab.com/gitlab-org/cli
 BUILDLOC ?= ./bin/glab
 
