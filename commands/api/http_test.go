@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -98,6 +99,7 @@ hosts:
 	originalEnvVarToken, envIsSet := os.LookupEnv("GITLAB_TOKEN")
 
 	api.SetUserAgent("v1.2.3", "12-31-1999", "darwin")
+	versionString := "glab/v1.2.3 - built 12-31-1999, (darwin)"
 
 	if envIsSet && originalEnvVarToken != "" {
 		_ = os.Setenv("GITLAB_TOKEN", "")
@@ -148,7 +150,7 @@ hosts:
 				method:  "GET",
 				u:       "https://gitlab.com/api/v4/projects/gitlab-com%2Fwww-gitlab-com",
 				body:    "",
-				headers: "Private-Token: OTOKEN\r\nUser-Agent: glab/v1.2.3 (built 12-31-1999), darwin\r\n",
+				headers: fmt.Sprintf("Private-Token: OTOKEN\r\nUser-Agent: %s\r\n", versionString),
 			},
 		},
 		{
@@ -166,7 +168,7 @@ hosts:
 				method:  "GET",
 				u:       "https://gitlab.com/api/v4/projects/gitlab-com%2Fwww-gitlab-com",
 				body:    "",
-				headers: "Private-Token: OTOKEN\r\nUser-Agent: glab/v1.2.3 (built 12-31-1999), darwin\r\n",
+				headers: fmt.Sprintf("Private-Token: OTOKEN\r\nUser-Agent: %s\r\n", versionString),
 			},
 		},
 		{
@@ -186,7 +188,7 @@ hosts:
 				method:  "GET",
 				u:       "https://gitlab.com/api/v4/projects/gitlab-com%2Fwww-gitlab-com?a=b",
 				body:    "",
-				headers: "Private-Token: OTOKEN\r\nUser-Agent: glab/v1.2.3 (built 12-31-1999), darwin\r\n",
+				headers: fmt.Sprintf("Private-Token: OTOKEN\r\nUser-Agent: %s\r\n", versionString),
 			},
 		},
 		{
@@ -206,7 +208,7 @@ hosts:
 				method:  "POST",
 				u:       "https://gitlab.com/api/graphql/",
 				body:    `{"variables":{"a":"b"}}`,
-				headers: "Content-Type: application/json; charset=utf-8\r\nPrivate-Token: OTOKEN\r\nUser-Agent: glab/v1.2.3 (built 12-31-1999), darwin\r\n",
+				headers: fmt.Sprintf("Content-Type: application/json; charset=utf-8\r\nPrivate-Token: OTOKEN\r\nUser-Agent: %s\r\n", versionString),
 			},
 		},
 		{
@@ -227,7 +229,7 @@ hosts:
 				method:  "POST",
 				u:       "https://gitlab.com/api/v4/projects",
 				body:    `CUSTOM`,
-				headers: "Accept: application/json\r\nContent-Type: text/plain\r\nPrivate-Token: OTOKEN\r\nUser-Agent: glab/v1.2.3 (built 12-31-1999), darwin\r\n",
+				headers: fmt.Sprintf("Accept: application/json\r\nContent-Type: text/plain\r\nPrivate-Token: OTOKEN\r\nUser-Agent: %s\r\n", versionString),
 			},
 		},
 	}

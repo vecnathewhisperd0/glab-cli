@@ -27,11 +27,11 @@ const (
 	PrivateToken
 )
 
-var (
-	glabVersion  string
-	glabPlatform string
-	glabBuild    string
-)
+type glabInstall struct {
+	version, platform, build string
+}
+
+var currentGlabInstall glabInstall
 
 // Global api client to be used throughout glab
 var apiClient *Client
@@ -60,20 +60,22 @@ type Client struct {
 	refreshLabInstance bool
 }
 
-func init() {
-	// initialise the global api client to be used throughout glab
-	RefreshClient()
-}
-
-func UserAgent() string {
-	// UserAgent format: glab/v1.25.3-27-g7ec258fb (built 2023-02-16), darwin
-	return fmt.Sprintf("glab/%s (built %s), %s", glabVersion, glabBuild, glabPlatform)
+func (i glabInstall) UserAgent() string {
+	// UserAgent format: glab/v1.25.3-27-g7ec258fb - built 2023-02-16, (darwin)
+	return fmt.Sprintf("glab/%s - built %s, (%s)", i.version, i.build, i.platform)
 }
 
 func SetUserAgent(version string, build string, platform string) {
-	glabVersion = version
-	glabBuild = build
-	glabPlatform = platform
+	currentGlabInstall = glabInstall{
+		version:  version,
+		build:    build,
+		platform: platform,
+	}
+}
+
+func init() {
+	// initialise the global api client to be used throughout glab
+	RefreshClient()
 }
 
 // RefreshClient re-initializes the api client
@@ -318,7 +320,7 @@ func (c *Client) NewLab() error {
 		if err != nil {
 			return fmt.Errorf("failed to initialize GitLab client: %v", err)
 		}
-		c.LabClient.UserAgent = UserAgent()
+		c.LabClient.UserAgent = currentGlabInstall.UserAgent()
 
 		if c.token != "" {
 			c.AuthType = PrivateToken
