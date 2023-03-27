@@ -32,11 +32,6 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 				return err
 			}
 
-			repo, err := f.BaseRepo()
-			if err != nil {
-				return err
-			}
-
 			l := &gitlab.ListTodosOptions{}
 
 			if m, _ := cmd.Flags().GetString("state"); m != "" {
@@ -46,6 +41,10 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 				l.Type = gitlab.String(m)
 			}
 			if m, _ := cmd.Flags().GetBool("global"); m == false {
+				repo, err := f.BaseRepo()
+				if err != nil {
+					return err
+				}
 				project, _ := repo.Project(apiClient)
 				l.ProjectID = &project.ID
 			}
