@@ -37,9 +37,6 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 				return err
 			}
 
-			project, err := repo.Project(apiClient)
-
-			// l := &gitlab.ListProjectPipelinesOptions{}
 			l := &gitlab.ListTodosOptions{}
 
 			if m, _ := cmd.Flags().GetString("state"); m != "" {
@@ -49,6 +46,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 				l.Type = gitlab.String(m)
 			}
 			if m, _ := cmd.Flags().GetBool("global"); m == false {
+				project, _ := repo.Project(apiClient)
 				l.ProjectID = &project.ID
 			}
 			if p, _ := cmd.Flags().GetInt("page"); p != 0 {
@@ -89,7 +87,6 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 	todoListCmd.Flags().StringP("state", "s", "pending", "State of TODO. One of: pending, done")
 	todoListCmd.Flags().StringP("type", "t", "", "Type of TODO. One of: MergeRequest, Commit, Epic, DesignManagement::Design or AlertManagement::Alert")
 	//TODO todoListCmd.Flags().StringP("author", "a", "text", "Author of TODO")
-	//TODO todoListCmd.Flags().StringP("project", "p", "text", "Project of TODO")
 	//TODO todoListCmd.Flags().StringP("group", "g", "text", "Group of TODO")
 
 	return todoListCmd
