@@ -27,13 +27,13 @@ func NewCmdIssue(f *cmdutils.Factory) *cobra.Command {
 			glab issue list
 			glab issue create --label --confidential
 			glab issue view --web
-			glab issue note -m "closing because !124 was merged" <issue number>
+			glab issue note -m "closing because !123 was merged" <issue number>
 		`),
 		Annotations: map[string]string{
 			"help:arguments": heredoc.Doc(`
 				An issue can be supplied as argument in any of the following formats:
-				- by number, e.g. "124"
-				- by URL, e.g. "https://gitlab.com/NAMESPACE/REPO/-/issues/124"
+				- by number, e.g. "123"
+				- by URL, e.g. "https://gitlab.com/NAMESPACE/REPO/-/issues/123"
 			`),
 		},
 	}
