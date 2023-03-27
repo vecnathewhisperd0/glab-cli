@@ -40,7 +40,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 			if m, _ := cmd.Flags().GetString("type"); m != "" {
 				l.Type = gitlab.String(m)
 			}
-			if m, _ := cmd.Flags().GetBool("global"); m == false {
+			if m, _ := cmd.Flags().GetBool("global"); !m {
 				repo, err := f.BaseRepo()
 				if err != nil {
 					return err
@@ -73,7 +73,6 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 					fmt.Fprintf(f.IO.StdOut, "%s\t%s\t%s\t%s\t%s\n", t.Target.UpdatedAt, milestone, t.TargetType, t.Target.Title, t.Target.WebURL)
 				}
 				// fmt.Fprintf(f.IO.StdOut, "%s\n", todos)
-
 			} else {
 				todoListJSON, _ := json.Marshal(todos)
 				fmt.Fprintln(f.IO.StdOut, string(todoListJSON))
@@ -85,8 +84,8 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 	todoListCmd.Flags().BoolP("global", "g", false, "Global list of TODO")
 	todoListCmd.Flags().StringP("state", "s", "pending", "State of TODO. One of: pending, done")
 	todoListCmd.Flags().StringP("type", "t", "", "Type of TODO. One of: MergeRequest, Commit, Epic, DesignManagement::Design or AlertManagement::Alert")
-	//TODO todoListCmd.Flags().StringP("author", "a", "text", "Author of TODO")
-	//TODO todoListCmd.Flags().StringP("group", "g", "text", "Group of TODO")
+	// TODO todoListCmd.Flags().StringP("author", "a", "text", "Author of TODO")
+	// TODO todoListCmd.Flags().StringP("group", "g", "text", "Group of TODO")
 
 	return todoListCmd
 }
