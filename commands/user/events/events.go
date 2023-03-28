@@ -37,6 +37,8 @@ func NewCmdEvents(f *cmdutils.Factory) *cobra.Command {
 			}
 			defer f.IO.StopPager()
 
+			includeDate, _ := cmd.Flags().GetBool("include-dates")
+
 			if lb, _ := cmd.Flags().GetBool("all"); lb {
 				projects := make(map[int]*gitlab.Project)
 				for _, e := range events {
@@ -50,7 +52,7 @@ func NewCmdEvents(f *cmdutils.Factory) *cobra.Command {
 				title := utils.NewListTitle("User events")
 				title.CurrentPageTotal = len(events)
 
-				DisplayAllEvents(f.IO.StdOut, events, projects)
+				DisplayAllEvents(f.IO.StdOut, events, projects, includeDate)
 				return nil
 			}
 
@@ -59,59 +61,66 @@ func NewCmdEvents(f *cmdutils.Factory) *cobra.Command {
 				return err
 			}
 
-			DisplayProjectEvents(f.IO.StdOut, events, project)
+			DisplayProjectEvents(f.IO.StdOut, events, project, includeDate)
 			return nil
 		},
 	}
 
 	cmd.Flags().BoolP("all", "a", false, "Get events from all projects")
+	cmd.Flags().BoolP("include-dates", "d", false, "Include the date of each event")
 
 	return cmd
 }
 
-func DisplayProjectEvents(w io.Writer, events []*gitlab.ContributionEvent, project *gitlab.Project) {
+func DisplayProjectEvents(w io.Writer, events []*gitlab.ContributionEvent, project *gitlab.Project, includeDate bool) {
 	for _, e := range events {
 		if e.ProjectID != project.ID {
 			continue
 		}
-		printEvent(w, e, project)
+		printEvent(w, e, project, includeDate)
 	}
 }
 
-func DisplayAllEvents(w io.Writer, events []*gitlab.ContributionEvent, projects map[int]*gitlab.Project) {
+func DisplayAllEvents(w io.Writer, events []*gitlab.ContributionEvent, projects map[int]*gitlab.Project, includeDate bool) {
 	for _, e := range events {
-		printEvent(w, e, projects[e.ProjectID])
+		printEvent(w, e, projects[e.ProjectID], includeDate)
 	}
 }
 
-func printEvent(w io.Writer, e *gitlab.ContributionEvent, project *gitlab.Project) {
+func printEvent(w io.Writer, e *gitlab.ContributionEvent, project *gitlab.Project, includeDate bool) {
+	dateString := "- "
+
+	if includeDate {
+		dateString = fmt.Sprintf("%s - ", e.CreatedAt.String())
+	}
+
 	switch e.ActionName {
 	case "pushed to":
-		fmt.Fprintf(w, "Pushed to %s %s at %s\n%q\n", e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace, e.PushData.CommitTitle)
+		fmt.Fprintf(w, "%sPushed to %s %s at %s\n%q\n", dateString, e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace, e.PushData.CommitTitle)
 	case "deleted":
-		fmt.Fprintf(w, "Deleted %s %s at %s\n", e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sDeleted %s %s at %s\n", dateString, e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace)
 	case "pushed new":
-		fmt.Fprintf(w, "Pushed new %s %s at %s\n", e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sPushed new %s %s at %s\n", dateString, e.PushData.RefType, e.PushData.Ref, project.NameWithNamespace)
 	case "commented on":
-		fmt.Fprintf(w, "Commented on %s #%s at %s\n%q\n", e.Note.NoteableType, e.Note.Title, project.NameWithNamespace, e.Note.Body)
+		fmt.Fprintf(w, "%sCommented on %s #%s at %s\n%q\n", dateString, e.Note.NoteableType, e.Note.Title, project.NameWithNamespace, e.Note.Body)
 	case "accepted":
-		fmt.Fprintf(w, "Accepted %s %s at %s\n", e.TargetType, e.TargetTitle, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sAccepted %s %s at %s\n", dateString, e.TargetType, e.TargetTitle, project.NameWithNamespace)
 	case "opened":
-		fmt.Fprintf(w, "Opened %s %s at %s\n", e.TargetType, e.TargetTitle, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sOpened %s %s at %s\n", dateString, e.TargetType, e.TargetTitle, project.NameWithNamespace)
 	case "closed":
-		fmt.Fprintf(w, "Closed %s %s at %s\n", e.TargetType, e.TargetTitle, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sClosed %s %s at %s\n", dateString, e.TargetType, e.TargetTitle, project.NameWithNamespace)
 	case "joined":
-		fmt.Fprintf(w, "Joined %s\n", project.NameWithNamespace)
+		fmt.Fprintf(w, "%sJoined %s\n", dateString, project.NameWithNamespace)
 	case "left":
-		fmt.Fprintf(w, "Left %s\n", project.NameWithNamespace)
+		fmt.Fprintf(w, "%sLeft %s\n", dateString, project.NameWithNamespace)
 	case "created":
 		targetType := e.TargetType
 		if e.TargetType == "WikiPage::Meta" {
-			targetType = "Wiki page"
+			targetType = "%sWiki page"
 		}
-		fmt.Fprintf(w, "Created %s %s at %s\n", targetType, e.TargetTitle, project.NameWithNamespace)
+		fmt.Fprintf(w, "%sCreated %s %s at %s\n", dateString, targetType, e.TargetTitle, project.NameWithNamespace)
 	default:
-		fmt.Fprintf(w, "%s %q", e.TargetType, e.Title)
+		fmt.Fprintf(w, "%s%s %q", dateString, e.TargetType, e.Title)
 	}
 	fmt.Fprintln(w) // to leave a blank line
 }
