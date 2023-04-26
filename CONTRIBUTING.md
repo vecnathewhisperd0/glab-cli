@@ -58,6 +58,22 @@ Integration tests use the `_Integration` test suffix and use the `_integration_t
 `GITLAB_TOKEN` must be a
 [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html).
 
+### Running integration tests against the GDK
+
+For local development, the integration tests can be configured to run against an arbitrary GitLab instance, including an instance of the [GDK](https://gitlab.com/gitlab-org/gitlab-development-kit).
+
+Depending on what tests are to be executed, test data may need to be created in the instance or IDs may need to be altered in the tests.
+In CI the integration tests use the [cli-automated-testing/test](https://gitlab.com/cli-automated-testing/test) repository.
+
+Additional environment variables may have to be set:
+`GITLAB_TEST_API_PROTOCOL` - set if the instance does not use `https`
+`GITLAB_TEST_API_HOST` - set when the `api_host` is different to the `host`
+
+Example command:
+```shell
+GITLAB_TEST_API_HOST="192.168.4.31:3000" GITLAB_TEST_API_PROTOCOL=http GITLAB_TEST_HOST="http://192.168.4.31" GITLAB_TOKEN=XXX make test
+```
+
 ### Submitting a merge request
 
 1. Create a new branch: `git checkout -b my-branch-name`

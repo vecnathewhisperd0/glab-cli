@@ -19,8 +19,6 @@ import (
 func TestNewCmdUnsubscribe_Integration(t *testing.T) {
 	glTestHost := test.GetHostOrSkip(t)
 
-	t.Parallel()
-
 	oldUnsubscribeIssue := api.UnsubscribeFromIssue
 	timer, _ := time.Parse(time.RFC3339, "2014-11-12T11:45:26.371Z")
 	api.UnsubscribeFromIssue = func(client *gitlab.Client, projectID interface{}, issueID int, opts gitlab.RequestOptionFunc) (*gitlab.Issue, error) {

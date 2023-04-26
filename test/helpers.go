@@ -115,5 +115,14 @@ func GetHostOrSkip(t testing.TB) string {
 		}
 		t.Skip("Set GITLAB_TEST_HOST and GITLAB_TOKEN to run this integration test")
 	}
+
+	if os.Getenv("GITLAB_TEST_API_PROTOCOL") != "" {
+		t.Setenv("API_PROTOCOL", os.Getenv("GITLAB_TEST_API_PROTOCOL"))
+	}
+
+	if os.Getenv("GITLAB_TEST_API_HOST") != "" {
+		t.Setenv("GITLAB_API_HOST", os.Getenv("GITLAB_TEST_API_HOST"))
+	}
+
 	return glTestHost
 }
