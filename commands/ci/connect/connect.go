@@ -23,6 +23,7 @@ func NewCmdConnect(f *cmdutils.Factory) *cobra.Command {
 		Aliases: []string{},
 		Example: heredoc.Doc(`
 	glab ci connect 123456
+	glab ci connect 123456 --hold
 `),
 		Long: "",
 		Args: cobra.ExactArgs(1),
@@ -32,12 +33,28 @@ func NewCmdConnect(f *cmdutils.Factory) *cobra.Command {
 				fmt.Fprintln(f.IO.StdErr, "invalid job id:", args[0])
 				return cmdutils.SilentError
 			}
+
+			// Hold the VM
+			hold, _ := cmd.Flags().GetBool("hold")
+			if hold {
+				resp, err := http.Get("http://localhost:12345/hold?jobID=" + strconv.Itoa(jobID))
+				if err != nil {
+					fmt.Fprintln(f.IO.StdErr, err)
+					return cmdutils.SilentError
+				}
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					fmt.Fprintln(f.IO.StdErr, string(msg))
+					return cmdutils.SilentError
+				}
+			}
+			// Push the public key
 			data, err := ioutil.ReadFile("/home/josephburnett/.ssh/id_ed25519_work.pub")
 			if err != nil {
 				fmt.Fprintln(f.IO.StdErr, err)
 				return cmdutils.SilentError
 			}
-			resp, err := http.Post("http://localhost:12345?jobID="+strconv.Itoa(jobID), "text", bytes.NewReader(data))
+			resp, err := http.Post("http://localhost:12345/connect?jobID="+strconv.Itoa(jobID), "text", bytes.NewReader(data))
 			if err != nil {
 				fmt.Fprintln(f.IO.StdErr, err)
 				return cmdutils.SilentError
@@ -57,13 +74,34 @@ func NewCmdConnect(f *cmdutils.Factory) *cobra.Command {
 				fmt.Fprintln(f.IO.StdErr, "no public IP address")
 				return cmdutils.SilentError
 			}
-			shell := exec.Command("ssh", "-i", "/home/josephburnett/.ssh/id_ed25519_work", "josephburnett@"+ipAddress)
+			// Connect to the VM
+			shell := exec.Command(
+				"ssh",
+				"-i", "/home/josephburnett/.ssh/id_ed25519_work",
+				"-o", "StrictHostKeychecking=no",
+				"josephburnett@"+ipAddress,
+			)
 			shell.Stdin = os.Stdin
 			shell.Stdout = os.Stdout
 			shell.Stderr = os.Stderr
 			_ = shell.Run()
+			// Release the VM
+			if hold {
+				resp, err = http.Get("http://localhost:12345/release?jobID=" + strconv.Itoa(jobID))
+				if err != nil {
+					fmt.Fprintln(f.IO.StdErr, err)
+					return cmdutils.SilentError
+				}
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					fmt.Fprintln(f.IO.StdErr, string(msg))
+					return cmdutils.SilentError
+				}
+			}
 			return nil
 		},
 	}
+	jobConnectCmd.Flags().BoolP("hold", "", false, "Hold the VM after job execution as long as connected (limit 30 minutes)")
+
 	return jobConnectCmd
 }
