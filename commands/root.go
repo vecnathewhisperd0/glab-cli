@@ -6,6 +6,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
 	aliasCmd "gitlab.com/gitlab-org/cli/commands/alias"
 	apiCmd "gitlab.com/gitlab-org/cli/commands/api"
 	askCmd "gitlab.com/gitlab-org/cli/commands/ask"
@@ -25,6 +26,7 @@ import (
 	scheduleCmd "gitlab.com/gitlab-org/cli/commands/schedule"
 	snippetCmd "gitlab.com/gitlab-org/cli/commands/snippet"
 	sshCmd "gitlab.com/gitlab-org/cli/commands/ssh-key"
+	"gitlab.com/gitlab-org/cli/commands/stack"
 	updateCmd "gitlab.com/gitlab-org/cli/commands/update"
 	userCmd "gitlab.com/gitlab-org/cli/commands/user"
 	variableCmd "gitlab.com/gitlab-org/cli/commands/variable"
@@ -124,6 +126,7 @@ func NewCmdRoot(f *cmdutils.Factory, version, buildDate string) *cobra.Command {
 	rootCmd.AddCommand(scheduleCmd.NewCmdSchedule(f))
 	rootCmd.AddCommand(snippetCmd.NewCmdSnippet(f))
 	rootCmd.AddCommand(askCmd.NewCmd(f))
+	rootCmd.AddCommand(stack.NewCmdStack(f))
 
 	rootCmd.Flags().BoolP("version", "v", false, "show glab version information")
 	return rootCmd

@@ -121,6 +121,14 @@ func Config(name string) (string, error) {
 	return firstLine(output), nil
 }
 
+// Command returns a new git command.
+var Command = func(args ...string) *exec.Cmd {
+	return exec.Command("git", args...)
+}
+
+// GitCommand returns a new git command.
+//
+// Deprecated: New code should use [Command] instead.
 var GitCommand = func(args ...string) *exec.Cmd {
 	return exec.Command("git", args...)
 }
