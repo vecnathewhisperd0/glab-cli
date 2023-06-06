@@ -16,6 +16,7 @@ GLab is an open source GitLab CLI tool bringing GitLab to your terminal next to 
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Homebrew](#homebrew)
+  - [Linux packages](#linux-packages)
   - [Other installation methods](#other-installation-methods)
   - [Building from source](#building-from-source)
     - [Prerequisites for building from source](#prerequisites-for-building-from-source)
@@ -94,6 +95,12 @@ Homebrew is the officially supported package manager for macOS, Linux, and Windo
 - Homebrew
   - Install with: `brew install glab`
   - Update with: `brew upgrade glab`
+
+### Linux packages
+
+On Linux, you can also install `glab` from community-maintained repositories - as a [snap package](https://snapcraft.io/glab) or from your distro's repositories:
+
+[![Packaging status in Linux distributions](https://repology.org/badge/vertical-allrepos/glab-gitlab-cli.svg)](https://repology.org/project/glab-gitlab-cli/versions)
 
 ### Other installation methods
 
