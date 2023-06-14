@@ -41,7 +41,7 @@ hosts:
 
 	var io *iostreams.IOStreams
 	io, _, stdout, _ = iostreams.Test()
-	stubFactory, _ = cmdtest.StubFactoryWithConfig(glTestHost + "/cli-automated-testing/test.git")
+	stubFactory, _ = cmdtest.StubFactoryWithConfig(glTestHost + "/cli-automated-testing/test")
 	stubFactory.IO = io
 	stubFactory.IO.IsaTTY = true
 	stubFactory.IO.IsErrTTY = true
@@ -111,7 +111,7 @@ func TestTraceRun(t *testing.T) {
 
 	var io *iostreams.IOStreams
 	io, _, stdout, _ = iostreams.Test()
-	stubFactory = cmdtest.StubFactory(glTestHost + "/cli-automated-testing/test.git")
+	stubFactory = cmdtest.StubFactory(glTestHost + "/cli-automated-testing/test")
 	stubFactory.IO = io
 	stubFactory.IO.IsaTTY = true
 	stubFactory.IO.IsErrTTY = true
