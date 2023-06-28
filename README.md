@@ -16,7 +16,6 @@ GLab is an open source GitLab CLI tool bringing GitLab to your terminal next to 
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Homebrew](#homebrew)
-  - [Linux packages](#linux-packages)
   - [Other installation methods](#other-installation-methods)
   - [Building from source](#building-from-source)
     - [Prerequisites for building from source](#prerequisites-for-building-from-source)
@@ -96,12 +95,6 @@ Homebrew is the officially supported package manager for macOS, Linux, and Windo
   - Install with: `brew install glab`
   - Update with: `brew upgrade glab`
 
-### Linux packages
-
-On Linux, you can also install `glab` from community-maintained repositories - as a [snap package](https://snapcraft.io/glab) or from your distro's repositories:
-
-[![Packaging status in Linux distributions](https://repology.org/badge/vertical-allrepos/glab-gitlab-cli.svg)](https://repology.org/project/glab-gitlab-cli/versions)
-
 ### Other installation methods
 
 Other options to install the GitLab CLI that may not be officially support or are maintained by the community are [also available](docs/installation_options.md).
@@ -153,8 +146,8 @@ To authenticate your installation of `glab` with a personal access token:
      from a file: `glab auth login --stdin < myaccesstoken.txt`
    - For self-managed instances, authenticate by reading from a file:
      `glab auth login --hostname gitlab.example.com --stdin < myaccesstoken.txt`. This will allow you to perform
-     authenticated `glab` commands against a self-managed instance when you are in a Git repository with a remote 
-     matching your self-managed instance's host. Alternatively set `GITLAB_HOST` to direct your command to your self-managed instance.  
+     authenticated `glab` commands against a self-managed instance when you are in a Git repository with a remote
+     matching your self-managed instance's host. Alternatively set `GITLAB_HOST` to direct your command to your self-managed instance.
    - Authenticate with token and hostname: `glab auth login --hostname gitlab.example.org --token xxxxx`
      Not recommended for shared environments.
 

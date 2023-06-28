@@ -12,6 +12,12 @@ are maintained by the community.
 
 ## Table of contents
 
+<div style="float: right;">
+
+  [![Packaging status in Linux distributions](https://repology.org/badge/vertical-allrepos/glab-gitlab-cli.svg)](https://repology.org/project/glab-gitlab-cli/versions)
+
+</div>
+
 - [macOS](#macos)
 - [Windows](#windows)
 - [Linux](#linux)
