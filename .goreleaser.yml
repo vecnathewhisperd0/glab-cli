@@ -138,6 +138,8 @@ nfpms:
 
 checksum:
   name_template: "checksums.txt"
+  extra_files:
+    - glob: ./bin/*
 snapshot:
   name_template: "{{ .Tag }}"
 changelog:
