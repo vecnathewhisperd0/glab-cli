@@ -28,6 +28,13 @@ include:
   - project: 'gitlab-org/quality/pipeline-common'
     file: '/ci/danger-review.yml'  # danger-review job below
 
+danger-review:
+  variables:
+    CI_DEBUG_TRACE: "true"
+  after_script:
+    - 'echo "diff base ${CI_MERGE_REQUEST_DIFF_BASE_SHA}"'
+    - 'echo "source head ${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"'
+    - 'echo "source head:-default ${CI_COMMIT_SHA}"'
 
 # From: https://docs.gitlab.com/ee/ci/caching/#cache-go-dependencies
 .go-cache:
