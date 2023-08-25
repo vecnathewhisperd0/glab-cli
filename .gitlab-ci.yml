@@ -24,3 +24,8 @@ danger-review:
     - 'echo "diff base ${CI_MERGE_REQUEST_DIFF_BASE_SHA}"'
     - 'echo "source head ${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"'
     - 'echo "source head:-default ${CI_COMMIT_SHA}"'
+
+exit_the_merge_train:
+  image: alpine:latest
+  script:
+    - exit 1
