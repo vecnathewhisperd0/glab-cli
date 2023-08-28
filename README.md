@@ -121,7 +121,6 @@ To build from source:
 ## Authentication
 
 ### OAuth (GitLab.com only)
-
 To authenticate your installation of `glab` with OAuth:
 
 1. Start interactive setup with `glab auth login`.
