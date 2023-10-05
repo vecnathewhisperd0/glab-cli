@@ -67,7 +67,11 @@ func (opts *ListTitleOptions) Describe() string {
 	}
 
 	if opts.CurrentPageTotal > 0 {
-		return fmt.Sprintf("Showing %s %s on %s %s\n", pageNumInfo, opts.Name, opts.RepoName, pageInfo)
+		if opts.RepoName == "" {
+			return fmt.Sprintf("Showing %s %s %s\n", pageNumInfo, opts.Name, pageInfo)
+		} else {
+			return fmt.Sprintf("Showing %s %s on %s %s\n", pageNumInfo, opts.Name, opts.RepoName, pageInfo)
+		}
 	}
 
 	emptyMessage := opts.EmptyMessage
