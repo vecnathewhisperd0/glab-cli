@@ -218,3 +218,6 @@ homebrew-release:
 
 secret_detection:
   dependencies: [] # Don't download artifacts, especially `./public/`
+
+echo-git-depth:
+  script: echo "GIT_DEPTH=$GIT_DEPTH"
