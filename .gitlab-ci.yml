@@ -220,4 +220,5 @@ secret_detection:
   dependencies: [] # Don't download artifacts, especially `./public/`
 
 echo-git-depth:
+  needs: []
   script: echo "GIT_DEPTH=$GIT_DEPTH"
