@@ -221,4 +221,4 @@ secret_detection:
 
 echo-git-depth:
   needs: []
-  script: echo "GIT_DEPTH=$GIT_DEPTH"
+  script: if [ -z "${DANGER_GITLAB_API_TOKEN}" ]; then echo "no danger token"; else "danger token is present"; fi
