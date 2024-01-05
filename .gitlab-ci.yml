@@ -1,5 +1,5 @@
 variables:
-  GO_VERSION: "1.19"
+  FRAMEWORK_VERSION: "add-tools-to-framework-current"
 
 # run the pipeline only on MRs, tags, and default branch
 workflow:
@@ -9,7 +9,8 @@ workflow:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 default:
-  image: golang:${GO_VERSION}
+  image: registry.gitlab.com/gitlab-org/distribution/build-compliance/staging-branches/framework_go_amd64:${FRAMEWORK_VERSION}
+  #image: registry.gitlab.com/gitlab-org/distribution/build-compliance/release-frameworks/framework_go_amd64:current
 
 stages:
   - documentation
@@ -116,7 +117,7 @@ run_tests:
   extends: .go-cache
   parallel:
     matrix:
-      - GO_VERSION: ["1.19", "1.20", "1.21"]
+      - FRAMEWORK_VERSION: ["add-tools-to-framework-current", "add-tools-to-framework-next"]
   script:
     # `goreleaser` also uses GITLAB_TOKEN and so we need to distinguish between
     # the GITLAB_TOKEN_TEST with less privilege used for testing and the GITLAB_TOKEN_RELEASE token
@@ -147,6 +148,22 @@ run_tests:
   dependencies: [windows_installer]
 
 release_test:
+  extends: .release
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script: |
+    docker run --rm --privileged \
+      -v $PWD:/go/src/gitlab.com/gitlab-org/cli \
+      -w /go/src/gitlab.com/gitlab-org/cli \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      goreleaser/goreleaser release --snapshot
+
+next_test:
+  variables:
+    FRAMEWORK_VERSION: "add-tools-to-framework-next"
   extends: .release
   rules:
     - if: $CI_COMMIT_TAG
