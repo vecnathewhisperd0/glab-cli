@@ -16,6 +16,7 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	completionCmd "gitlab.com/gitlab-org/cli/commands/completion"
 	configCmd "gitlab.com/gitlab-org/cli/commands/config"
+	gcpCmd "gitlab.com/gitlab-org/cli/commands/gcp"
 	"gitlab.com/gitlab-org/cli/commands/help"
 	incidentCmd "gitlab.com/gitlab-org/cli/commands/incident"
 	issueCmd "gitlab.com/gitlab-org/cli/commands/issue"
@@ -112,6 +113,7 @@ func NewCmdRoot(f *cmdutils.Factory, version, buildDate string) *cobra.Command {
 
 	rootCmd.AddCommand(changelogCmd.NewCmdChangelog(f))
 	rootCmd.AddCommand(clusterCmd.NewCmdCluster(f))
+	rootCmd.AddCommand(gcpCmd.NewCmdGcp(f))
 	rootCmd.AddCommand(issueCmd.NewCmdIssue(f))
 	rootCmd.AddCommand(incidentCmd.NewCmdIncident(f))
 	rootCmd.AddCommand(labelCmd.NewCmdLabel(f))
