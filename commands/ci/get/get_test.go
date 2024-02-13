@@ -26,8 +26,10 @@ func runCommand(rt http.RoundTripper, isTTY bool, args string) (*test.CmdOut, er
 	return cmdtest.ExecuteCommand(cmd, args, stdout, stderr)
 }
 
-const FILE_BODY = 1
-const INLINE_BODY = 2
+const (
+	FILE_BODY   = 1
+	INLINE_BODY = 2
+)
 
 func TestCIGet(t *testing.T) {
 	type httpMock struct {
@@ -432,8 +434,10 @@ No variables found in pipeline.
 			require.Nil(t, err)
 
 			fmt.Printf("++>> %s\n", output.String())
-			os.WriteFile("/tmp/expected", []byte(tc.expectedOut), 0644)
-			os.WriteFile("/tmp/received", []byte(output.String()), 0644)
+			err = os.WriteFile("/tmp/expected", []byte(tc.expectedOut), 0o644)
+			require.Nil(t, err)
+			err = os.WriteFile("/tmp/received", []byte(output.String()), 0o644)
+			require.Nil(t, err)
 			assert.Equal(t, tc.expectedOut, output.String())
 			assert.Empty(t, output.Stderr())
 		})
