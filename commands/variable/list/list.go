@@ -68,7 +68,7 @@ func NewCmdSet(f *cmdutils.Factory, runE func(opts *ListOpts) error) *cobra.Comm
 		"",
 		"Select a group/subgroup. This option is ignored if a repo argument is set.",
 	)
-	cmd.Flags().StringVarP(&opts.OutputFormat, "output-format", "F", "text", "Format output as: text, json")
+	cmd.Flags().StringVarP(&opts.OutputFormat, "output", "F", "text", "Format output as: text, json")
 
 	return cmd
 }

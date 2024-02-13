@@ -131,7 +131,7 @@ func NewCmdView(f *cmdutils.Factory, issueType issuable.IssueType) *cobra.Comman
 	issueViewCmd.Flags().BoolVarP(&opts.Web, "web", "w", false, fmt.Sprintf("Open %s in a browser. Uses default browser or browser specified in BROWSER variable", issueType))
 	issueViewCmd.Flags().IntVarP(&opts.CommentPageNumber, "page", "p", 1, "Page number")
 	issueViewCmd.Flags().IntVarP(&opts.CommentLimit, "per-page", "P", 20, "Number of items to list per page")
-	issueViewCmd.Flags().StringVarP(&opts.OutputFormat, "output-format", "F", "text", "Format output as: text, json")
+	issueViewCmd.Flags().StringVarP(&opts.OutputFormat, "output", "F", "text", "Format output as: text, json")
 
 	return issueViewCmd
 }

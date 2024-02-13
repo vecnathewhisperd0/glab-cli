@@ -94,7 +94,7 @@ func NewCmdGet(f *cmdutils.Factory) *cobra.Command {
 				Variables: variables,
 			}
 
-			outputFormat, _ := cmd.Flags().GetString("output-format")
+			outputFormat, _ := cmd.Flags().GetString("output")
 			if outputFormat == "json" {
 				printJSON(*mergedPipelineObject, f.IO.StdOut)
 			} else {
@@ -108,7 +108,7 @@ func NewCmdGet(f *cmdutils.Factory) *cobra.Command {
 
 	pipelineGetCmd.Flags().StringP("branch", "b", "", "Check pipeline status for a branch. (Default is current branch)")
 	pipelineGetCmd.Flags().IntP("pipeline-id", "p", 0, "Provide pipeline ID")
-	pipelineGetCmd.Flags().StringP("output-format", "F", "text", "Format output as: text, json")
+	pipelineGetCmd.Flags().StringP("output", "F", "text", "Format output as: text, json")
 	pipelineGetCmd.Flags().BoolP("with-job-details", "d", false, "Show extended job information")
 	pipelineGetCmd.Flags().Bool("with-variables", false, "Show variables in pipeline (maintainer role required)")
 

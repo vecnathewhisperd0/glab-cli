@@ -68,7 +68,7 @@ func NewCmdSet(f *cmdutils.Factory, runE func(opts *GetOps) error) *cobra.Comman
 
 	cmd.Flags().StringVarP(&opts.Scope, "scope", "s", "*", "The environment_scope of the variable. All (*), or specific environments.")
 	cmd.Flags().StringVarP(&opts.Group, "group", "g", "", "Get variable for a group")
-	cmd.Flags().StringVarP(&opts.OutputFormat, "output-format", "F", "text", "Format output as: text, json")
+	cmd.Flags().StringVarP(&opts.OutputFormat, "output", "F", "text", "Format output as: text, json")
 	return cmd
 }
 
