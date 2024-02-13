@@ -1,0 +1,195 @@
+[
+  {
+    "request": {
+      "url": "/api/v4/projects/OWNER%2FREPO/pipelines?order_by=id&page=1&per_page=30&sort=desc",
+      "method": "GET"
+    },
+    "response": {
+      "body": [
+        {
+          "id": 452959326,
+          "iid": 14,
+          "project_id": 29316529,
+          "sha": "44eb489568f7cb1a5a730fce6b247cd3797172ca",
+          "ref": "1-fake-issue-3",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-20T21:47:16.276Z",
+          "updated_at": "2022-01-20T21:47:31.358Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/452959326",
+          "name": null
+        },
+        {
+          "id": 452944621,
+          "iid": 13,
+          "project_id": 29316529,
+          "sha": "001eb421e586a3f07f90aea102c8b2d4068ab5b6",
+          "ref": "1-fake-issue-3",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-20T21:20:50.971Z",
+          "updated_at": "2022-01-20T21:21:04.802Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/452944621",
+          "name": null
+        },
+        {
+          "id": 452941417,
+          "iid": 12,
+          "project_id": 29316529,
+          "sha": "001eb421e586a3f07f90aea102c8b2d4068ab5b6",
+          "ref": "1-fake-issue",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-20T21:15:42.546Z",
+          "updated_at": "2022-01-20T21:15:55.200Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/452941417",
+          "name": null
+        },
+        {
+          "id": 452939664,
+          "iid": 11,
+          "project_id": 29316529,
+          "sha": "001eb421e586a3f07f90aea102c8b2d4068ab5b6",
+          "ref": "1-mr",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-20T21:12:35.048Z",
+          "updated_at": "2022-01-20T21:12:50.132Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/452939664",
+          "name": null
+        },
+        {
+          "id": 450719821,
+          "iid": 10,
+          "project_id": 29316529,
+          "sha": "123f34ebfd5d97ef562974e55e01b83f06ae7b4a",
+          "ref": "OWNER-main-patch-25608",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-18T18:06:49.629Z",
+          "updated_at": "2022-01-18T18:08:09.708Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/450719821",
+          "name": null
+        },
+        {
+          "id": 450714758,
+          "iid": 9,
+          "project_id": 29316529,
+          "sha": "f288fd8d797a05c2946eb5d675f9d4438a150bec",
+          "ref": "OWNER-main-patch-25608",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-18T18:04:03.546Z",
+          "updated_at": "2022-01-18T18:05:23.843Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/450714758",
+          "name": null
+        },
+        {
+          "id": 450707660,
+          "iid": 8,
+          "project_id": 29316529,
+          "sha": "afe2714d50f156567ab87c2434cd901de7d341dc",
+          "ref": "OWNER-main-patch-25608",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-18T18:00:31.663Z",
+          "updated_at": "2022-01-18T18:01:53.086Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/450707660",
+          "name": null
+        },
+        {
+          "id": 450615878,
+          "iid": 7,
+          "project_id": 29316529,
+          "sha": "a4030d817a2881f5998e6466b9ba90914aecfb18",
+          "ref": "OWNER-main-patch-25608",
+          "status": "success",
+          "source": "push",
+          "created_at": "2022-01-18T17:02:16.204Z",
+          "updated_at": "2022-01-18T17:03:22.021Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/450615878",
+          "name": null
+        },
+        {
+          "id": 364128214,
+          "iid": 6,
+          "project_id": 29316529,
+          "sha": "001eb421e586a3f07f90aea102c8b2d4068ab5b6",
+          "ref": "main",
+          "status": "success",
+          "source": "push",
+          "created_at": "2021-09-02T14:19:52.731Z",
+          "updated_at": "2021-09-02T14:20:07.800Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364128214",
+          "name": null
+        },
+        {
+          "id": 364109593,
+          "iid": 5,
+          "project_id": 29316529,
+          "sha": "2a10724040f892e45917e4aef03cdb821e98bd99",
+          "ref": "main",
+          "status": "success",
+          "source": "web",
+          "created_at": "2021-09-02T13:58:21.181Z",
+          "updated_at": "2021-09-02T13:58:35.804Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364109593",
+          "name": null
+        },
+        {
+          "id": 364109341,
+          "iid": 4,
+          "project_id": 29316529,
+          "sha": "2a10724040f892e45917e4aef03cdb821e98bd99",
+          "ref": "main",
+          "status": "success",
+          "source": "push",
+          "created_at": "2021-09-02T13:57:59.126Z",
+          "updated_at": "2021-09-02T13:58:11.734Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364109341",
+          "name": null
+        },
+        {
+          "id": 364104462,
+          "iid": 3,
+          "project_id": 29316529,
+          "sha": "65fb4980734c4b84fa1f7c934c92f747a6fe3ed0",
+          "ref": "main",
+          "status": "success",
+          "source": "web",
+          "created_at": "2021-09-02T13:51:43.615Z",
+          "updated_at": "2021-09-02T13:51:57.057Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364104462",
+          "name": null
+        },
+        {
+          "id": 364102457,
+          "iid": 2,
+          "project_id": 29316529,
+          "sha": "65fb4980734c4b84fa1f7c934c92f747a6fe3ed0",
+          "ref": "main",
+          "status": "success",
+          "source": "push",
+          "created_at": "2021-09-02T13:48:58.178Z",
+          "updated_at": "2021-09-02T13:49:10.689Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364102457",
+          "name": null
+        },
+        {
+          "id": 364098384,
+          "iid": 1,
+          "project_id": 29316529,
+          "sha": "6bd3a42163672bb5341075021d74231c3d75d4b8",
+          "ref": "main",
+          "status": "skipped",
+          "source": "push",
+          "created_at": "2021-09-02T13:43:57.758Z",
+          "updated_at": "2021-09-02T13:43:57.758Z",
+          "web_url": "https://gitlab.com/OWNER/REPO/-/pipelines/364098384",
+          "name": null
+        }
+      ],
+      "status": 200
+    }
+  }
+]
