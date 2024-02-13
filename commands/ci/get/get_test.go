@@ -118,12 +118,14 @@ updated:	2023-10-10 00:00:00 +0000 UTC
 						"started_at": "2023-10-10T00:00:00Z",
 						"updated_at": "2023-10-10T00:00:00Z"
 					}`,
+					INLINE_BODY,
 				},
 				{
 					http.MethodGet,
 					"/api/v4/projects/OWNER%2FREPO/pipelines/123/jobs?per_page=100",
 					http.StatusOK,
 					`[]`,
+					INLINE_BODY,
 				},
 				{
 					http.MethodGet,
@@ -134,6 +136,7 @@ updated:	2023-10-10 00:00:00 +0000 UTC
 							"id": 123
 						}
 					}`,
+					INLINE_BODY,
 				},
 			},
 			expectedOut: `# Pipeline:
@@ -176,6 +179,7 @@ updated:	2023-10-10 00:00:00 +0000 UTC
 						"started_at": "2023-10-10T00:00:00Z",
 						"updated_at": "2023-10-10T00:00:00Z"
 					}`,
+					INLINE_BODY,
 				},
 				{
 					http.MethodGet,
@@ -186,6 +190,7 @@ updated:	2023-10-10 00:00:00 +0000 UTC
 							"name": "publish",
 							"status": "failed"
 						}]`,
+					INLINE_BODY,
 				},
 			},
 			expectedOut: `# Pipeline:
@@ -229,6 +234,7 @@ publish:	failed
 						"started_at": "2023-10-10T00:00:00Z",
 						"updated_at": "2023-10-10T00:00:00Z"
 					}`,
+					INLINE_BODY,
 				},
 				{
 					http.MethodGet,
@@ -240,6 +246,7 @@ publish:	failed
 							"status": "failed",
 							"failure_reason": "bad timing"
 						}]`,
+					INLINE_BODY,
 				},
 			},
 			expectedOut: `# Pipeline:
