@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO?license=true&statistics=true&with_custom_attributes=true",
+  "method": "GET"
+}

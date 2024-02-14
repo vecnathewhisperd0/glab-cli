@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO/labels?page=1&per_page=30&with_counts=true",
+  "method": "GET"
+}

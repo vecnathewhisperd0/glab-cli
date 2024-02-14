@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO/merge_requests?page=1&per_page=30&state=opened",
+  "method": "GET"
+}

@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO/variables/PROJECT_VAR?filter%5Benvironment_scope%5D=%2A",
+  "method": "GET"
+}

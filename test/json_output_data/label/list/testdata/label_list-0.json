@@ -1,0 +1,16 @@
+[
+  {
+    "id": 29739671,
+    "name": "my label",
+    "description": "Simple label",
+    "description_html": "Simple label",
+    "text_color": "#FFFFFF",
+    "color": "#00b140",
+    "open_issues_count": 0,
+    "closed_issues_count": 0,
+    "open_merge_requests_count": 0,
+    "subscribed": false,
+    "priority": null,
+    "is_project_label": true
+  }
+]

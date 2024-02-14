@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO/merge_requests/4/approval_state",
+  "method": "GET"
+}

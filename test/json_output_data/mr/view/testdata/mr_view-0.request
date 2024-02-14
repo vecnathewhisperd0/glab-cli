@@ -1,0 +1,4 @@
+{
+  "url": "/api/v4/projects/OWNER%2FREPO/merge_requests/4?include_diverged_commits_count=true&include_rebase_in_progress=true&render_html=true",
+  "method": "GET"
+}
