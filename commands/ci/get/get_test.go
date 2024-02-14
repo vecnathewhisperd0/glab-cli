@@ -445,10 +445,10 @@ No variables found in pipeline.
 			fmt.Printf("++>> %s\n", output.String())
 			if tc.expectedOutType == FILE_BODY {
 				expectedOutBytes, err = os.ReadFile(tc.expectedOut)
-				expectedOut=string(expectedOutBytes)
+				expectedOut = string(expectedOutBytes)
 				require.Nil(t, err)
 			} else {
-				expectedOut=tc.expectedOut
+				expectedOut = tc.expectedOut
 			}
 			// err = os.WriteFile("/tmp/received", []byte(output.String()), 0o644)
 			// require.Nil(t, err)
