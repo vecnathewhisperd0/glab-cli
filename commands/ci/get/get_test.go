@@ -427,18 +427,32 @@ No variables found in pipeline.
 			defer fakeHTTP.Verify(t)
 
 			for _, mock := range tc.httpMocks {
-				fakeHTTP.RegisterResponder(mock.method, mock.path, httpmock.NewStringResponse(mock.status, mock.body))
+				var body string
+				if mock.bodyType == FILE_BODY {
+					bodyBytes, _ := os.ReadFile(mock.body)
+					body = string(bodyBytes)
+				} else {
+					body = mock.body
+				}
+				fakeHTTP.RegisterResponder(mock.method, mock.path, httpmock.NewStringResponse(mock.status, body))
 			}
 
 			output, err := runCommand(fakeHTTP, false, tc.args)
 			require.Nil(t, err)
+			var expectedOut string
+			var expectedOutBytes []byte
 
 			fmt.Printf("++>> %s\n", output.String())
-			err = os.WriteFile("/tmp/expected", []byte(tc.expectedOut), 0o644)
-			require.Nil(t, err)
-			err = os.WriteFile("/tmp/received", []byte(output.String()), 0o644)
-			require.Nil(t, err)
-			assert.Equal(t, tc.expectedOut, output.String())
+			if tc.expectedOutType == FILE_BODY {
+				expectedOutBytes, err = os.ReadFile(tc.expectedOut)
+				expectedOut=string(expectedOutBytes)
+				require.Nil(t, err)
+			} else {
+				expectedOut=tc.expectedOut
+			}
+			// err = os.WriteFile("/tmp/received", []byte(output.String()), 0o644)
+			// require.Nil(t, err)
+			assert.Equal(t, expectedOut, output.String())
 			assert.Empty(t, output.Stderr())
 		})
 	}

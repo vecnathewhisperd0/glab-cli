@@ -1,10 +1,4 @@
-{
-  "request": {
-    "url": "/api/v4/projects/OWNER%2FREPO/pipelines/452959326",
-    "method": "GET"
-  },
-  "response": {
-    "body": {
+    {
       "id": 452959326,
       "iid": 14,
       "project_id": 29316529,
@@ -45,7 +39,4 @@
         "favicon": "/assets/ci_favicons/favicon_status_success-8451333011eee8ce9f2ab25dc487fe24a8758c694827a582f17f42b0a90446a2.png"
       },
       "name": null
-    },
-    "status": 200
-  }
-}
+    }

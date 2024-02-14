@@ -1,10 +1,4 @@
-{
-  "request": {
-    "url": "/api/v4/projects/OWNER%2FREPO/pipelines/452959326/jobs?per_page=100",
-    "method": "GET"
-  },
-  "response": {
-    "body": [
+    [
       {
         "id": 1999017704,
         "status": "success",
@@ -105,7 +99,4 @@
         "archived": false,
         "tag_list": []
       }
-    ],
-    "status": 200
-  }
-}
+    ]
