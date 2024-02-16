@@ -397,8 +397,8 @@ No variables found in pipeline.
 		},
 		{
 			name: "when getting JSON for pipeline",
-			args: "-R OWNER/REPO ci get -p 452959326 -F json",
-			httpmocks: []httpMock{ 
+			args: "-p 452959326 -F json",
+			httpMocks: []httpMock{ 
 				{
 					http.MethodGet,
 					"/api/v4/projects/OWNER%2FREPO/pipelines/452959326",
