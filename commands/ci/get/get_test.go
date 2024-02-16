@@ -398,7 +398,7 @@ No variables found in pipeline.
 		{
 			name: "when getting JSON for pipeline",
 			args: "-p 452959326 -F json",
-			httpMocks: []httpMock{ 
+			httpMocks: []httpMock{
 				{
 					http.MethodGet,
 					"/api/v4/projects/OWNER%2FREPO/pipelines/452959326",
@@ -414,7 +414,7 @@ No variables found in pipeline.
 					FILE_BODY,
 				},
 			},
-			expectedOut: "testdata/ci_get.result",
+			expectedOut:     "testdata/ci_get.result",
 			expectedOutType: FILE_BODY,
 		},
 	}
