@@ -290,6 +290,7 @@ func RawIssuableNotes(notes []*gitlab.Note, showComments bool, showSystemLogs bo
 func printJSONIssue(opts *ViewOpts) error {
 	// var notes []gitlab.Note
 	if opts.ShowComments {
+
 		extendedIssue := IssueWithNotes{opts.Issue, opts.Notes}
 		issueJSON, _ := json.Marshal(extendedIssue)
 		fmt.Fprintln(opts.IO.StdOut, string(issueJSON))

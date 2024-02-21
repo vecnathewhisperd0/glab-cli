@@ -294,7 +294,6 @@ func rawMRPreview(opts *ViewOpts, mr *gitlab.MergeRequest, notes []*gitlab.Note)
 }
 
 func printJSONMR(opts *ViewOpts, mr *gitlab.MergeRequest, notes []*gitlab.Note) error {
-	// var notes []gitlab.Note
 	if opts.ShowComments {
 		extendedMR := MRWithNotes{mr, notes}
 		mrJSON, _ := json.Marshal(extendedMR)
