@@ -75,15 +75,18 @@ func WriteTemplateToFile(t *template.Template, p string, data interface{}) error
 }
 
 func DownloadFile(url string, p string, isTemp bool) (string, error) {
-	var outFile io.Writer
 	if isTemp {
 		outFile, err := os.CreateTemp("", p)
 		if err != nil {
 			return "", err
 		}
 		p = outFile.Name()
-		defer os.Remove(p)
 		defer outFile.Close()
+
+		err = _DownloadFile(url, outFile)
+		if err != nil {
+			return "", err
+		}
 	} else {
 		if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
 			return "", err
@@ -93,17 +96,27 @@ func DownloadFile(url string, p string, isTemp bool) (string, error) {
 			return "", err
 		}
 		defer outFile.Close()
+
+		err = _DownloadFile(url, outFile)
+		if err != nil {
+			return "", err
+		}
 	}
 
+	return p, nil
+}
+
+func _DownloadFile(url string, outFile *os.File) error {
 	client := http.Client{}
 	resp, err := client.Get(url)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
+
 	_, err = io.Copy(outFile, resp.Body)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return p, nil
+	return nil
 }

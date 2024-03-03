@@ -2,7 +2,9 @@ package list
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path"
 	"text/template"
 	"time"
 
@@ -156,15 +158,25 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		agentutils.KubectlApply(factory.IO, agentManifestDir+"/external-secrets.yaml")
 		fmt.Fprintf(factory.IO.StdOut, "Applied External Secrets manifests to Kubernetes\n")
 
-		// TODO: Wait for external secrets to be ready
+		fmt.Fprintf(factory.IO.StdOut, "Waiting for External Secrets controller to start\n")
+		// Wait for external secrets to be ready
+		es_apply_wait := exec.Command("kubectl", "wait", "--for=condition=ready", "pod", "-n", es_namespace, "-l", "app.kubernetes.io/instance=external-secrets", "--timeout=3m")
+		es_apply_wait.Stdout = factory.IO.StdOut
+		es_apply_wait.Stderr = factory.IO.StdErr
+		err = es_apply_wait.Run()
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(factory.IO.StdOut, "External Secrets controller started\n")
 
 		// Generates the YAML to configure the External Secrets controller to retrieve its own token from GitLab (to allow the rotation of the token) under /manifests/demo-agent/external-secrets-gitlab.yaml
-		// TODO: get template file from GitLab instance
 		externalSecretStoreYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/secret-store.gotmpl", "secret_store_gotmpl-", true)
 		if err != nil {
 			return err
 		}
-		externalSecretStoreYAMLTemplate, err := template.New(externalSecretStoreYAMLTemplateFile).ParseFiles(externalSecretStoreYAMLTemplateFile)
+		defer os.Remove(externalSecretStoreYAMLTemplateFile)
+
+		externalSecretStoreYAMLTemplate, err := template.New(path.Base(externalSecretStoreYAMLTemplateFile)).ParseFiles(externalSecretStoreYAMLTemplateFile)
 		if err != nil {
 			return err
 		}
@@ -188,7 +200,8 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		if err != nil {
 			return err
 		}
-		externalSecretYAMLTemplate, err := template.New(externalSecretYAMLTemplateFile).ParseFiles(externalSecretStoreYAMLTemplateFile)
+		defer os.Remove(externalSecretYAMLTemplateFile)
+		externalSecretYAMLTemplate, err := template.New(path.Base(externalSecretYAMLTemplateFile)).ParseFiles(externalSecretYAMLTemplateFile)
 		if err != nil {
 			return err
 		}
