@@ -1,9 +1,12 @@
 package agentutils
 
 import (
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"text/template"
 
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
@@ -53,18 +56,54 @@ func KubectlApply(io *iostreams.IOStreams, path string) error {
 	return nil
 }
 
-func WriteToFile(p string, content string) error {
+func WriteTemplateToFile(t *template.Template, p string, data interface{}) error {
 	if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
 		return err
 	}
+
 	outFile, err := os.Create(p)
 	if err != nil {
 		return err
 	}
 	defer outFile.Close()
-	_, err = outFile.WriteString(content)
+
+	err = t.Execute(outFile, data)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func DownloadFile(url string, p string, isTemp bool) (string, error) {
+	var outFile io.Writer
+	if isTemp {
+		outFile, err := os.CreateTemp("", p)
+		if err != nil {
+			return "", err
+		}
+		p = outFile.Name()
+		defer os.Remove(p)
+		defer outFile.Close()
+	} else {
+		if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
+			return "", err
+		}
+		outFile, err := os.Create(p)
+		if err != nil {
+			return "", err
+		}
+		defer outFile.Close()
+	}
+
+	client := http.Client{}
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	_, err = io.Copy(outFile, resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return p, nil
 }

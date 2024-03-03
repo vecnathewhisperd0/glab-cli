@@ -3,6 +3,7 @@ package list
 import (
 	"fmt"
 	"os/exec"
+	"text/template"
 	"time"
 
 	"gitlab.com/gitlab-org/cli/api"
@@ -51,6 +52,22 @@ func AgentBootstrapCmd(f *cmdutils.Factory) *cobra.Command {
 	return environmentCreateCmd
 }
 
+type SecretStore struct {
+	SecretStoreName string
+	Namespace       string
+	ProjectID       int
+	SecretName      string
+}
+
+type ExternalSecret struct {
+	ExternalSecretName string
+	Namespace          string
+	SecretStoreName    string
+	TargetSecretName   string
+	SecretKey          string
+	GitLabVariableName string
+}
+
 func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 	apiClient, err := factory.HttpClient()
 	if err != nil {
@@ -65,6 +82,7 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 	if err != nil {
 		return err
 	}
+	var snippetsBase = "https://gitlab.com/-/snippets/3682432/raw/main/"
 
 	// TODO: Validation - https://gitlab.com/groups/gitlab-org/-/epics/12594#validations
 
@@ -128,17 +146,11 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		fmt.Fprintf(factory.IO.StdOut, "Applied External Secrets token to Kubernetes\n")
 
 		// Generates the YAML to install the External Secrets controller to /manifests/demo-agent/external-secrets.yaml
-		es_helm_add_cmd := exec.Command("helm", "repo", "add", "external-secrets", "https://charts.external-secrets.io")
-		es_helm_add_cmd.Stdout = factory.IO.StdOut
-		es_helm_add_cmd.Stderr = factory.IO.StdErr
-		err = es_helm_add_cmd.Run()
+		_, err = agentutils.DownloadFile(snippetsBase+"/external-secrets.yaml", agentManifestDir+"/external-secrets.yaml", false)
 		if err != nil {
 			return err
 		}
-
-		es_template_cmd := exec.Command("helm", "template", "external-secrets", "external-secrets/external-secrets", "-n", es_namespace)
-		agentutils.RunCommandToFile(es_template_cmd, agentManifestDir+"/external-secrets.yaml")
-		fmt.Fprintf(factory.IO.StdOut, "Generated external secrets manifests to %s\n", agentManifestDir+"/external-secrets.yaml")
+		fmt.Fprintf(factory.IO.StdOut, "Saved external secrets manifests to %s\n", agentManifestDir+"/external-secrets.yaml")
 
 		// Applies /manifests/demo-agent/external-secrets.yaml in the cluster
 		agentutils.KubectlApply(factory.IO, agentManifestDir+"/external-secrets.yaml")
@@ -147,24 +159,24 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		// TODO: Wait for external secrets to be ready
 
 		// Generates the YAML to configure the External Secrets controller to retrieve its own token from GitLab (to allow the rotation of the token) under /manifests/demo-agent/external-secrets-gitlab.yaml
-		externalSecretStoreYAML := fmt.Sprintf(`apiVersion: external-secrets.io/v1beta1
-kind: SecretStore
-metadata:
-  name: gitlab-secret-store
-  namespace: %s
-spec:
-  provider:
-    # provider type: gitlab
-    gitlab:
-      # url: https://gitlab.mydomain.com/
-      auth:
-        SecretRef:
-          accessToken:
-            name: %s
-            key: token
-      projectID: "%d"
-      environment: "%s"`, es_namespace, es_gitlab_secret_name, project.ID, name)
-		agentutils.WriteToFile(agentManifestDir+"/external-secrets-gitlab.yaml", externalSecretStoreYAML)
+		// TODO: get template file from GitLab instance
+		externalSecretStoreYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/secret-store.gotmpl", "secret_store_gotmpl-", true)
+		if err != nil {
+			return err
+		}
+		externalSecretStoreYAMLTemplate, err := template.New(externalSecretStoreYAMLTemplateFile).ParseFiles(externalSecretStoreYAMLTemplateFile)
+		if err != nil {
+			return err
+		}
+		err = agentutils.WriteTemplateToFile(externalSecretStoreYAMLTemplate, agentManifestDir+"/external-secrets-gitlab.yaml", SecretStore{
+			SecretStoreName: "gitlab-secret-store",
+			Namespace:       es_namespace,
+			ProjectID:       project.ID,
+			SecretName:      es_gitlab_secret_name,
+		})
+		if err != nil {
+			return err
+		}
 		fmt.Fprintf(factory.IO.StdOut, "Generated external secrets gitlab store manifests to %s\n", agentManifestDir+"/external-secrets-gitlab.yaml")
 
 		// Applies /manifests/demo-agent/external-secrets-gitlab.yaml in the cluster
@@ -172,27 +184,25 @@ spec:
 		fmt.Fprintf(factory.IO.StdOut, "Applied External Secrets gitlab store manifests to Kubernetes\n")
 
 		// Retrieve the external secrets own token by external secrets - YAML
-		externalSecretOwnYAML := fmt.Sprintf(`apiVersion: external-secrets.io/v1beta1
-kind: ExternalSecret
-metadata:
-  name: %s
-  namespace: %s
-spec:
-  refreshInterval: 1h
-
-  secretStoreRef:
-    kind: SecretStore
-    name: gitlab-secret-store # Must match SecretStore on the cluster
-
-  target:
-    name: %s # Name for the secret to be created on the cluster
-    creationPolicy: Owner
-
-  data:
-    - secretKey: token # Key given to the secret to be created on the cluster
-      remoteRef: 
-        key: external_secrets_pat_%s # Key of the variable on Gitlab`, es_gitlab_secret_name, es_namespace, es_gitlab_secret_name, name)
-		agentutils.WriteToFile(agentManifestDir+"/external-secrets-token.yaml", externalSecretOwnYAML)
+		externalSecretYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/external-secret.gotmpl", "external_secret_gotmpl-", true)
+		if err != nil {
+			return err
+		}
+		externalSecretYAMLTemplate, err := template.New(externalSecretYAMLTemplateFile).ParseFiles(externalSecretStoreYAMLTemplateFile)
+		if err != nil {
+			return err
+		}
+		err = agentutils.WriteTemplateToFile(externalSecretYAMLTemplate, agentManifestDir+"/external-secrets-token.yaml", ExternalSecret{
+			ExternalSecretName: es_gitlab_secret_name,
+			Namespace:          es_namespace,
+			SecretStoreName:    "gitlab-secret-store",
+			TargetSecretName:   es_gitlab_secret_name,
+			SecretKey:          "token",
+			GitLabVariableName: "external_secrets_pat_" + name,
+		})
+		if err != nil {
+			return err
+		}
 		fmt.Fprintf(factory.IO.StdOut, "Generated external secrets manifests to %s\n", agentManifestDir+"/external-secrets-token.yaml")
 
 		// Applies /manifests/demo-agent/external-secrets-token.yaml in the cluster
