@@ -1,6 +1,10 @@
 package agentutils
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 	"gitlab.com/gitlab-org/cli/pkg/tableprinter"
@@ -15,4 +19,52 @@ func DisplayAllAgents(io *iostreams.IOStreams, agents []*gitlab.Agent) string {
 		table.AddRow(r.ID, r.Name, c.Gray(utils.TimeToPrettyTimeAgo(*r.CreatedAt)))
 	}
 	return table.Render()
+}
+
+func RunCommandToFile(cmd *exec.Cmd, p string) error {
+	if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
+		return err
+	}
+
+	outFile, err := os.Create(p)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	cmd.Stdout = outFile
+	err = cmd.Start()
+	if err != nil {
+		panic(err)
+	}
+	cmd.Wait()
+
+	return nil
+}
+
+func KubectlApply(io *iostreams.IOStreams, path string) error {
+	cmd := exec.Command("kubectl", "apply", "-f", path)
+	cmd.Stdout = io.StdOut
+	cmd.Stderr = io.StdErr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WriteToFile(p string, content string) error {
+	if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
+		return err
+	}
+	outFile, err := os.Create(p)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+	_, err = outFile.WriteString(content)
+	if err != nil {
+		return err
+	}
+	return nil
 }
