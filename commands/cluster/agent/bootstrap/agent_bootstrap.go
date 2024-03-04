@@ -1,6 +1,8 @@
 package list
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -44,12 +46,17 @@ func AgentBootstrapCmd(f *cmdutils.Factory) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return bootstrapAgent(name, manifestDir, skipExternalSecrets)
+			skipFlux, err := cmd.Flags().GetBool("skip-flux")
+			if err != nil {
+				return err
+			}
+			return bootstrapAgent(name, manifestDir, skipExternalSecrets, skipFlux)
 		},
 	}
 	environmentCreateCmd.Flags().StringP("name", "n", "", "Name of the new environment")
 	environmentCreateCmd.Flags().StringP("manifest-dir", "", "manifests", "Base directory for manifests")
 	environmentCreateCmd.Flags().BoolP("skip-external-secrets", "", false, "Skips creation of External Secrets")
+	environmentCreateCmd.Flags().BoolP("skip-flux", "", false, "Skips the Flux setup")
 
 	return environmentCreateCmd
 }
@@ -61,16 +68,20 @@ type SecretStore struct {
 	SecretName      string
 }
 
+type ExternalSecretData struct {
+	SecretKey          string
+	GitLabVariableName string
+}
+
 type ExternalSecret struct {
 	ExternalSecretName string
 	Namespace          string
 	SecretStoreName    string
 	TargetSecretName   string
-	SecretKey          string
-	GitLabVariableName string
+	Data               []ExternalSecretData
 }
 
-func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
+func bootstrapAgent(name, manifestDir string, skipExternalSecrets, skipFlux bool) error {
 	apiClient, err := factory.HttpClient()
 	if err != nil {
 		return err
@@ -85,6 +96,11 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		return err
 	}
 	var snippetsBase = "https://gitlab.com/-/snippets/3682432/raw/main/"
+	now := time.Now()
+	// Sometimes we need time.Time
+	expires_at_time := now.AddDate(0, 0, 90)
+	// Sometimes we need gitlab.ISOTime
+	expires_at := gitlab.ISOTime(expires_at_time)
 
 	// TODO: Validation - https://gitlab.com/groups/gitlab-org/-/epics/12594#validations
 
@@ -97,12 +113,41 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 	}
 	fmt.Fprintf(factory.IO.StdOut, "Created environment: %s\n", name)
 	agentManifestDir := fmt.Sprintf("%s/%s", manifestDir, name)
+	bootstrap_namespace := "gitlab-tools"
+
+	// Initialize some templates
+	externalSecretYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/external-secret.gotmpl", "external_secret_gotmpl-", true)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(externalSecretYAMLTemplateFile)
+	externalSecretYAMLTemplate, err := template.New(path.Base(externalSecretYAMLTemplateFile)).ParseFiles(externalSecretYAMLTemplateFile)
+	if err != nil {
+		return err
+	}
+
+	// Create the bootstrap_namespace
+	es_secret_ns_cmd := exec.Command("kubectl", "create", "namespace", bootstrap_namespace)
+	es_secret_ns_cmd.Stdout = factory.IO.StdOut
+	es_secret_ns_cmd.Stderr = factory.IO.StdErr
+	err = es_secret_ns_cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	type DockerRegistryAuth struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Auth     string `json:"auth"`
+	}
+
+	type DockerRegistryConfig struct {
+		Auths map[string]DockerRegistryAuth `json:"auths"`
+	}
 
 	if !skipExternalSecrets {
 		// Create a project access token for the External Secrets controller to retrieve secrets
 		pat_name := fmt.Sprintf("external_secrets_pat_%s", name)
-		now := time.Now()
-		expires_at := gitlab.ISOTime(now.AddDate(0, 0, 90))
 		accessLevel := gitlab.MaintainerPermissions
 		pat, err := api.CreateProjectAccessToken(apiClient, repo.FullName(), &gitlab.CreateProjectAccessTokenOptions{
 			Name:        &pat_name,
@@ -125,20 +170,11 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		}
 		fmt.Fprintf(factory.IO.StdOut, "Created and saved project access token in environment variable: %s\n", pat.Name)
 
-		// Create the external-secrets es_namespace
-		es_namespace := "external-secrets"
-		es_secret_ns_cmd := exec.Command("kubectl", "create", "namespace", es_namespace)
-		es_secret_ns_cmd.Stdout = factory.IO.StdOut
-		es_secret_ns_cmd.Stderr = factory.IO.StdErr
-		err = es_secret_ns_cmd.Run()
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(factory.IO.StdOut, "Created "+es_namespace+" namespace\n")
+		fmt.Fprintf(factory.IO.StdOut, "Created "+bootstrap_namespace+" namespace\n")
 
 		// Applies the External Secret token to Kubernetes
 		es_gitlab_secret_name := "external-secrets-token"
-		es_secret_cmd := exec.Command("kubectl", "create", "secret", "generic", "-n", es_namespace, "--from-literal=token="+pat.Token, es_gitlab_secret_name)
+		es_secret_cmd := exec.Command("kubectl", "create", "secret", "generic", "-n", bootstrap_namespace, "--from-literal=token="+pat.Token, es_gitlab_secret_name)
 		es_secret_cmd.Stdout = factory.IO.StdOut
 		es_secret_cmd.Stderr = factory.IO.StdErr
 		err = es_secret_cmd.Run()
@@ -148,7 +184,19 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		fmt.Fprintf(factory.IO.StdOut, "Applied External Secrets token to Kubernetes\n")
 
 		// Generates the YAML to install the External Secrets controller to /manifests/demo-agent/external-secrets.yaml
-		_, err = agentutils.DownloadFile(snippetsBase+"/external-secrets.yaml", agentManifestDir+"/external-secrets.yaml", false)
+		externalSecretControllerTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/external-secrets-controller.gotmpl", "external_secrets_controller_gotmpl-", true)
+		if err != nil {
+			return err
+		}
+		defer os.Remove(externalSecretControllerTemplateFile)
+
+		externalSecretControllerYAMLTemplate, err := template.New(path.Base(externalSecretControllerTemplateFile)).ParseFiles(externalSecretControllerTemplateFile)
+		if err != nil {
+			return err
+		}
+		err = agentutils.WriteTemplateToFile(externalSecretControllerYAMLTemplate, agentManifestDir+"/external-secrets.yaml", SecretStore{
+			Namespace: bootstrap_namespace,
+		})
 		if err != nil {
 			return err
 		}
@@ -160,7 +208,7 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 
 		fmt.Fprintf(factory.IO.StdOut, "Waiting for External Secrets controller to start\n")
 		// Wait for external secrets to be ready
-		es_apply_wait := exec.Command("kubectl", "wait", "--for=condition=ready", "pod", "-n", es_namespace, "-l", "app.kubernetes.io/instance=external-secrets", "--timeout=3m")
+		es_apply_wait := exec.Command("kubectl", "wait", "--for=condition=ready", "pod", "-n", bootstrap_namespace, "-l", "app.kubernetes.io/instance=external-secrets", "--timeout=3m")
 		es_apply_wait.Stdout = factory.IO.StdOut
 		es_apply_wait.Stderr = factory.IO.StdErr
 		err = es_apply_wait.Run()
@@ -182,7 +230,7 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		}
 		err = agentutils.WriteTemplateToFile(externalSecretStoreYAMLTemplate, agentManifestDir+"/external-secrets-gitlab.yaml", SecretStore{
 			SecretStoreName: "gitlab-secret-store",
-			Namespace:       es_namespace,
+			Namespace:       bootstrap_namespace,
 			ProjectID:       project.ID,
 			SecretName:      es_gitlab_secret_name,
 		})
@@ -195,23 +243,18 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		agentutils.KubectlApply(factory.IO, agentManifestDir+"/external-secrets-gitlab.yaml")
 		fmt.Fprintf(factory.IO.StdOut, "Applied External Secrets gitlab store manifests to Kubernetes\n")
 
-		// Retrieve the external secrets own token by external secrets - YAML
-		externalSecretYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/external-secret.gotmpl", "external_secret_gotmpl-", true)
-		if err != nil {
-			return err
-		}
-		defer os.Remove(externalSecretYAMLTemplateFile)
-		externalSecretYAMLTemplate, err := template.New(path.Base(externalSecretYAMLTemplateFile)).ParseFiles(externalSecretYAMLTemplateFile)
-		if err != nil {
-			return err
-		}
+		// Retrieve the external secrets own token with external secrets - YAML
 		err = agentutils.WriteTemplateToFile(externalSecretYAMLTemplate, agentManifestDir+"/external-secrets-token.yaml", ExternalSecret{
 			ExternalSecretName: es_gitlab_secret_name,
-			Namespace:          es_namespace,
+			Namespace:          bootstrap_namespace,
 			SecretStoreName:    "gitlab-secret-store",
 			TargetSecretName:   es_gitlab_secret_name,
-			SecretKey:          "token",
-			GitLabVariableName: "external_secrets_pat_" + name,
+			Data: []ExternalSecretData{
+				{
+					SecretKey:          "token",
+					GitLabVariableName: "external_secrets_pat_" + name,
+				},
+			},
 		})
 		if err != nil {
 			return err
@@ -223,26 +266,91 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 		fmt.Fprintf(factory.IO.StdOut, "Configured External Secrets to update its own token\n")
 	}
 
-	// Creates a deployment token with read_registry rights for Flux and store it as a masked variable for the environment
+	if !skipFlux {
 
-	// Applies /manifests/demo-agent/external-secrets-flux.yaml in the cluster
+		// Creates a deployment token with read_registry rights for Flux and store it as a masked variable for the environment
+		fluxToken, err := api.CreateProjectDeployToken(apiClient, repo.FullName(), &gitlab.CreateProjectDeployTokenOptions{
+			Name:      &name,
+			ExpiresAt: &expires_at_time,
+			Scopes:    &[]string{"read_registry"},
+		})
+		if err != nil {
+			return err
+		}
+		var fluxVarName = "flux_deploy_token_" + name
+		var dockerConfig = DockerRegistryConfig{
+			Auths: map[string]DockerRegistryAuth{
+				"registry.gitlab.com": {
+					Username: fluxToken.Username,
+					Password: fluxToken.Token,
+					Auth:     base64.StdEncoding.EncodeToString([]byte(fluxToken.Username + ":" + fluxToken.Token)),
+				},
+			},
+		}
+		dockerConfigJSON, err := json.Marshal(dockerConfig)
+		if err != nil {
+			return err
+		}
+		var dockerConfigJSONString = string(dockerConfigJSON)
+		_, err = api.CreateProjectVariable(apiClient, repo.FullName(), &gitlab.CreateProjectVariableOptions{
+			Key:              &fluxVarName,
+			Value:            &dockerConfigJSONString,
+			Masked:           gitlab.Bool(true),
+			Protected:        gitlab.Bool(true),
+			EnvironmentScope: &name,
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(factory.IO.StdOut, "Created and saved deploy token for Flux in environment variable: %s\n", fluxVarName)
 
-	// Generates the YAML for Flux under /manifests/demo-agent/flux-system/ (equivalent to flux install --export > /manifests/demo-agent/flux-system/gotk-components.yaml
+		// Retrieve the flux token with external secrets - YAML
+		externalSecretDockerConfigYAMLTemplateFile, err := agentutils.DownloadFile(snippetsBase+"/external-secret-dockerconfig", "external_secret_gotmpl-", true)
+		if err != nil {
+			return err
+		}
+		defer os.Remove(externalSecretDockerConfigYAMLTemplateFile)
+		externalSecretDockerConfigYAMLTemplate, err := template.New(path.Base(externalSecretDockerConfigYAMLTemplateFile)).ParseFiles(externalSecretDockerConfigYAMLTemplateFile)
+		if err != nil {
+			return err
+		}
+		err = agentutils.WriteTemplateToFile(externalSecretDockerConfigYAMLTemplate, agentManifestDir+"/flux-token.yaml", ExternalSecret{
+			ExternalSecretName: "flux-deploy-token",
+			Namespace:          bootstrap_namespace,
+			SecretStoreName:    "gitlab-secret-store",
+			TargetSecretName:   "flux-gitlab-access-token",
+			Data: []ExternalSecretData{
+				{
+					GitLabVariableName: fluxVarName,
+				},
+			},
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(factory.IO.StdOut, "Generated external secrets manifests to %s\n", agentManifestDir+"/flux-token.yaml")
 
-	// Generates the YAML for Flux to watch the OCI image registry.gitlab.com/<project-slug>/demo-agent/flux-manifests:latest
+		// Applies /manifests/demo-agent/flux-token.yaml in the cluster
+		agentutils.KubectlApply(factory.IO, agentManifestDir+"flux-token.yaml")
+		fmt.Fprintf(factory.IO.StdOut, "Configured External Secrets to retrieve the flux token\n")
 
-	// Generates the YAML for Flux to watch /manifests/demo-agent/ under /manifests/demo-agent/flux-system/gotk-sync.yaml
+		// Generates the YAML for Flux under /manifests/demo-agent/flux-system/ (equivalent to flux install --export > /manifests/demo-agent/flux-system/gotk-components.yaml
 
-	// Builds and pushes the registry.gitlab.com/<project-slug>/demo-agent/flux-manifests:latest image including /manifests/demo-agent
+		// Generates the YAML for Flux to watch the OCI image registry.gitlab.com/<project-slug>/demo-agent/flux-manifests:latest
 
-	// Generates a kustomization to use both files in /manifests/demo-agent/flux-system/kustomization.yaml
+		// Generates a kustomization to use both files in /manifests/demo-agent/flux-system/kustomization.yaml
 
-	// Adds a CI component to /.gitlab-ci.yml to build the OCI image when any file changes under /manifests/demo-agent on the default branch
+		// Builds and pushes /manifests/demo-agent to registry.gitlab.com/<project-slug>/demo-agent/flux-manifests:latest OCI image
 
-	// Applies /manifests/demo-agent/flux-system/kustomization.yaml in the cluster (with kubectl -k)
+		// TODO: Adds a CI component to /.gitlab-ci.yml to build the OCI image when any file changes under /manifests/demo-agent on the default branch
 
-	// Commits and pushes all the above to the Gitlab project (from this point on everything is deployed by Flux through building the OCI image)
+		// Applies /manifests/demo-agent/flux-system/kustomization.yaml in the cluster (with kubectl -k) to start Flux
 
+		// TODO: Ask the user to continue with commit and push
+
+		// Commits and pushes all the above to the Gitlab project (from this point on everything is deployed by Flux through building the OCI image)
+
+	}
 	// Registers the demo-agent with GitLab and stores the registration token as an environment variable under the demo-agent environment
 
 	// Generates the YAML to configure the External Secrets controller to retrieve the agent registration token from GitLab to /manifests/demo-agent/external-secrets-agentk.yaml
@@ -251,7 +359,9 @@ func bootstrapAgent(name, manifestDir string, skipExternalSecrets bool) error {
 
 	// Generates an agent config under /.gitlab/agents/demo-agent/config.yaml that enables user access for the current project
 
-	// generate /manifests/demo-agent/auth/project-owner-is-namespace-admin.yaml that sets up the current project's GitLab owners as namespace admins with the necessary RoleBindings
+	// Generate /manifests/demo-agent/auth/project-owner-is-namespace-admin.yaml that sets up the current project's GitLab owners as namespace admins with the necessary RoleBindings
+
+	// TODO: Ask the user to continue with commit and push
 
 	// Commits and pushes all the above to the Gitlab project
 
