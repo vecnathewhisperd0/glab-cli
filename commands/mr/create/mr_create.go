@@ -106,7 +106,10 @@ func NewCmdCreate(f *cmdutils.Factory, runE func(opts *CreateOpts) error) *cobra
 				repoOverride = repoFromEnv
 			}
 			if repoOverride != "" {
-				_ = headRepoOverride(opts, repoOverride)
+				err := headRepoOverride(opts, repoOverride)
+				if err != nil {
+					fmt.Fprintf(opts.IO.StdErr, "Could not create recovery file: %v", err)
+				}
 			}
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

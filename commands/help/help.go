@@ -37,7 +37,7 @@ import (
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-func RootUsageFunc(command *cobra.Command) error {
+func RootUsageFunc(command *cobra.Command) {
 	command.Printf("Usage:  %s", command.UseLine())
 
 	subcommands := command.Commands()
@@ -49,7 +49,6 @@ func RootUsageFunc(command *cobra.Command) error {
 			}
 			command.Printf("  %s\n", c.Name())
 		}
-		return nil
 	}
 
 	flagUsages := command.LocalFlags().FlagUsages()
@@ -57,7 +56,6 @@ func RootUsageFunc(command *cobra.Command) error {
 		command.Println("\n\nFlags:")
 		command.Print(utils.Indent(dedent(flagUsages), "  "))
 	}
-	return nil
 }
 
 var hasFailed bool
@@ -91,7 +89,7 @@ func nestedSuggestFunc(command *cobra.Command, arg string) {
 	}
 
 	command.Print("\n")
-	_ = RootUsageFunc(command)
+	RootUsageFunc(command)
 }
 
 func isRootCmd(command *cobra.Command) bool {
