@@ -81,7 +81,7 @@ func ListGitLabTemplates(tmplType string) ([]string, error) {
 	fileNames, err := f.Readdirnames(-1)
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 	}()
 
