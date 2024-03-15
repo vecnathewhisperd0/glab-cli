@@ -28,6 +28,10 @@ func ensurePathIsCreated(filename string) error {
 	return nil
 }
 
+// Read limit is 4GB
+const zipReadLimit = 4 * 1024 * 1024 * 1024
+const zipFileLimit = 100000 
+
 func sanitizeAssetName(asset string) string {
 	if !strings.HasPrefix(asset, "/") {
 		// Prefix the asset with "/" ensures that filepath.Clean removes all `/..`
@@ -49,6 +53,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 		Long: ``,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			repo, err := f.BaseRepo()
 			if err != nil {
 				return err
@@ -82,6 +87,12 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 				path = path + "/"
 			}
 
+			var written int64 = 0
+
+			if len(zipReader.File) > zipFileLimit {
+				return fmt.Errorf("zip archive includes too many files: limit is %d files", zipFileLimit)
+			}
+
 			for _, v := range zipReader.File {
 				sanitizedAssetName := sanitizeAssetName(v.Name)
 
@@ -105,6 +116,8 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 					}
 					defer srcFile.Close()
 
+					limitedReader := io.LimitReader(srcFile, zipReadLimit)
+
 					err = ensurePathIsCreated(destPath)
 					if err != nil {
 						return err
@@ -120,8 +133,14 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 					if err != nil {
 						return err
 					}
-					if _, err := io.Copy(dstFile, srcFile); err != nil {
+					var writtenPerFile int64 = 0
+					if writtenPerFile, err = io.Copy(dstFile, limitedReader); err != nil {
 						return err
+					}
+
+					written += writtenPerFile
+					if written >= zipReadLimit {
+						return fmt.Errorf("Extracted zip too large: limit is %d bytes", zipReadLimit)
 					}
 				}
 			}
