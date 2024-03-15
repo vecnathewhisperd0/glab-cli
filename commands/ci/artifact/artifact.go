@@ -30,8 +30,8 @@ func ensurePathIsCreated(filename string) error {
 
 // Read limit is 4GB
 const (
-	zipReadLimit = 4 * 1024 * 1024 * 1024
-	zipFileLimit = 100000
+	zipReadLimit int64 = 4 * 1024 * 1024 * 1024
+	zipFileLimit int = 100000
 )
 
 func sanitizeAssetName(asset string) string {
@@ -141,7 +141,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 
 					written += writtenPerFile
 					if written >= zipReadLimit {
-						return fmt.Errorf("Extracted zip too large: limit is %d bytes", int(zipReadLimit))
+						return fmt.Errorf("Extracted zip too large: limit is %d bytes", zipReadLimit)
 					}
 				}
 			}
