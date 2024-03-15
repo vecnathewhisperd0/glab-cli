@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -148,7 +149,11 @@ func (s *IOStreams) StartPager() error {
 	// We should eventually add some error reporting for the go function
 
 	go func() {
-		defer pagedOut.Close()
+		defer func() {
+			if err := pagedOut.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 
 		scanner := bufio.NewScanner(pipeReader)
 

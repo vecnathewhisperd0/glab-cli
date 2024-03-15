@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -78,7 +79,12 @@ func ListGitLabTemplates(tmplType string) ([]string, error) {
 		return files, nil
 	}
 	fileNames, err := f.Readdirnames(-1)
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
 	if err != nil {
 		// return empty slice if error
 		return files, nil

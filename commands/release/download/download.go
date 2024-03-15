@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -233,7 +234,11 @@ func downloadAsset(client *api.Client, assetURL, destinationPath string) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	if resp.StatusCode > 299 {
 		return errors.New(resp.Status)
@@ -243,7 +248,12 @@ func downloadAsset(client *api.Client, assetURL, destinationPath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	_, err = io.Copy(f, resp.Body)
 	return err

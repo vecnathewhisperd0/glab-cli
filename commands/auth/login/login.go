@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -72,7 +73,12 @@ func NewCmdLogin(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			if tokenStdin {
-				defer opts.IO.In.Close()
+				defer func() {
+					if err := opts.IO.In.Close(); err != nil {
+						log.Fatal(err.Error())
+					}
+				}()
+
 				token, err := io.ReadAll(opts.IO.In)
 				if err != nil {
 					return fmt.Errorf("failed to read token from STDIN: %w", err)

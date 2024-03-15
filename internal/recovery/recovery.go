@@ -3,6 +3,7 @@ package recovery
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -41,7 +42,11 @@ func CreateFile(repoName, filename string, i any) (string, error) {
 		return "", fmt.Errorf("creating recovery file: %w", err)
 	}
 
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	if err := json.NewEncoder(f).Encode(i); err != nil {
 		return "", fmt.Errorf("writing file: %w", err)

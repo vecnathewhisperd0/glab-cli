@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -219,7 +220,12 @@ func apiRun(opts *ApiOptions) error {
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Fatal(err.Error())
+			}
+		}()
+
 		requestPath, err = parseQuery(requestPath, params)
 		if err != nil {
 			return err
@@ -487,7 +493,13 @@ func readUserFile(fn string, stdin io.ReadCloser) ([]byte, error) {
 			return nil, err
 		}
 	}
-	defer r.Close()
+
+	defer func() {
+		if err := r.Close(); err != nil {
+			log.Fatal(err.Error())
+		}
+	}()
+
 	return io.ReadAll(r)
 }
 

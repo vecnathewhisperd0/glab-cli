@@ -3,6 +3,7 @@ package add
 import (
 	"errors"
 	"io"
+	"log"
 	"os"
 
 	"github.com/MakeNowJust/heredoc"
@@ -83,13 +84,21 @@ func addRun(opts *AddOpts) error {
 	var keyFileReader io.Reader
 	if opts.KeyFile == "-" {
 		keyFileReader = opts.IO.In
-		defer opts.IO.In.Close()
+		defer func() {
+			if err := opts.IO.In.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 	} else {
 		f, err := os.Open(opts.KeyFile)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 
 		keyFileReader = f
 	}

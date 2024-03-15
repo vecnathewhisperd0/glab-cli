@@ -3,6 +3,7 @@ package git
 import (
 	"bufio"
 	"io"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -56,7 +57,11 @@ func (p *sshParser) read(fileName string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 		file = f
 	} else {
 		var err error

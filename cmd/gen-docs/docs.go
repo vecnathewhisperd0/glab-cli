@@ -174,7 +174,11 @@ func GenMarkdownTreeCustom(cmd *cobra.Command, dir string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fatal(err)
+		}
+	}()
 
 	if err := GenMarkdownCustom(cmd, f); err != nil {
 		return err

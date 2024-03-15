@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
@@ -21,8 +22,12 @@ func GetValue(value string, ios *iostreams.IOStreams, args []string) (string, er
 		return "", &cmdutils.FlagError{Err: errors.New("no value specified but nothing on STDIN")}
 	}
 
-	// read value from STDIN if not provided
-	defer ios.In.Close()
+	defer func() {
+		if err := ios.In.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	stdinValue, err := io.ReadAll(ios.In)
 	if err != nil {
 		return "", fmt.Errorf("failed to read value from STDIN: %w", err)
