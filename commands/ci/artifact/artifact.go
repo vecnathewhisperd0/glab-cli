@@ -29,8 +29,10 @@ func ensurePathIsCreated(filename string) error {
 }
 
 // Read limit is 4GB
-const zipReadLimit = 4 * 1024 * 1024 * 1024
-const zipFileLimit = 100000 
+const (
+	zipReadLimit = 4 * 1024 * 1024 * 1024
+	zipFileLimit = 100000
+)
 
 func sanitizeAssetName(asset string) string {
 	if !strings.HasPrefix(asset, "/") {
@@ -53,7 +55,6 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 		Long: ``,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			repo, err := f.BaseRepo()
 			if err != nil {
 				return err
@@ -133,7 +134,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 					if err != nil {
 						return err
 					}
-					var writtenPerFile int64 = 0
+					var writtenPerFile int64
 					if writtenPerFile, err = io.Copy(dstFile, limitedReader); err != nil {
 						return err
 					}
