@@ -140,7 +140,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 
 					written += writtenPerFile
 					if written >= zipReadLimit {
-						return fmt.Errorf("Extracted zip too large: limit is %d bytes", zipReadLimit)
+						return fmt.Errorf("Extracted zip too large: limit is %d bytes", int(zipReadLimit))
 					}
 				}
 			}
