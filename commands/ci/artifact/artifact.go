@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -104,12 +103,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 					if err != nil {
 						return err
 					}
-
-					defer func() {
-						if err := srcFile.Close(); err != nil {
-							log.Fatal(err.Error())
-						}
-					}()
+					defer srcFile.Close()
 
 					err = ensurePathIsCreated(destPath)
 					if err != nil {
