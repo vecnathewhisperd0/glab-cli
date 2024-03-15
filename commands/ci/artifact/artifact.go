@@ -31,7 +31,7 @@ func ensurePathIsCreated(filename string) error {
 // Read limit is 4GB
 const (
 	zipReadLimit int64 = 4 * 1024 * 1024 * 1024
-	zipFileLimit int = 100000
+	zipFileLimit int   = 100000
 )
 
 func sanitizeAssetName(asset string) string {
