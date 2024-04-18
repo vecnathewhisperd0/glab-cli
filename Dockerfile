@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache bash \
+RUN apk add --verbose --no-cache bash \
                        curl \
                        docker-cli \
                        git \
