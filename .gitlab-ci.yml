@@ -158,7 +158,7 @@ release_test:
       -v $PWD:/go/src/gitlab.com/gitlab-org/cli \
       -w /go/src/gitlab.com/gitlab-org/cli \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      goreleaser/goreleaser release --snapshot
+      goreleaser/goreleaser release --verbose --snapshot
 
 build_windows:
   stage: test
