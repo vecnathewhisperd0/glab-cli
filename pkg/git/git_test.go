@@ -396,6 +396,7 @@ func Test_configValueExists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			InitGitRepo(t)
+
 			err := SetRemoteConfig("this", "testsuite", tt.value)
 			require.NoError(t, err)
 
@@ -440,7 +441,6 @@ func TestSetConfig(t *testing.T) {
 			}
 
 			err := SetConfig("cool.testcase", tt.value)
-			require.NoError(t, err)
 
 			output, err := exec.Command("git", "config", "--get-all", "cool.testcase").Output()
 
@@ -500,13 +500,14 @@ func TestListTags(t *testing.T) {
 		},
 	}
 
-	for name, tt := range cases {
+	for name, v := range cases {
 		t.Run(name, func(t *testing.T) {
-			if tt.wantErr {
-				tempDir := t.TempDir()
-				// move to a directory without a .git subdirectory
-				err := os.Chdir(tempDir)
+			initGitRepoWithCommit(t)
+
+			for tag := range v.expected {
+				_, err := exec.Command("git", "tag", v.expected[tag]).Output()
 				require.NoError(t, err)
+			}
 
 				tags, err := ListTags()
 				require.Equal(t, tt.errString, errors.Unwrap(err).Error())
