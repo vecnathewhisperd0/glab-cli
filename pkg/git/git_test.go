@@ -15,6 +15,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func initGitRepo(t *testing.T) string {
+	tempDir := t.TempDir()
+
+	err := os.Chdir(tempDir)
+	require.NoError(t, err)
+
+	gitInit := GitCommand("init")
+	_, err = run.PrepareCmd(gitInit).Output()
+	require.NoError(t, err)
+
+	return tempDir
+}
+
+func initGitRepoWithCommit(t *testing.T) {
+	initGitRepo(t)
+
+	configureGitConfig(t)
+
+	err := exec.Command("touch", "randomfile").Run()
+	require.NoError(t, err)
+
+	gitAdd := GitCommand("add", "randomfile")
+	_, err = run.PrepareCmd(gitAdd).Output()
+	require.NoError(t, err)
+
+	gitCommit := GitCommand("commit", "-m", "\"commit\"")
+	_, err = run.PrepareCmd(gitCommit).Output()
+	require.NoError(t, err)
+}
+
+func configureGitConfig(t *testing.T) {
+	// CI will throw errors using a git command without a configuration
+	nameConfig := GitCommand("config", "user.name", "glab test bot")
+	_, err := run.PrepareCmd(nameConfig).Output()
+	require.NoError(t, err)
+
+	emailConfig := GitCommand("config", "user.email", "no-reply+cli-tests@gitlab.com")
+	_, err = run.PrepareCmd(emailConfig).Output()
+	require.NoError(t, err)
+}
+
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -396,7 +437,6 @@ func Test_configValueExists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			InitGitRepo(t)
-
 			err := SetRemoteConfig("this", "testsuite", tt.value)
 			require.NoError(t, err)
 
@@ -441,6 +481,7 @@ func TestSetConfig(t *testing.T) {
 			}
 
 			err := SetConfig("cool.testcase", tt.value)
+			require.NoError(t, err)
 
 			output, err := exec.Command("git", "config", "--get-all", "cool.testcase").Output()
 
@@ -500,14 +541,13 @@ func TestListTags(t *testing.T) {
 		},
 	}
 
-	for name, v := range cases {
+	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			initGitRepoWithCommit(t)
-
-			for tag := range v.expected {
-				_, err := exec.Command("git", "tag", v.expected[tag]).Output()
+			if tt.wantErr {
+				tempDir := t.TempDir()
+				// move to a directory without a .git subdirectory
+				err := os.Chdir(tempDir)
 				require.NoError(t, err)
-			}
 
 				tags, err := ListTags()
 				require.Equal(t, tt.errString, errors.Unwrap(err).Error())
@@ -527,3 +567,32 @@ func TestListTags(t *testing.T) {
 		})
 	}
 }
+
+func TestGitUserName(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		setName  string
+		expected string
+	}{
+		{
+			desc:     "with a set name",
+			setName:  "Bob",
+			expected: "Bob\n",
+		},
+		// NOTE: it's not possible to do any kind of committing without setting
+		// a username for git, so it's unlikely this would not set
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			initGitRepo(t)
+
+			_ = SetLocalConfig("user.name", tC.setName)
+
+			output, err := GitUserName()
+			require.NoError(t, err)
+
+			require.Equal(t, string(output), tC.expected)
+		})
+	}
+}
+
