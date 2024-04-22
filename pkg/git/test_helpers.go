@@ -50,3 +50,4 @@ func configureGitConfig(t *testing.T) {
 	_, err = run.PrepareCmd(emailConfig).Output()
 	require.NoError(t, err)
 }
+
