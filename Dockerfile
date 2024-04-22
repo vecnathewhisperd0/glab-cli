@@ -1,12 +1,12 @@
 FROM alpine:latest
 
-RUN apk add --verbose --no-cache bash \
-                       curl \
-                       docker-cli \
-                       git \
-                       mercurial \
-                       make \
-                       build-base
+RUN apk add --verbose --no-cache bash
+RUN apk add --verbose --no-cache curl
+RUN apk add --verbose --no-cache docker-cli
+RUN apk add --verbose --no-cache git
+RUN apk add --verbose --no-cache mercurial
+RUN apk add --verbose --no-cache make
+RUN apk add --verbose --no-cache build-base
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "-h" ]
