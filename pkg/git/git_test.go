@@ -436,7 +436,11 @@ func Test_configValueExists(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+<<<<<<< HEAD
 			InitGitRepo(t)
+=======
+			initGitRepo(t)
+>>>>>>> c2bcd527 (Fixing some lint issues)
 			err := SetRemoteConfig("this", "testsuite", tt.value)
 			require.NoError(t, err)
 
