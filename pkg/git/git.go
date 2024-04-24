@@ -149,6 +149,20 @@ func UncommittedChangeCount() (int, error) {
 	return count, nil
 }
 
+func GitUserName() ([]byte, error) {
+	nameGrab := GitCommand("config", "user.name")
+	output, err := run.PrepareCmd(nameGrab).Output()
+	if err != nil {
+		return []byte{}, err
+	}
+
+	if string(output) == "" {
+		return []byte(os.Getenv("USER")), nil
+	}
+
+	return output, nil
+}
+
 type Commit struct {
 	Sha   string
 	Title string
