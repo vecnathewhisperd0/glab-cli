@@ -27,6 +27,7 @@ import (
 	scheduleCmd "gitlab.com/gitlab-org/cli/commands/schedule"
 	snippetCmd "gitlab.com/gitlab-org/cli/commands/snippet"
 	sshCmd "gitlab.com/gitlab-org/cli/commands/ssh-key"
+	stackCmd "gitlab.com/gitlab-org/cli/commands/stack"
 	updateCmd "gitlab.com/gitlab-org/cli/commands/update"
 	userCmd "gitlab.com/gitlab-org/cli/commands/user"
 	variableCmd "gitlab.com/gitlab-org/cli/commands/variable"
@@ -130,7 +131,12 @@ func NewCmdRoot(f *cmdutils.Factory, version, buildDate string) *cobra.Command {
 	rootCmd.AddCommand(apiCmd.NewCmdApi(f, nil))
 	rootCmd.AddCommand(scheduleCmd.NewCmdSchedule(f))
 	rootCmd.AddCommand(snippetCmd.NewCmdSnippet(f))
+<<<<<<< HEAD
 	rootCmd.AddCommand(duoCmd.NewCmdDuo(f))
+=======
+	rootCmd.AddCommand(askCmd.NewCmd(f))
+	rootCmd.AddCommand(stackCmd.NewCmdStack(f))
+>>>>>>> 9410673a (feat(stacked-diffs): adding branch creation)
 
 	rootCmd.Flags().BoolP("version", "v", false, "show glab version information")
 	return rootCmd
