@@ -156,10 +156,6 @@ func GitUserName() ([]byte, error) {
 		return []byte{}, err
 	}
 
-	if string(output) == "" {
-		return []byte(os.Getenv("USER")), nil
-	}
-
 	return output, nil
 }
 
