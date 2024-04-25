@@ -62,6 +62,11 @@ glab mr merge
 - [`glab user`](user)
 - [`glab variable`](variable)
 
+## Get help
+
+All core commands have a `-h`/`--help` flag,
+or can be passed to the `glab help ...` command.
+
 ## Install the CLI
 
 Installation instructions are available in the GLab
