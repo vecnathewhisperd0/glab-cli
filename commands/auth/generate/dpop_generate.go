@@ -35,6 +35,11 @@ type PasswordReader interface {
 	Read() ([]byte, error)
 }
 
+type CustomProofTokenClaims struct {
+	*dpop.ProofTokenClaims
+	Kid string `json:"kid,omitempty"`
+}
+
 type ConsolePasswordReader struct{}
 
 func (pr ConsolePasswordReader) Read() ([]byte, error) {
@@ -102,7 +107,7 @@ func NewCmdGenerate(f *cmdutils.Factory) *cobra.Command {
 				return err
 			}
 
-			proofString, err := generateDPoPProof(&privateKey, opts.PersonalAccessToken)
+			proofString, err := generateDPoPProof(privateKey, opts.PersonalAccessToken)
 			if err != nil {
 				return err
 			}
@@ -120,7 +125,7 @@ func NewCmdGenerate(f *cmdutils.Factory) *cobra.Command {
 	return cmd
 }
 
-func generateDPoPProof(key *crypto.PrivateKey, accessToken string) (string, error) {
+func generateDPoPProof(key crypto.PrivateKey, accessToken string) (string, error) {
 	signingMethod, err := getSigningMethod(key)
 	if err != nil {
 		return "", err
@@ -133,27 +138,39 @@ func generateDPoPProof(key *crypto.PrivateKey, accessToken string) (string, erro
 	if err != nil {
 		return "", err
 	}
-
-	now := time.Now()
-	claims := &dpop.ProofTokenClaims{
-		RegisteredClaims: &jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
-			ID:        uuidObj.String(),
-		},
-		AccessTokenHash: base64UrlEncodedHash,
+	publicKey, err := getPublicKey(key)
+	if err != nil {
+		return "", err
 	}
+	sshPubKey, err := ssh.NewPublicKey(publicKey)
+	if err != nil {
+		return "", err
+	}
+	fingerprint := ssh.FingerprintSHA256(sshPubKey)
+	now := time.Now()
+	claims :=
+		CustomProofTokenClaims{
+			ProofTokenClaims: &dpop.ProofTokenClaims{
+				RegisteredClaims: &jwt.RegisteredClaims{
+					IssuedAt:  jwt.NewNumericDate(now),
+					ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
+					ID:        uuidObj.String(),
+				},
+				AccessTokenHash: base64UrlEncodedHash,
+			},
+			Kid: fingerprint,
+		}
 
-	if signer, ok := (*key).(crypto.Signer); ok {
+	if signer, ok := (key).(crypto.Signer); ok {
 		return dpop.Create(signingMethod, claims, signer)
 	} else {
 		return "", fmt.Errorf("key type does not implement crypto.Signer")
 	}
 }
 
-func getSigningMethod(key *crypto.PrivateKey) (jwt.SigningMethod, error) {
+func getSigningMethod(key crypto.PrivateKey) (jwt.SigningMethod, error) {
 	var signingMethod jwt.SigningMethod
-	switch key := (*key).(type) {
+	switch key := key.(type) {
 	case *rsa.PrivateKey:
 		{
 			if key.N.BitLen() < 2048 {
@@ -173,6 +190,18 @@ func getSigningMethod(key *crypto.PrivateKey) (jwt.SigningMethod, error) {
 	return signingMethod, nil
 }
 
+func getPublicKey(key crypto.PrivateKey) (crypto.PublicKey, error) {
+	switch key := key.(type) {
+	case *rsa.PrivateKey:
+		return key.Public(), nil
+	case *ed25519.PrivateKey:
+		publicKey := key.Public().(ed25519.PublicKey)
+		return publicKey, nil
+	default:
+		return nil, fmt.Errorf("unsupported key type")
+	}
+}
+
 func loadPrivateKey(path string, passwordReader PasswordReader) (crypto.PrivateKey, error) {
 	keyBytes, err := os.ReadFile(path)
 	if err != nil {
@@ -180,6 +209,7 @@ func loadPrivateKey(path string, passwordReader PasswordReader) (crypto.PrivateK
 	}
 
 	privateKey, err := ssh.ParseRawPrivateKey(keyBytes)
+
 	if err != nil {
 		var passphraseMissingErr *ssh.PassphraseMissingError
 		if errors.As(err, &passphraseMissingErr) {
