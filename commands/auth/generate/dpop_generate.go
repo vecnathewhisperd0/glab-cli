@@ -47,23 +47,31 @@ func NewCmdGenerate(f *cmdutils.Factory) *cobra.Command {
 	}
 	cmd := &cobra.Command{
 		Use:   "dpop-gen [flags]",
-		Short: "Generates a DPoP (demonstrating-proof-of-possession) proof JWT",
+		Short: "Generates a DPoP (demonstrating-proof-of-possession) proof JWT. (Experimental.)",
 		Long: heredoc.Doc(`
-		[Experiment] Demonstrating-proof-of-possession (DPoP, <https://gitlab.com/gitlab-com/gl-security/appsec/security-feature-blueprints/-/blob/main/sender_constraining_access_tokens/index.md>) is a technique to
-		cryptographically bind personal access tokens to their owners. The tools to manage the client aspects of DPoP are
-		provided by this command.
+		Demonstrating-proof-of-possession (DPoP) is a technique to
+		cryptographically bind personal access tokens to their owners. This command provides
+		the tools to manage the client aspects of DPoP. It generates a DPoP proof JWT
+		(JSON Web Token).
 
-		The command generates a DPoP proof JWT that can be used alongside a Personal Access Token (PAT) to authenticate
-		to the GitLab API. It is valid for 5 minutes and will need to be generated again once it expires. Your SSH
-		private key will be used to sign the JWT. RSA, ed25519, and ECDSA keys are supported.
+		Prerequisites:
+
+		- You must have a SSH key pair in RSA, ed25519, or ECDSA format.
+		- You have enabled DPoP for your account, as described in https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#enable-dpop-for-your-personal-access-tokens
+
+		Use the JWT in combination with a Personal Access Token (PAT) to authenticate to
+		the GitLab API. Your JWT remains valid for 5 minutes. After it expires, you must
+		generate another token. Your SSH private key is then used to sign the JWT.
 		`),
 		Example: heredoc.Doc(`
 			# Generate a DPoP JWT for authentication to GitLab
 			$ glab dpop-gen [flags]
 			$ glab dpop-gen --private-key "~/.ssh/id_rsa" --pat "glpat-xxxxxxxxxxxxxxxxxxxx"
-			# No PAT required if the user has previously used the glab auth login command with a PAT
+
+			# No PAT required if you previously used the 'glab auth login' command with a PAT
 			$ glab dpop-gen --private-key "~/.ssh/id_rsa"
-			# Generate a DPoP JWT for another GitLab instance
+
+			# Generate a DPoP JWT for a different GitLab instance
 			$ glab dpop-gen --private-key "~/.ssh/id_rsa" --hostname "https://gitlab.com"
 		`),
 		Args: cobra.ExactArgs(0),
@@ -106,8 +114,8 @@ func NewCmdGenerate(f *cmdutils.Factory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&opts.PrivateKeyLocation, "private-key", "p", "", "Location of the private SSH key on the local system.")
-	cmd.Flags().StringVar(&opts.PersonalAccessToken, "pat", "", "Personal Access Token (PAT) to generate a DPoP proof for. If this is not provided, the token set with `glab auth login` will be used. In the absence of both, there will be an error.")
-	cmd.Flags().StringVarP(&opts.Hostname, "hostname", "h", "gitlab.com", "The hostname of the GitLab instance to authenticate with")
+	cmd.Flags().StringVar(&opts.PersonalAccessToken, "pat", "", "Personal Access Token (PAT) to generate a DPoP proof for. Defaults to the token set with `glab auth login`. Returns an error if both are empty.")
+	cmd.Flags().StringVarP(&opts.Hostname, "hostname", "h", "gitlab.com", "The hostname of the GitLab instance to authenticate with. Defaults to 'gitlab.com'.")
 
 	return cmd
 }
@@ -150,10 +158,10 @@ func getSigningMethod(key *crypto.PrivateKey) (jwt.SigningMethod, error) {
 		{
 			if key.N.BitLen() < 2048 {
 				// Minimum should be 2048 as per https://www.rfc-editor.org/rfc/rfc7518.html#section-3.3
-				return nil, fmt.Errorf("rsa key size must be at least 2048 bits")
+				return nil, fmt.Errorf("RSA key size must be greater than 2048 bits")
 			} else if key.N.BitLen() > 8192 {
 				// Maximum should be 8192 as per https://docs.gitlab.com/ee/user/ssh.html#rsa-ssh-keys
-				return nil, fmt.Errorf("rsa key size must be at most 8192 bits")
+				return nil, fmt.Errorf("RSA key size must be less than 8192 bits")
 			}
 			signingMethod = jwt.SigningMethodRS512
 		}
@@ -175,7 +183,7 @@ func loadPrivateKey(path string, passwordReader PasswordReader) (crypto.PrivateK
 	if err != nil {
 		var passphraseMissingErr *ssh.PassphraseMissingError
 		if errors.As(err, &passphraseMissingErr) {
-			fmt.Println("SSH private key is encrypted, please enter passphrase: ")
+			fmt.Println("SSH private key is encrypted. Enter your key's passphrase: ")
 			passphrase, err := passwordReader.Read()
 			if err != nil {
 				return nil, err
