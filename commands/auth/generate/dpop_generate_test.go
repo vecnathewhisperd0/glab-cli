@@ -77,7 +77,7 @@ func TestSigningMethods(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		signingMethod, err := getSigningMethod(&testCase.key)
+		signingMethod, err := getSigningMethod(testCase.key)
 		if testCase.shouldError {
 			assert.Error(t, err)
 		} else {
