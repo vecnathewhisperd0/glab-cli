@@ -23,7 +23,7 @@ the tools to manage the client aspects of DPoP. It generates a DPoP proof JWT
 Prerequisites:
 
 - You must have a SSH key pair in RSA, ed25519, or ECDSA format.
-- You have enabled DPoP for your account, as described in https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#enable-dpop-for-your-personal-access-tokens
+- You have enabled DPoP for your account, as described in the [GitLab documentation.](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#enable-dpop-for-your-personal-access-tokens)
 
 Use the JWT in combination with a Personal Access Token (PAT) to authenticate to
 the GitLab API. Your JWT remains valid for 5 minutes. After it expires, you must
