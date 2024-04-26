@@ -148,18 +148,17 @@ func generateDPoPProof(key crypto.PrivateKey, accessToken string) (string, error
 	}
 	fingerprint := ssh.FingerprintSHA256(sshPubKey)
 	now := time.Now()
-	claims :=
-		CustomProofTokenClaims{
-			ProofTokenClaims: &dpop.ProofTokenClaims{
-				RegisteredClaims: &jwt.RegisteredClaims{
-					IssuedAt:  jwt.NewNumericDate(now),
-					ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
-					ID:        uuidObj.String(),
-				},
-				AccessTokenHash: base64UrlEncodedHash,
+	claims := CustomProofTokenClaims{
+		ProofTokenClaims: &dpop.ProofTokenClaims{
+			RegisteredClaims: &jwt.RegisteredClaims{
+				IssuedAt:  jwt.NewNumericDate(now),
+				ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
+				ID:        uuidObj.String(),
 			},
-			Kid: fingerprint,
-		}
+			AccessTokenHash: base64UrlEncodedHash,
+		},
+		Kid: fingerprint,
+	}
 
 	if signer, ok := (key).(crypto.Signer); ok {
 		return dpop.Create(signingMethod, claims, signer)
@@ -209,7 +208,6 @@ func loadPrivateKey(path string, passwordReader PasswordReader) (crypto.PrivateK
 	}
 
 	privateKey, err := ssh.ParseRawPrivateKey(keyBytes)
-
 	if err != nil {
 		var passphraseMissingErr *ssh.PassphraseMissingError
 		if errors.As(err, &passphraseMissingErr) {
