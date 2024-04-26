@@ -7,10 +7,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"gitlab.com/gitlab-org/cli/commands/auth/generate/dpop"
 	"log"
 	"os"
 	"time"
+
+	"gitlab.com/gitlab-org/cli/commands/auth/generate/dpop"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"

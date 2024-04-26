@@ -2,11 +2,13 @@ package dpop
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"encoding/base64"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"math/big"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 /*
@@ -32,9 +34,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-import (
-	"crypto/ed25519"
-)
 
 type ecdsaJWK struct {
 	X   string `json:"x"`
