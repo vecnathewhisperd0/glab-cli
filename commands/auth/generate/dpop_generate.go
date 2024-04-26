@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"gitlab.com/gitlab-org/cli/commands/auth/generate/dpop"
 	"log"
 	"os"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
-	"github.com/AxisCommunications/go-dpop"
 	"github.com/MakeNowJust/heredoc"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -33,11 +33,6 @@ type GenerateOpts struct {
 
 type PasswordReader interface {
 	Read() ([]byte, error)
-}
-
-type CustomProofTokenClaims struct {
-	*dpop.ProofTokenClaims
-	Kid string `json:"kid,omitempty"`
 }
 
 type ConsolePasswordReader struct{}
@@ -138,33 +133,55 @@ func generateDPoPProof(key crypto.PrivateKey, accessToken string) (string, error
 	if err != nil {
 		return "", err
 	}
+
 	publicKey, err := getPublicKey(key)
 	if err != nil {
 		return "", err
 	}
+
 	sshPubKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {
 		return "", err
 	}
+
 	fingerprint := ssh.FingerprintSHA256(sshPubKey)
+
 	now := time.Now()
-	claims := CustomProofTokenClaims{
-		ProofTokenClaims: &dpop.ProofTokenClaims{
-			RegisteredClaims: &jwt.RegisteredClaims{
-				IssuedAt:  jwt.NewNumericDate(now),
-				ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
-				ID:        uuidObj.String(),
-			},
-			AccessTokenHash: base64UrlEncodedHash,
+	claims := &dpop.ProofTokenClaims{
+		RegisteredClaims: &jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Minute * 5)),
+			ID:        uuidObj.String(),
 		},
-		Kid: fingerprint,
+		AccessTokenHash: base64UrlEncodedHash,
 	}
 
-	if signer, ok := (key).(crypto.Signer); ok {
-		return dpop.Create(signingMethod, claims, signer)
-	} else {
+	signer, ok := key.(crypto.Signer)
+	if !ok {
 		return "", fmt.Errorf("key type does not implement crypto.Signer")
 	}
+
+	jwk, err := dpop.Reflect(publicKey)
+	if err != nil {
+		return "", err
+	}
+	token := &jwt.Token{
+		Header: map[string]interface{}{
+			"typ": "dpop+jwt",
+			"alg": signingMethod.Alg(),
+			"jwk": jwk,
+			"kid": fingerprint,
+		},
+		Claims: claims,
+		Method: signingMethod,
+	}
+
+	signedToken, err := token.SignedString(signer)
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
 }
 
 func getSigningMethod(key crypto.PrivateKey) (jwt.SigningMethod, error) {
