@@ -35,11 +35,6 @@ type PasswordReader interface {
 	Read() ([]byte, error)
 }
 
-type CustomProofTokenClaims struct {
-	*dpop.ProofTokenClaims
-	Kid string `json:"kid,omitempty"`
-}
-
 type ConsolePasswordReader struct{}
 
 func (pr ConsolePasswordReader) Read() ([]byte, error) {
