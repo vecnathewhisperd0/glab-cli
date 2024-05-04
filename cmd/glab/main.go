@@ -16,6 +16,7 @@ import (
 	"github.com/mgutz/ansi"
 
 	surveyCore "github.com/AlecAivazis/survey/v2/core"
+
 	"gitlab.com/gitlab-org/cli/commands"
 	"gitlab.com/gitlab-org/cli/commands/alias/expand"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
@@ -109,37 +110,30 @@ func main() {
 	}
 
 	cmd, _, err := rootCmd.Traverse(expandedArgs)
-	if err != nil || cmd == rootCmd {
-		originalArgs := expandedArgs
-		isShell := false
+	// If a command was not found during traversal it will always return the rootCmd
+	// which has no parent.
+	if err != nil || !cmd.HasParent() {
+		var (
+			originalArgs = expandedArgs
+			isShell      bool
+		)
+
+		if debug {
+			fmt.Printf("%v -> %v\n", originalArgs, expandedArgs)
+		}
+
 		expandedArgs, isShell, err = expand.ExpandAlias(cfg, os.Args, nil)
 		if err != nil {
 			cmdFactory.IO.LogInfof("Failed to process alias: %s\n", err)
 			os.Exit(2)
 		}
 
-		if debug {
-			fmt.Printf("%v -> %v\n", originalArgs, expandedArgs)
+		if isShell {
+			runCmd(cmdFactory, expandedArgs)
 		}
 
-		if isShell {
-			externalCmd := exec.Command(expandedArgs[0], expandedArgs[1:]...)
-			externalCmd.Stderr = os.Stderr
-			externalCmd.Stdout = os.Stdout
-			externalCmd.Stdin = os.Stdin
-			preparedCmd := run.PrepareCmd(externalCmd)
-
-			err = preparedCmd.Run()
-			if err != nil {
-				if ee, ok := err.(*exec.ExitError); ok {
-					os.Exit(ee.ExitCode())
-				}
-
-				cmdFactory.IO.LogInfof("failed to run external command: %s", err)
-				os.Exit(3)
-			}
-
-			os.Exit(0)
+		if isPlugin(expandedArgs) {
+			runPlugin(cmdFactory, expandedArgs)
 		}
 	}
 
@@ -242,4 +236,40 @@ func maybeOverrideDefaultHost(f *cmdutils.Factory, cfg config.Config) {
 		}
 		glinstance.OverrideDefault(customGLHost)
 	}
+}
+
+func isPlugin(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	searchTerm := "glab-" + args[0]
+	_, err := exec.LookPath(searchTerm)
+	return err == nil
+}
+
+func runCmd(utils *cmdutils.Factory, args []string) {
+	externalCmd := exec.Command(args[0], args[1:]...)
+	externalCmd.Stderr = os.Stderr
+	externalCmd.Stdout = os.Stdout
+	externalCmd.Stdin = os.Stdin
+
+	preparedCmd := run.PrepareCmd(externalCmd)
+	if err := preparedCmd.Run(); err != nil {
+		handleCmdError(utils, err)
+	}
+
+	os.Exit(0)
+}
+
+func runPlugin(utils *cmdutils.Factory, args []string) {
+	args[0] = "glab-" + args[0]
+	runCmd(utils, args)
+}
+
+func handleCmdError(utils *cmdutils.Factory, err error) {
+	utils.IO.LogInfof("failed to run external command: %s", err)
+	if ee, ok := err.(*exec.ExitError); ok {
+		os.Exit(ee.ExitCode())
+	}
+	os.Exit(3)
 }
