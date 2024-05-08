@@ -15,6 +15,11 @@ type StackRef struct {
 	ChangeId string `json:"change-id"`
 }
 
+func GetCurrentStackTitle() (title string, err error) {
+	title, err = Config("glab.currentstack")
+	return
+}
+
 func SetLocalConfig(key, value string) error {
 	found, err := configValueExists(key, value)
 	if err != nil {
