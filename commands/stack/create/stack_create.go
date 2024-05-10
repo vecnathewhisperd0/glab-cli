@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
-	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
 	"gitlab.com/gitlab-org/cli/pkg/utils"
@@ -42,20 +41,27 @@ func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			color := f.IO.Color()
 
-			branch := utils.ReplaceNonAlphaNumericChars(titleString, "-")
-			if branch != titleString {
-				fmt.Fprintf(f.IO.StdErr, "\nwarning: non-usable characters have been replaced with dashes\n")
+			title := utils.ReplaceNonAlphaNumericChars(titleString, "-")
+			if title != titleString {
+				fmt.Fprintf(f.IO.StdErr, "%s warning: non-usable characters have been replaced with dashes: %s\n",
+					color.WarnIcon(),
+					color.Blue(title))
 			}
 
-			gitCmd := git.GitCommand("checkout", "-b", branch)
-			_, err := run.PrepareCmd(gitCmd).Output()
+			err := git.SetLocalConfig("glab.currentstack", title)
 			if err != nil {
-				return fmt.Errorf("error running git command: %v", err)
+				return fmt.Errorf("error setting local git config: %v", err)
+			}
+
+			_, err = git.AddStackRefDir(title)
+			if err != nil {
+				return fmt.Errorf("error adding stack metadata directory: %v", err)
 			}
 
 			if f.IO.IsOutputTTY() {
-				fmt.Fprintf(f.IO.StdOut, "New stack created with branch \"%s\".\n", branch)
+				fmt.Fprintf(f.IO.StdOut, "New stack created with title \"%s\".\n", title)
 			}
 
 			s.Stop()

@@ -2,12 +2,11 @@ package create
 
 import (
 	"net/http"
-	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"gitlab.com/gitlab-org/cli/commands/cmdtest"
-	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
 	"gitlab.com/gitlab-org/cli/test"
@@ -54,6 +53,8 @@ func TestCreateNewStack(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
+			tempDir := git.InitGitRepo(t)
+
 			if tc.branch == "" {
 				as, restoreAsk := prompt.InitAskStubber()
 				defer restoreAsk()
@@ -66,40 +67,22 @@ func TestCreateNewStack(t *testing.T) {
 				})
 			}
 
-			tempDir, err := os.MkdirTemp("", "empty-git-directory")
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-			defer os.RemoveAll(tempDir)
-
-			err = os.Chdir(tempDir)
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-
-			gitInit := git.GitCommand("init")
-			_, err = run.PrepareCmd(gitInit).Output()
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-
 			output, err := runCommand(nil, true, tc.branch)
 			require.Nil(t, err)
 
-			require.Equal(t, "New stack created with branch \""+tc.expectedBranch+"\".\n", output.String())
+			require.Equal(t, "New stack created with title \""+tc.expectedBranch+"\".\n", output.String())
 
 			if tc.warning == true {
-				require.Equal(t, "\nwarning: non-usable characters have been replaced with dashes\n", output.Stderr())
+				require.Equal(t, "! warning: non-usable characters have been replaced with dashes: "+tc.expectedBranch+"\n", output.Stderr())
 			} else {
 				require.Empty(t, output.Stderr())
 			}
 
-			branchOutput, err := git.CurrentBranch()
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
+			configValue, err := git.GetCurrentStackTitle()
+			require.Nil(t, err)
 
-			require.Equal(t, tc.expectedBranch, branchOutput)
+			require.Equal(t, tc.expectedBranch, configValue)
+			require.DirExists(t, path.Join(tempDir, "/.git/refs/stacked/", tc.expectedBranch))
 		})
 	}
 }

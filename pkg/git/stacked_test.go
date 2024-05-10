@@ -28,7 +28,7 @@ func Test_AddStackRefDir(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			baseDir := initGitRepo(t)
+			baseDir := InitGitRepo(t)
 
 			_, err := AddStackRefDir(tt.branch)
 			require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestSetLocalConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := initGitRepo(t)
+			tempDir := InitGitRepo(t)
 			defer os.RemoveAll(tempDir)
 
 			if tt.existingConfig {

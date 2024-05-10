@@ -33,6 +33,11 @@ func SetLocalConfig(key, value string) error {
 	return nil
 }
 
+func GetCurrentStackTitle() (title string, err error) {
+	title, err = Config("glab.currentstack")
+	return
+}
+
 func AddStackRefDir(dir string) (string, error) {
 	baseDir, err := ToplevelDir()
 	if err != nil {
