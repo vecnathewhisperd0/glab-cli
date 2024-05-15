@@ -294,6 +294,12 @@ func CheckoutBranch(branch string) error {
 	return err
 }
 
+func CheckoutNewBranch(branch string) error {
+	configCmd := GitCommand("checkout", "-b", branch)
+	err := run.PrepareCmd(configCmd).Run()
+	return err
+}
+
 func parseCloneArgs(extraArgs []string) (args []string, target string) {
 	args, target = parseArgs(extraArgs)
 	return
