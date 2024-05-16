@@ -1,16 +1,22 @@
 package create
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 	"testing"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/gitlab-org/cli/commands/cmdtest"
+	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	"gitlab.com/gitlab-org/cli/internal/config"
 	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
 	"gitlab.com/gitlab-org/cli/test"
 )
@@ -41,7 +47,7 @@ func TestSaveNewStack(t *testing.T) {
 			args:     []string{"testfile", "randomfile"},
 			files:    []string{"testfile", "randomfile"},
 			message:  "this is a commit message",
-			expected: "• cool test feature: Saved with message: \"this is a commit message\".\n",
+			expected: "• cool-test-feature: Saved with message: \"this is a commit message\".\n",
 		},
 
 		{
@@ -49,14 +55,14 @@ func TestSaveNewStack(t *testing.T) {
 			args:     []string{"."},
 			files:    []string{"testfile", "randomfile"},
 			message:  "this is a commit message",
-			expected: "• cool test feature: Saved with message: \"this is a commit message\".\n",
+			expected: "• cool-test-feature: Saved with message: \"this is a commit message\".\n",
 		},
 
 		{
 			desc:     "omitting a message",
 			args:     []string{"."},
 			files:    []string{"testfile"},
-			expected: "• cool test feature: Saved with message: \"oh ok fine how about blah blah\".\n",
+			expected: "• cool-test-feature: Saved with message: \"oh ok fine how about blah blah\".\n",
 		},
 
 		{
@@ -86,7 +92,7 @@ func TestSaveNewStack(t *testing.T) {
 			}
 
 			dir := git.InitGitRepoWithCommit(t)
-			err := git.SetLocalConfig("glab.currentstack", "cool test feature")
+			err := git.SetLocalConfig("glab.currentstack", "cool-test-feature")
 			require.Nil(t, err)
 
 			createTemporaryFiles(t, dir, tc.files)
@@ -126,7 +132,7 @@ func Test_addFiles(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			dir := git.InitGitRepoWithCommit(t)
-			err := git.SetLocalConfig("glab.currentstack", "cool test feature")
+			err := git.SetLocalConfig("glab.currentstack", "cool-test-feature")
 			require.Nil(t, err)
 
 			createTemporaryFiles(t, dir, tc.expected)
@@ -172,7 +178,7 @@ func Test_checkForChanges(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
 			dir := git.InitGitRepoWithCommit(t)
-			err := git.SetLocalConfig("glab.currentstack", "cool test feature")
+			err := git.SetLocalConfig("glab.currentstack", "cool-test-feature")
 			require.Nil(t, err)
 
 			createTemporaryFiles(t, dir, tc.args)
@@ -187,11 +193,252 @@ func Test_checkForChanges(t *testing.T) {
 	}
 }
 
+func Test_commitFiles(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    string
+		message string
+		wantErr bool
+	}{
+		{
+			name:    "a regular commit message",
+			message: "i am a test message",
+			want:    "i am a test message\n 2 files changed, 0 insertions(+), 0 deletions(-)\n create mode 100644 test\n create mode 100644 yo\n",
+		},
+		{
+			name:    "no message",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := git.InitGitRepoWithCommit(t)
+
+			createTemporaryFiles(t, dir, []string{"yo", "test"})
+			_, err := addFiles([]string{"."})
+			require.Nil(t, err)
+
+			got, err := commitFiles(tt.message)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+				require.Contains(t, got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_generateStackSha(t *testing.T) {
+	type args struct {
+		message string
+		title   string
+		author  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "basic test",
+			args: args{message: "hello", title: "supercool stack title", author: "norm maclean"},
+			want: "f541d1d62a519a43e6242bcf3f2f6e7f4310c01e",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			git.InitGitRepo(t)
+
+			got, err := generateStackSha(tt.args.message, tt.args.title, tt.args.author)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+
+				require.Equal(t, got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_createShaBranch(t *testing.T) {
+	type args struct {
+		sha   string
+		title string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		prefix   string
+		want     string
+		wantErr  bool
+		noConfig bool
+	}{
+		{
+			name:   "standard test case",
+			args:   args{sha: "237ec83c03d3", title: "cool-change"},
+			prefix: "asdf",
+			want:   "asdf-cool-change-237ec83c",
+		},
+		{
+			name:     "with no config file",
+			args:     args{sha: "237ec83c03d3", title: "cool-change"},
+			prefix:   "",
+			want:     "jawn-cool-change-237ec83c",
+			noConfig: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			git.InitGitRepo(t)
+
+			defer config.StubWriteConfig(io.Discard, io.Discard)()
+
+			factory := createFactoryWithConfig("branch_prefix", tt.prefix)
+
+			if tt.noConfig {
+				t.Setenv("USER", "jawn")
+			}
+
+			got, err := createShaBranch(factory, tt.args.sha, tt.args.title)
+			require.Nil(t, err)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_addStackRefFile(t *testing.T) {
+	type args struct {
+		title    string
+		stackRef StackRef
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "no message",
+			args: args{
+				title: "sweet-title-123",
+				stackRef: StackRef{
+					Prev:   "hello",
+					Branch: "gmh-feature-3ab3da",
+					Next:   "goodbye",
+					SHA:    "1a2b3c4d",
+					MR:     "https://gitlab.com/",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := git.InitGitRepo(t)
+
+			err := addStackRefFile(tt.args.title, tt.args.stackRef)
+			require.Nil(t, err)
+
+			file := path.Join(dir, StackLocation, tt.args.title, tt.args.stackRef.SHA+".json")
+			require.True(t, config.CheckFileExists(file))
+
+			stackRef := StackRef{}
+			readData, err := os.ReadFile(file)
+			require.Nil(t, err)
+
+			err = json.Unmarshal(readData, &stackRef)
+			require.Nil(t, err)
+
+			require.Equal(t, stackRef, tt.args.stackRef)
+		})
+	}
+}
+
+func Test_updateStackRefFile(t *testing.T) {
+	type args struct {
+		title    string
+		stackRef StackRef
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "no message",
+			args: args{
+				title: "sweet-title-123",
+				stackRef: StackRef{
+					Prev:   "hello",
+					Branch: "gmh-feature-3ab3da",
+					Next:   "goodbye",
+					SHA:    "1a2b3c4d",
+					MR:     "https://gitlab.com/",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := git.InitGitRepo(t)
+
+			// add the initial data
+			initial := StackRef{Prev: "123", Branch: "gmh"}
+			err := addStackRefFile(tt.args.title, initial)
+			require.Nil(t, err)
+
+			err = updateStackRefFile(tt.args.title, tt.args.stackRef)
+			require.Nil(t, err)
+
+			file := path.Join(dir, StackLocation, tt.args.title, tt.args.stackRef.SHA+".json")
+			require.True(t, config.CheckFileExists(file))
+
+			stackRef := StackRef{}
+			readData, err := os.ReadFile(file)
+			require.Nil(t, err)
+
+			err = json.Unmarshal(readData, &stackRef)
+			require.Nil(t, err)
+
+			require.Equal(t, stackRef, tt.args.stackRef)
+		})
+	}
+}
+
 func createTemporaryFiles(t *testing.T, dir string, files []string) {
 	for _, file := range files {
 		file = path.Join(dir, file)
 		_, err := os.Create(file)
 
 		require.Nil(t, err)
+	}
+}
+
+func createFactoryWithConfig(key string, value string) *cmdutils.Factory {
+	strconfig := heredoc.Doc(`
+				` + key + `: ` + value + `
+			`)
+
+	cfg := config.NewFromString(strconfig)
+
+	ios, _, _, _ := iostreams.Test()
+
+	return &cmdutils.Factory{
+		IO: ios,
+		Config: func() (config.Config, error) {
+			return cfg, nil
+		},
 	}
 }
