@@ -1,8 +1,12 @@
 package create
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
@@ -16,6 +20,16 @@ import (
 )
 
 var message string
+
+const StackLocation = "/.git/refs/stacked/"
+
+type StackRef struct {
+	Prev   string `json:"prev"`
+	Branch string `json:"branch"`
+	SHA    string `json:"sha"`
+	Next   string `json:"next"`
+	MR     string `json:"mr"`
+}
 
 func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
@@ -53,6 +67,42 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			title, err := git.GetCurrentStackTitle()
 			if err != nil {
 				return fmt.Errorf("error running git command: %v", err)
+			}
+
+			author, err := git.GitUserName()
+			if err != nil {
+				return fmt.Errorf("error getting git author: %v", err)
+			}
+
+			// generate a SHA based on: commit message, stack title, git author name
+			sha, err := generateStackSha(message, title, string(author))
+			if err != nil {
+				return fmt.Errorf("error generating SHA command: %v", err)
+			}
+
+			// create branch name from SHA
+			branch, err := createShaBranch(f, sha, title)
+			if err != nil {
+				return fmt.Errorf("error creating branch name: %v", err)
+			}
+
+			// create the branch prefix-stack_title-SHA
+			err = git.CheckoutNewBranch(branch)
+			if err != nil {
+				return fmt.Errorf("error running branch checkout: %v", err)
+			}
+
+			// commit files to branch
+			_, err = commitFiles(message)
+			if err != nil {
+				return fmt.Errorf("error committing files: %v", err)
+			}
+
+			// create stack metadata
+			stackRef := StackRef{SHA: sha, Branch: branch}
+			err = addStackRefFile(title, stackRef)
+			if err != nil {
+				return fmt.Errorf("error creating stack file: %v", err)
 			}
 
 			if f.IO.IsOutputTTY() {
@@ -110,4 +160,104 @@ func addFiles(args []string) (files []string, err error) {
 	}
 
 	return files, err
+}
+
+func commitFiles(message string) (string, error) {
+	commitCmd := git.GitCommand("commit", "-m", message)
+	output, err := run.PrepareCmd(commitCmd).Output()
+	if err != nil {
+		return "", fmt.Errorf("error running git command: %v", err)
+	}
+
+	return string(output), nil
+}
+
+func generateStackSha(message string, title string, author string) (string, error) {
+	toSha := message + title + author
+
+	cmd := "echo \"" + toSha + "\" | git hash-object --stdin"
+	sha, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		return "", fmt.Errorf("error running git hash-object: %v", err)
+	}
+
+	return strings.TrimSuffix(string(sha), "\n"), nil
+}
+
+func createShaBranch(f *cmdutils.Factory, sha string, title string) (string, error) {
+	shortSha := string(sha)[0:8]
+
+	cfg, err := f.Config()
+	if err != nil {
+		return "", fmt.Errorf("could not retrieve config file: %v", err)
+	}
+
+	prefix, err := cfg.Get("", "branch_prefix")
+	if err != nil {
+		return "", fmt.Errorf("could not get prefix config: %v", err)
+	}
+
+	if prefix == "" {
+		prefix = os.Getenv("USER")
+		if prefix == "" {
+			prefix = "glab-stack"
+		}
+	}
+
+	branchTitle := []string{prefix, title, shortSha}
+
+	branch := strings.Join(branchTitle, "-")
+	return string(branch), nil
+}
+
+func addStackRefFile(title string, stackRef StackRef) error {
+	baseDir, err := git.ToplevelDir()
+	if err != nil {
+		return fmt.Errorf("error running git command: %v", err)
+	}
+
+	refDir := path.Join(baseDir, StackLocation, title)
+
+	initialJsonData, err := json.Marshal(stackRef)
+	if err != nil {
+		return fmt.Errorf("error marshalling data: %v", err)
+	}
+
+	if _, err = os.Stat(refDir); os.IsNotExist(err) {
+		err = os.MkdirAll(refDir, 0o700) // create directory if it doesn't exist
+		if err != nil {
+			return fmt.Errorf("error creating directory: %v", err)
+		}
+	}
+
+	fullPath := path.Join(refDir, stackRef.SHA+".json")
+
+	err = os.WriteFile(fullPath, initialJsonData, 0o644)
+	if err != nil {
+		return fmt.Errorf("error running writing file: %v", err)
+	}
+
+	return nil
+}
+
+func updateStackRefFile(title string, s StackRef) error {
+	baseDir, err := git.ToplevelDir()
+	if err != nil {
+		return fmt.Errorf("error running git command: %v", err)
+	}
+
+	refDir := path.Join(baseDir, StackLocation, title)
+
+	fullPath := path.Join(refDir, s.SHA+".json")
+
+	initialJsonData, err := json.Marshal(s)
+	if err != nil {
+		return fmt.Errorf("error marshalling data: %v", err)
+	}
+	err = os.WriteFile(fullPath, initialJsonData, 0o644)
+	if err != nil {
+		return fmt.Errorf("error running writing file: %v", err)
+	}
+
+	return nil
 }
