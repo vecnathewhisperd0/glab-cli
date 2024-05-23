@@ -82,7 +82,7 @@ func TestSaveNewStack(t *testing.T) {
 
 				as.Stub([]*prompt.QuestionStub{
 					{
-						Name:  "title",
+						Name:  "description",
 						Value: "oh ok fine how about blah blah",
 					},
 				})
@@ -313,6 +313,229 @@ func Test_createShaBranch(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_gatherStackRefs(t *testing.T) {
+	type args struct {
+		title string
+	}
+	tests := []struct {
+		name   string
+		args   args
+		stacks []StackRef
+	}{
+		{
+			name: "with multiple files",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "789", Prev: "456", Next: ""},
+			},
+		},
+		{
+			name: "with 1 file",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: ""},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := git.InitGitRepo(t)
+
+			for _, stack := range tt.stacks {
+				err := addStackRefFile(tt.args.title, stack)
+				require.Nil(t, err)
+			}
+
+			for _, stack := range tt.stacks {
+				file := path.Join(dir, StackLocation, tt.args.title, stack.SHA+".json")
+
+				data, err := os.ReadFile(file)
+				require.Nil(t, err)
+
+				temp := StackRef{}
+				err = json.Unmarshal(data, &temp)
+				require.Nil(t, err)
+
+				require.Equal(t, stack, temp)
+			}
+		})
+	}
+}
+
+func Test_lastRefInChain(t *testing.T) {
+	type args struct {
+		title string
+	}
+	tests := []struct {
+		name        string
+		args        args
+		stacks      []StackRef
+		expected    StackRef
+		expectedErr bool
+	}{
+		{
+			name: "with multiple files",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "789", Prev: "456", Next: ""},
+			},
+			expected: StackRef{SHA: "789", Prev: "456", Next: ""},
+		},
+		{
+			name: "with multiple bad data that might infinite loop",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "789", Prev: "456", Next: "123"},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "with 1 file",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: ""},
+			},
+			expected: StackRef{SHA: "123", Prev: "", Next: ""},
+		},
+		{
+			name: "large number",
+			args: args{title: "title-123"},
+			stacks: []StackRef{
+				{SHA: "13", Prev: "12", Next: ""},
+				{SHA: "3", Prev: "2", Next: "4"},
+				{SHA: "10", Prev: "9", Next: "11"},
+				{SHA: "2", Prev: "1", Next: "3"},
+				{SHA: "5", Prev: "4", Next: "6"},
+				{SHA: "6", Prev: "5", Next: "7"},
+				{SHA: "7", Prev: "6", Next: "8"},
+				{SHA: "4", Prev: "3", Next: "5"},
+				{SHA: "12", Prev: "11", Next: "13"},
+				{SHA: "9", Prev: "8", Next: "10"},
+				{SHA: "1", Prev: "", Next: "2"},
+				{SHA: "11", Prev: "10", Next: "12"},
+				{SHA: "8", Prev: "7", Next: "9"},
+			},
+			expected: StackRef{SHA: "13", Prev: "12", Next: ""},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := lastRefInChain(tt.stacks)
+			if tt.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+			}
+
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func Test_sortRefs(t *testing.T) {
+	type args struct {
+		title string
+	}
+	tests := []struct {
+		name        string
+		args        args
+		stacks      []StackRef
+		expected    []StackRef
+		expectedErr bool
+	}{
+		{
+			name: "with multiple files",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "789", Prev: "456", Next: ""},
+			},
+			expected: []StackRef{
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "789", Prev: "456", Next: ""},
+			},
+		},
+		{
+			name: "with multiple bad data that might infinite loop",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: "456"},
+				{SHA: "456", Prev: "123", Next: "789"},
+				{SHA: "789", Prev: "456", Next: "123"},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "with 1 file",
+			args: args{title: "sweet-title-123"},
+			stacks: []StackRef{
+				{SHA: "123", Prev: "", Next: ""},
+			},
+			expected: []StackRef{
+				{SHA: "123", Prev: "", Next: ""},
+			},
+		},
+		{
+			name: "large number",
+			args: args{title: "title-123"},
+			stacks: []StackRef{
+				{SHA: "13", Prev: "12", Next: ""},
+				{SHA: "3", Prev: "2", Next: "4"},
+				{SHA: "10", Prev: "9", Next: "11"},
+				{SHA: "2", Prev: "1", Next: "3"},
+				{SHA: "5", Prev: "4", Next: "6"},
+				{SHA: "6", Prev: "5", Next: "7"},
+				{SHA: "7", Prev: "6", Next: "8"},
+				{SHA: "4", Prev: "3", Next: "5"},
+				{SHA: "12", Prev: "11", Next: "13"},
+				{SHA: "9", Prev: "8", Next: "10"},
+				{SHA: "1", Prev: "", Next: "2"},
+				{SHA: "11", Prev: "10", Next: "12"},
+				{SHA: "8", Prev: "7", Next: "9"},
+			},
+			expected: []StackRef{
+				{SHA: "1", Prev: "", Next: "2"},
+				{SHA: "2", Prev: "1", Next: "3"},
+				{SHA: "3", Prev: "2", Next: "4"},
+				{SHA: "4", Prev: "3", Next: "5"},
+				{SHA: "5", Prev: "4", Next: "6"},
+				{SHA: "6", Prev: "5", Next: "7"},
+				{SHA: "7", Prev: "6", Next: "8"},
+				{SHA: "8", Prev: "7", Next: "9"},
+				{SHA: "9", Prev: "8", Next: "10"},
+				{SHA: "10", Prev: "9", Next: "11"},
+				{SHA: "11", Prev: "10", Next: "12"},
+				{SHA: "12", Prev: "11", Next: "13"},
+				{SHA: "13", Prev: "12", Next: ""},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			git.InitGitRepo(t)
+
+			_, err := sortRefs(tt.stacks)
+			if tt.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.Nil(t, err)
+			}
+
+			for k, stack := range tt.expected {
+				require.Equal(t, stack, tt.expected[k])
 			}
 		})
 	}
