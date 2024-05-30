@@ -1,4 +1,4 @@
-package create
+package save
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
 
-var message string
+var description string
 
 const StackLocation = "/.git/refs/stacked/"
 
@@ -46,6 +46,10 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			glab stack save . -m "added a function"
 			glab stack save -m "added a function"`),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("message") && cmd.Flags().Changed("description") {
+				return &cmdutils.FlagError{Err: errors.New("specify either of --message or --description")}
+			}
+
 			// check if there are even any changes before we start
 			err := checkForChanges()
 			if err != nil {
@@ -53,8 +57,8 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			// a description is required, so ask if one is not provided
-			if message == "" {
-				err := prompt.AskQuestionWithInput(&message, "description", "How would you describe this change?", "", true)
+			if description == "" {
+				err := prompt.AskQuestionWithInput(&description, "description", "How would you describe this change?", "", true)
 				if err != nil {
 					return fmt.Errorf("error prompting for save description: %v", err)
 				}
@@ -80,7 +84,7 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			// generate a SHA based on: commit message, stack title, git author name
-			sha, err := generateStackSha(message, title, string(author))
+			sha, err := generateStackSha(description, title, string(author))
 			if err != nil {
 				return fmt.Errorf("error generating SHA command: %v", err)
 			}
@@ -98,7 +102,7 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			// commit files to branch
-			_, err = commitFiles(message)
+			_, err = commitFiles(description)
 			if err != nil {
 				return fmt.Errorf("error committing files: %v", err)
 			}
@@ -128,9 +132,9 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 					return fmt.Errorf("error updating old ref: %v", err)
 				}
 
-				stackRef = StackRef{Prev: lastRef.SHA, SHA: sha, Branch: branch, Description: message}
+				stackRef = StackRef{Prev: lastRef.SHA, SHA: sha, Branch: branch, Description: description}
 			} else {
-				stackRef = StackRef{SHA: sha, Branch: branch, Description: message}
+				stackRef = StackRef{SHA: sha, Branch: branch, Description: description}
 			}
 
 			err = addStackRefFile(title, stackRef)
@@ -146,7 +150,7 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 					"%s %s: Saved with message: \"%s\".\n",
 					color.ProgressIcon(),
 					color.Blue(title),
-					message,
+					description,
 				)
 			}
 
@@ -155,7 +159,8 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 			return nil
 		},
 	}
-	stackSaveCmd.Flags().StringVarP(&message, "message", "m", "", "name the change")
+	stackSaveCmd.Flags().StringVarP(&description, "description", "d", "", "a description of the change")
+	stackSaveCmd.Flags().StringVarP(&description, "message", "m", "", "alias for description flag")
 
 	return stackSaveCmd
 }
@@ -175,6 +180,10 @@ func checkForChanges() error {
 }
 
 func addFiles(args []string) (files []string, err error) {
+	if len(args) == 0 {
+		args = []string{"."}
+	}
+
 	for _, file := range args {
 		_, err = os.Stat(file)
 		if err != nil {

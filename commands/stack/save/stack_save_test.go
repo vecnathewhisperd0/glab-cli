@@ -1,4 +1,4 @@
-package create
+package save
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ import (
 	"gitlab.com/gitlab-org/cli/test"
 )
 
-func runCommand(rt http.RoundTripper, isTTY bool, args string) (*test.CmdOut, error) {
+func runSaveCommand(rt http.RoundTripper, isTTY bool, args string) (*test.CmdOut, error) {
 	ios, _, stdout, stderr := cmdtest.InitIOStreams(isTTY, "")
 
 	factory := cmdtest.InitFactory(ios, rt)
@@ -99,7 +99,7 @@ func TestSaveNewStack(t *testing.T) {
 
 			args := strings.Join(tc.args, " ")
 
-			output, err := runCommand(nil, true, args)
+			output, err := runSaveCommand(nil, true, args)
 
 			if tc.wantErr {
 				require.Errorf(t, err, tc.expected)
@@ -125,6 +125,10 @@ func Test_addFiles(t *testing.T) {
 		{
 			desc:     "adding files with a dot argument",
 			args:     []string{"."},
+			expected: []string{"file1", "file2"},
+		},
+		{
+			desc:     "adding files with no argument",
 			expected: []string{"file1", "file2"},
 		},
 	}

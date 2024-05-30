@@ -20,5 +20,6 @@ func NewCmdStack(f *cmdutils.Factory) *cobra.Command {
 
 	stackCmd.AddCommand(stackCreateCmd.NewCmdCreateStack(f))
 	stackCmd.AddCommand(stackSaveCmd.NewCmdSaveStack(f))
+	stackCmd.AddCommand(stackSaveCmd.NewCmdAmendStack(f))
 	return stackCmd
 }

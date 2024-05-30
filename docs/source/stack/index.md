@@ -33,5 +33,6 @@ stacks
 
 ## Subcommands
 
+- [`amend`](amend.md)
 - [`create`](create.md)
 - [`save`](save.md)
