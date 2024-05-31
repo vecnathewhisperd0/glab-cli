@@ -23,7 +23,6 @@ type Stack struct {
 }
 
 func (s Stack) Empty() bool { return len(s.Refs) == 0 }
-func (s Stack) Len() int    { return len(s.Refs) }
 
 func (s *Stack) RemoveRef(ref StackRef) error {
 	if ref.Next == "" && ref.Prev == "" {
