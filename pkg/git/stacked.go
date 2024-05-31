@@ -3,8 +3,10 @@ package git
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gitlab.com/gitlab-org/cli/internal/run"
 )
@@ -14,6 +16,21 @@ var stackLocation = filepath.Join(".git", "stacked")
 type GitRunner interface {
 	Git(command []string) (string, error)
 }
+
+type StandardGitCommand struct {
+}
+
+func CommandParser(args ...string) io.Reader {
+	command := strings.Join(args, " ")
+	reader := strings.NewReader(command)
+	return reader
+}
+
+func (gitc StandardGitCommand) Git(r io.Reader) (string, error) {
+	command, err := io.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
 
 type StandardGitCommand struct{}
 
