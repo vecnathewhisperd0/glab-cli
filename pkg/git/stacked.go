@@ -17,8 +17,7 @@ type GitRunner interface {
 	Git(command []string) (string, error)
 }
 
-type StandardGitCommand struct {
-}
+type StandardGitCommand struct{}
 
 func CommandParser(args ...string) io.Reader {
 	command := strings.Join(args, " ")
