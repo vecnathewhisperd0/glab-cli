@@ -7,6 +7,7 @@ import (
 	issueCloseCmd "gitlab.com/gitlab-org/cli/commands/issue/close"
 	issueCreateCmd "gitlab.com/gitlab-org/cli/commands/issue/create"
 	issueDeleteCmd "gitlab.com/gitlab-org/cli/commands/issue/delete"
+	issueLinkCmd "gitlab.com/gitlab-org/cli/commands/issue/link"
 	issueListCmd "gitlab.com/gitlab-org/cli/commands/issue/list"
 	issueNoteCmd "gitlab.com/gitlab-org/cli/commands/issue/note"
 	issueReopenCmd "gitlab.com/gitlab-org/cli/commands/issue/reopen"
@@ -44,6 +45,7 @@ func NewCmdIssue(f *cmdutils.Factory) *cobra.Command {
 	issueCmd.AddCommand(issueBoardCmd.NewCmdBoard(f))
 	issueCmd.AddCommand(issueCreateCmd.NewCmdCreate(f))
 	issueCmd.AddCommand(issueDeleteCmd.NewCmdDelete(f))
+	issueCmd.AddCommand(issueLinkCmd.NewCmdLink(f))
 	issueCmd.AddCommand(issueListCmd.NewCmdList(f, nil))
 	issueCmd.AddCommand(issueNoteCmd.NewCmdNote(f))
 	issueCmd.AddCommand(issueReopenCmd.NewCmdReopen(f))
