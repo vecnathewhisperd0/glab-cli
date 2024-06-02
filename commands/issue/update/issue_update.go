@@ -3,18 +3,32 @@ package update
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/issue/issueutils"
+	"gitlab.com/gitlab-org/cli/internal/glrepo"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 )
 
+type LinkIssueOpts struct {
+	LinkedIssues  []int  `json:"linked_issues,omitempty"`
+	IssueLinkType string `json:"issue_link_type,omitempty"`
+
+	IO *iostreams.IOStreams `json:"-"`
+}
+
 func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
+	opts := &LinkIssueOpts{
+		IO: f.IO,
+	}
 	issueUpdateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: `Update issue`,
@@ -165,6 +179,14 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 
 			fmt.Fprintf(out, "- Updating issue #%d\n", issue.IID)
 
+			// If the linked-issues flag is passed call to update LinkedIssues
+			if len(opts.LinkedIssues) > 0 {
+				err = linkedIssueUpdate(apiClient, issue, opts, repo)
+				if err != nil {
+					return err
+				}
+			}
+
 			issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
 			if err != nil {
 				return err
@@ -191,6 +213,25 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 	issueUpdateCmd.Flags().
 		StringSliceP("assignee", "a", []string{}, "assign users via username, prefix with '!' or '-' to remove from existing assignees, '+' to add, otherwise replace existing assignees with given users")
 	issueUpdateCmd.Flags().Bool("unassign", false, "unassign all users")
+	issueUpdateCmd.Flags().IntSliceVarP(&opts.LinkedIssues, "linked-issues", "", []int{}, "The IIDs of issues that this issue links to")
+	issueUpdateCmd.Flags().StringVarP(&opts.IssueLinkType, "link-type", "", "relates_to", "Type for the issue link")
 
 	return issueUpdateCmd
+}
+
+func linkedIssueUpdate(apiClient *gitlab.Client, issue *gitlab.Issue, opts *LinkIssueOpts, repo glrepo.Interface) error {
+	if len(opts.LinkedIssues) > 0 {
+		var err error
+		for _, targetIssueIID := range opts.LinkedIssues {
+			fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)
+			issue, _, err = api.LinkIssues(apiClient, repo.FullName(), issue.IID, &gitlab.CreateIssueLinkOptions{
+				TargetIssueIID: gitlab.Ptr(strconv.Itoa(targetIssueIID)),
+				LinkType:       gitlab.Ptr(opts.IssueLinkType),
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
