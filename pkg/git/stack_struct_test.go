@@ -532,6 +532,10 @@ func Test_validateStackRefs(t *testing.T) {
 }
 
 func createBranches(t *testing.T, refs map[string]StackRef) {
+	// older versions of git could default to a different branch,
+	// so making sure this one exists.
+	_ = CheckoutNewBranch("main")
+
 	for _, ref := range refs {
 		err := CheckoutNewBranch(ref.Branch)
 		require.Nil(t, err)
