@@ -36,5 +36,6 @@ skd
 
 - [`create`](create.md)
 - [`delete`](delete.md)
+- [`edit`](edit.md)
 - [`list`](list.md)
 - [`run`](run.md)

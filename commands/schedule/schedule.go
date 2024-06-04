@@ -3,6 +3,7 @@ package schedule
 import (
 	scheduleCreateCmd "gitlab.com/gitlab-org/cli/commands/schedule/create"
 	scheduleDeleteCmd "gitlab.com/gitlab-org/cli/commands/schedule/delete"
+	scheduleEditCmd "gitlab.com/gitlab-org/cli/commands/schedule/edit"
 	scheduleListCmd "gitlab.com/gitlab-org/cli/commands/schedule/list"
 	scheduleRunCmd "gitlab.com/gitlab-org/cli/commands/schedule/run"
 
@@ -25,6 +26,7 @@ func NewCmdSchedule(f *cmdutils.Factory) *cobra.Command {
 	scheduleCmd.AddCommand(scheduleRunCmd.NewCmdRun(f))
 	scheduleCmd.AddCommand(scheduleCreateCmd.NewCmdCreate(f))
 	scheduleCmd.AddCommand(scheduleDeleteCmd.NewCmdDelete(f))
+	scheduleCmd.AddCommand(scheduleEditCmd.NewCmdEdit(f))
 
 	return scheduleCmd
 }
