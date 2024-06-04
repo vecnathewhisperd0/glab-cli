@@ -15,6 +15,8 @@ import (
 	"gitlab.com/gitlab-org/cli/internal/run"
 )
 
+const DefaultRemote = "origin"
+
 func GetRemoteURL(remoteAlias string) (string, error) {
 	return Config("remote." + remoteAlias + ".url")
 }

@@ -2,7 +2,6 @@ package save
 
 import (
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
@@ -108,21 +107,22 @@ func gitAmend(description string) error {
 	return nil
 }
 
-func checkForStack(title string) (StackRef, error) {
-	refs, err := gatherStackRefs(title)
+func checkForStack(title string) (git.StackRef, error) {
+	stack, err := git.GatherStackRefs(title)
 	if err != nil {
-		return StackRef{}, err
+		return git.StackRef{}, err
 	}
 
 	branch, err := git.CurrentBranch()
 	if err != nil {
-		return StackRef{}, err
+		return git.StackRef{}, err
 	}
 
-	index := slices.IndexFunc(refs, func(sr StackRef) bool { return sr.Branch == branch })
-	if index == -1 {
-		return StackRef{}, nil
+	for _, ref := range stack.Refs {
+		if ref.Branch == branch {
+			return ref, nil
+		}
 	}
 
-	return refs[index], nil
+	return git.StackRef{}, nil
 }
