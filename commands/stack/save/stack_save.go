@@ -1,15 +1,10 @@
 package save
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
-	"path"
-	"path/filepath"
-	"slices"
 	"strings"
 	"time"
 
@@ -24,17 +19,6 @@ import (
 )
 
 var description string
-
-const StackLocation = "/.git/refs/stacked/"
-
-type StackRef struct {
-	Prev        string `json:"prev"`
-	Branch      string `json:"branch"`
-	SHA         string `json:"sha"`
-	Next        string `json:"next"`
-	MR          string `json:"mr"`
-	Description string `json:"description"`
-}
 
 func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
@@ -107,20 +91,20 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 				return fmt.Errorf("error committing files: %v", err)
 			}
 
-			refs, err := gatherStackRefs(title)
+			stack, err := git.GatherStackRefs(title)
 			if err != nil {
 				return fmt.Errorf("error getting refs from file system: %v", err)
 			}
 
-			var stackRef StackRef
-			if len(refs) > 0 {
-				lastRef, err := lastRefInChain(refs)
+			var stackRef git.StackRef
+			if len(stack.Refs) > 0 {
+				lastRef, err := stack.Last()
 				if err != nil {
-					return fmt.Errorf("error finding last ref in chain: %v", err)
+					return fmt.Errorf("error getting last ref: %v", err)
 				}
 
 				// update the ref before it (the current last ref)
-				err = updateStackRefFile(title, StackRef{
+				err = git.UpdateStackRefFile(title, git.StackRef{
 					Prev:        lastRef.Prev,
 					MR:          lastRef.MR,
 					Description: lastRef.Description,
@@ -132,12 +116,12 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 					return fmt.Errorf("error updating old ref: %v", err)
 				}
 
-				stackRef = StackRef{Prev: lastRef.SHA, SHA: sha, Branch: branch, Description: description}
+				stackRef = git.StackRef{Prev: lastRef.SHA, SHA: sha, Branch: branch, Description: description}
 			} else {
-				stackRef = StackRef{SHA: sha, Branch: branch, Description: description}
+				stackRef = git.StackRef{SHA: sha, Branch: branch, Description: description}
 			}
 
-			err = addStackRefFile(title, stackRef)
+			err = git.AddStackRefFile(title, stackRef)
 			if err != nil {
 				return fmt.Errorf("error creating stack file: %v", err)
 			}
@@ -250,148 +234,4 @@ func createShaBranch(f *cmdutils.Factory, sha string, title string) (string, err
 
 	branch := strings.Join(branchTitle, "-")
 	return string(branch), nil
-}
-
-func addStackRefFile(title string, stackRef StackRef) error {
-	refDir, err := stackRootDir(title)
-	if err != nil {
-		return fmt.Errorf("error determining git root: %v", err)
-	}
-
-	initialJsonData, err := json.Marshal(stackRef)
-	if err != nil {
-		return fmt.Errorf("error marshaling data: %v", err)
-	}
-
-	if _, err = os.Stat(refDir); os.IsNotExist(err) {
-		err = os.MkdirAll(refDir, 0o700) // create directory if it doesn't exist
-		if err != nil {
-			return fmt.Errorf("error creating directory: %v", err)
-		}
-	}
-
-	fullPath := path.Join(refDir, stackRef.SHA+".json")
-
-	err = os.WriteFile(fullPath, initialJsonData, 0o644)
-	if err != nil {
-		return fmt.Errorf("error running writing file: %v", err)
-	}
-
-	return nil
-}
-
-func updateStackRefFile(title string, s StackRef) error {
-	refDir, err := stackRootDir(title)
-	if err != nil {
-		return fmt.Errorf("error determining git root: %v", err)
-	}
-
-	fullPath := path.Join(refDir, s.SHA+".json")
-
-	initialJsonData, err := json.Marshal(s)
-	if err != nil {
-		return fmt.Errorf("error marshaling data: %v", err)
-	}
-
-	err = os.WriteFile(fullPath, initialJsonData, 0o644)
-	if err != nil {
-		return fmt.Errorf("error running writing file: %v", err)
-	}
-
-	return nil
-}
-
-func stackRootDir(title string) (string, error) {
-	baseDir, err := git.ToplevelDir()
-	if err != nil {
-		return "", err
-	}
-
-	return path.Join(baseDir, StackLocation, title), nil
-}
-
-func gatherStackRefs(title string) ([]StackRef, error) {
-	root, err := stackRootDir(title)
-	if err != nil {
-		return nil, err
-	}
-
-	var refs []StackRef
-	err = filepath.WalkDir(root, func(dir string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-		// read files in the stacked ref directory
-		// TODO: this may be quicker if we introduce a package
-		// https://github.com/bmatcuk/doublestar
-		if filepath.Ext(d.Name()) == ".json" {
-			data, err := os.ReadFile(dir)
-			if err != nil {
-				return err
-			}
-
-			// marshal them into our StackRef type
-			stackRef := StackRef{}
-			err = json.Unmarshal(data, &stackRef)
-			if err != nil {
-				return err
-			}
-
-			refs = append(refs, stackRef)
-		}
-
-		return nil
-	})
-	if err != nil {
-		if !os.IsNotExist(err) { // there might not be any refs yet, this is ok.
-			return nil, err
-		}
-	}
-
-	return refs, nil
-}
-
-func lastRefInChain(unsorted []StackRef) (StackRef, error) {
-	index := slices.IndexFunc(unsorted, func(sr StackRef) bool { return sr.Next == "" })
-	if index == -1 {
-		return StackRef{}, fmt.Errorf("can't find the last ref in the chain. data might have been corrupted.")
-	}
-
-	return unsorted[index], nil
-}
-
-func sortRefs(unsorted []StackRef) ([]StackRef, error) {
-	if len(unsorted) == 1 {
-		return unsorted, nil // no need to sort if we only have one!
-	}
-
-	sorted := make([]StackRef, 0, len(unsorted))
-	first := slices.IndexFunc(unsorted, func(sr StackRef) bool { return sr.Prev == "" })
-	// find the first item in the chain: where the previous entry is nil
-	sorted = append(sorted, unsorted[first])
-	start := first
-
-	for {
-		next := slices.IndexFunc(unsorted, func(sr StackRef) bool { return sr.Prev == unsorted[start].SHA })
-		// find the next item: find where the previous value == the current SHA
-
-		if next == -1 {
-			return []StackRef{}, errors.New("All entries have a non-empty Next ref and would infinite loop- check your data files")
-		}
-
-		sorted = append(sorted, unsorted[next])
-		start = next
-		// make the item we just found the start
-
-		if unsorted[start].Next == "" {
-			// if the item we found has a next == "", we're done
-			break
-		}
-	}
-
-	return sorted, nil
 }
