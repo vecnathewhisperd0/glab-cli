@@ -16,6 +16,7 @@ moves to the next diff
 ## Synopsis
 
 Moves to the next diff in the stack and checks out that branch
+
 ```plaintext
 glab stack next [flags]
 ```
@@ -24,7 +25,6 @@ glab stack next [flags]
 
 ```plaintext
 glab stack next
-
 ```
 
 ## Options inherited from parent commands

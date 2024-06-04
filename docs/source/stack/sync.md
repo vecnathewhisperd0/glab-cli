@@ -16,10 +16,11 @@ Sync and submit progress on a stacked diff
 ## Synopsis
 
 Sync and submit progress on a stacked diff. This will do the following:
-* Create a merge requet for any branches without one
-* Push any amended changes to their MRs
-* Rebase any changes that happened previously in the stack
-* Remove any branches that were already merged or where the MR has been closed
+
+- Create a merge requet for any branches without one
+- Push any amended changes to their MRs
+- Rebase any changes that happened previously in the stack
+- Remove any branches that were already merged or where the MR has been closed
 
 ```plaintext
 glab stack sync [flags]

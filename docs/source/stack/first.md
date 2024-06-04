@@ -16,6 +16,7 @@ moves to the first diff in the stack
 ## Synopsis
 
 Moves to the first diff in the stack and checks out that branch
+
 ```plaintext
 glab stack first [flags]
 ```
@@ -24,7 +25,6 @@ glab stack first [flags]
 
 ```plaintext
 glab stack first
-
 ```
 
 ## Options inherited from parent commands

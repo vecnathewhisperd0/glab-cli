@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/xanzy/go-gitlab"
 
 	"github.com/spf13/cobra"
@@ -40,12 +39,10 @@ func baseCommand(f *cmdutils.Factory) (git.Stack, error) {
 
 func NewCmdStackFirst(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
-		Use:   "first",
-		Short: `moves to the first diff in the stack`,
-		Long:  `Moves to the first diff in the stack and checks out that branch`,
-		Example: heredoc.Doc(`
-			glab stack first
-		`),
+		Use:     "first",
+		Short:   "moves to the first diff in the stack",
+		Long:    "Moves to the first diff in the stack and checks out that branch\n",
+		Example: "glab stack first",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
 			if err != nil {
@@ -73,12 +70,10 @@ func NewCmdStackFirst(f *cmdutils.Factory) *cobra.Command {
 
 func NewCmdStackNext(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
-		Use:   "next",
-		Short: `moves to the next diff`,
-		Long:  `Moves to the next diff in the stack and checks out that branch`,
-		Example: heredoc.Doc(`
-			glab stack next
-		`),
+		Use:     "next",
+		Short:   "moves to the next diff",
+		Long:    "Moves to the next diff in the stack and checks out that branch\n",
+		Example: "glab stack next",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
 			if err != nil {
@@ -110,12 +105,10 @@ func NewCmdStackNext(f *cmdutils.Factory) *cobra.Command {
 
 func NewCmdStackPrev(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
-		Use:   "prev",
-		Short: `moves to the previous diff`,
-		Long:  `Moves to the previous diff in the stack and checks out that branch`,
-		Example: heredoc.Doc(`
-			glab stack prev
-		`),
+		Use:     "prev",
+		Short:   "moves to the previous diff",
+		Long:    "Moves to the previous diff in the stack and checks out that branch\n",
+		Example: "glab stack prev",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
 			if err != nil {
@@ -147,12 +140,10 @@ func NewCmdStackPrev(f *cmdutils.Factory) *cobra.Command {
 
 func NewCmdStackLast(f *cmdutils.Factory) *cobra.Command {
 	stackLastCmd := &cobra.Command{
-		Use:   "last",
-		Short: `moves to the last diff`,
-		Long:  `Moves to the last diff in the stack and checks out that branch`,
-		Example: heredoc.Doc(`
-			glab stack last
-		`),
+		Use:     "last",
+		Short:   "moves to the last diff",
+		Long:    "Moves to the last diff in the stack and checks out that branch\n",
+		Example: "glab stack last",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
 			if err != nil {
@@ -185,12 +176,10 @@ type BranchChoice struct {
 
 func NewCmdStackMove(f *cmdutils.Factory) *cobra.Command {
 	stackLastCmd := &cobra.Command{
-		Use:   "move",
-		Short: `moves to any selected entry in the stack`,
-		Long:  `Brings up a menu to select a stack with a fuzzy finder`,
-		Example: heredoc.Doc(`
-			glab stack move
-		`),
+		Use:     "move",
+		Short:   "moves to any selected entry in the stack",
+		Long:    "Brings up a menu to select a stack with a fuzzy finder\n",
+		Example: "glab stack move",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
 			if err != nil {

@@ -16,6 +16,7 @@ moves to the last diff
 ## Synopsis
 
 Moves to the last diff in the stack and checks out that branch
+
 ```plaintext
 glab stack last [flags]
 ```
@@ -24,7 +25,6 @@ glab stack last [flags]
 
 ```plaintext
 glab stack last
-
 ```
 
 ## Options inherited from parent commands
