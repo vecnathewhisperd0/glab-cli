@@ -206,3 +206,23 @@ func validateStackRefs(s Stack) error {
 	}
 	return nil
 }
+
+func CurrentStackFromBranch(title string) (StackRef, error) {
+	stack, err := GatherStackRefs(title)
+	if err != nil {
+		return StackRef{}, err
+	}
+
+	branch, err := CurrentBranch()
+	if err != nil {
+		return StackRef{}, err
+	}
+
+	for _, ref := range stack.Refs {
+		if ref.Branch == branch {
+			return ref, nil
+		}
+	}
+
+	return StackRef{}, nil
+}

@@ -12,13 +12,13 @@ import (
 var stackLocation = filepath.Join(".git", "stacked")
 
 type GitRunner interface {
-	Git(command []string) (string, error)
+	Git(args ...string) (string, error)
 }
 
 type StandardGitCommand struct{}
 
-func (gitc StandardGitCommand) Git(command []string) (string, error) {
-	cmd := GitCommand(command...)
+func (gitc StandardGitCommand) Git(args ...string) (string, error) {
+	cmd := GitCommand(args...)
 	output, err := run.PrepareCmd(cmd).Output()
 	if err != nil {
 		return "", err
