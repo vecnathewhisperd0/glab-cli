@@ -1,4 +1,4 @@
-package edit
+package update
 
 import (
 	"net/http"
@@ -28,8 +28,8 @@ func Test_ScheduleEdit(t *testing.T) {
 		httpMocks   []httpMock
 	}{
 		{
-			Name:        "Schedule edited",
-			ExpectedMsg: []string{"Edited schedule with ID 1"},
+			Name:        "Schedule updated",
+			ExpectedMsg: []string{"Updated schedule with ID 1"},
 			cli:         "1 --cron '*0 * * * *' --description 'example pipeline' --ref 'main'",
 			httpMocks: []httpMock{
 				{
@@ -41,8 +41,8 @@ func Test_ScheduleEdit(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Schedule edited with new variable",
-			ExpectedMsg: []string{"Edited schedule with ID 1"},
+			Name:        "Schedule updated with new variable",
+			ExpectedMsg: []string{"Updated schedule with ID 1"},
 			cli:         "1 --description 'example pipeline' --create-variable 'foo:bar'",
 			httpMocks: []httpMock{
 				{
@@ -60,9 +60,9 @@ func Test_ScheduleEdit(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Schedule edited with edited variable",
-			ExpectedMsg: []string{"Edited schedule with ID 1"},
-			cli:         "1 --description 'example pipeline' --edit-variable 'foo:bar'",
+			Name:        "Schedule updated with updated variable",
+			ExpectedMsg: []string{"Updated schedule with ID 1"},
+			cli:         "1 --description 'example pipeline' --update-variable 'foo:bar'",
 			httpMocks: []httpMock{
 				{
 					http.MethodPut,
@@ -79,8 +79,8 @@ func Test_ScheduleEdit(t *testing.T) {
 			},
 		},
 		{
-			Name:        "Schedule edited with deleted variable",
-			ExpectedMsg: []string{"Edited schedule with ID 1"},
+			Name:        "Schedule updated with deleted variable",
+			ExpectedMsg: []string{"Updated schedule with ID 1"},
 			cli:         "1 --description 'example pipeline' --delete-variable 'foo'",
 			httpMocks: []httpMock{
 				{
@@ -99,7 +99,7 @@ func Test_ScheduleEdit(t *testing.T) {
 		},
 		{
 			Name:        "Schedule not changed if no flags are set",
-			ExpectedMsg: []string{"Edited schedule with ID 1"},
+			ExpectedMsg: []string{"Updated schedule with ID 1"},
 			cli:         "1",
 			httpMocks:   []httpMock{},
 		},
@@ -137,6 +137,6 @@ func runCommand(rt http.RoundTripper, isTTY bool, cli string) (*test.CmdOut, err
 	ios, _, stdout, stderr := cmdtest.InitIOStreams(isTTY, "")
 	factory := cmdtest.InitFactory(ios, rt)
 	_, _ = factory.HttpClient()
-	cmd := NewCmdEdit(factory)
+	cmd := NewCmdUpdate(factory)
 	return cmdtest.ExecuteCommand(cmd, cli, stdout, stderr)
 }

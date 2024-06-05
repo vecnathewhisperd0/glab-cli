@@ -1,4 +1,4 @@
-package edit
+package update
 
 import (
 	"fmt"
@@ -15,16 +15,16 @@ import (
 
 var (
 	variablesToCreate []string
-	variablesToEdit   []string
+	variablesToUpdate []string
 	variablesToDelete []string
 )
 
-func NewCmdEdit(f *cmdutils.Factory) *cobra.Command {
-	scheduleEditCmd := &cobra.Command{
-		Use:   "edit [flags]",
-		Short: `Edit a pipeline.`,
+func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
+	scheduleUpdateCmd := &cobra.Command{
+		Use:   "update [flags]",
+		Short: `Update a pipeline schedule.`,
 		Example: heredoc.Doc(`
-			glab schedule edit 10 --cron "0 * * * *" --description "Describe your pipeline here" --ref "main" --create-variable "foo:bar" --edit-variable "baz:baz" --delete-variable "qux"
+			glab schedule update 10 --cron "0 * * * *" --description "Describe your pipeline here" --ref "main" --create-variable "foo:bar" --update-variable "baz:baz" --delete-variable "qux"
 		`),
 		Long: ``,
 		Args: cobra.ExactArgs(1),
@@ -54,7 +54,7 @@ func NewCmdEdit(f *cmdutils.Factory) *cobra.Command {
 			cronTimeZone, _ := cmd.Flags().GetString("cronTimeZone")
 			active, _ := cmd.Flags().GetBool("active")
 			variablesToCreate, _ = cmd.Flags().GetStringSlice("create-variable")
-			variablesToEdit, _ = cmd.Flags().GetStringSlice("edit-variable")
+			variablesToUpdate, _ = cmd.Flags().GetStringSlice("update-variable")
 			variablesToDelete, _ = cmd.Flags().GetStringSlice("delete-variable")
 
 			if cmd.Flags().Lookup("active").Changed {
@@ -100,11 +100,11 @@ func NewCmdEdit(f *cmdutils.Factory) *cobra.Command {
 				}
 			}
 
-			// edit variables
-			for _, v := range variablesToEdit {
+			// update variables
+			for _, v := range variablesToUpdate {
 				split := strings.SplitN(v, ":", 2)
 				if len(split) != 2 {
-					return fmt.Errorf("Invalid format for --edit-variable: %s", v)
+					return fmt.Errorf("Invalid format for --update-variable: %s", v)
 				}
 				err = api.EditScheduleVariable(apiClient, repo.FullName(), scheduleId, split[0], &gitlab.EditPipelineScheduleVariableOptions{
 					Value: &split[1],
@@ -122,21 +122,21 @@ func NewCmdEdit(f *cmdutils.Factory) *cobra.Command {
 				}
 			}
 
-			fmt.Fprintln(f.IO.StdOut, "Edited schedule with ID", scheduleId)
+			fmt.Fprintln(f.IO.StdOut, "Updated schedule with ID", scheduleId)
 
 			return nil
 		},
 	}
 
-	scheduleEditCmd.Flags().String("description", "", "Description of the schedule")
-	scheduleEditCmd.Flags().String("ref", "", "Target branch or tag")
-	scheduleEditCmd.Flags().String("cron", "", "Cron interval pattern")
-	scheduleEditCmd.Flags().String("cronTimeZone", "", "Cron timezone")
-	scheduleEditCmd.Flags().Bool("active", true, "Whether or not the schedule is active")
-	scheduleEditCmd.Flags().StringSliceVar(&variablesToCreate, "create-variable", []string{}, "Pass new variables to schedule in format <key>:<value>")
-	scheduleEditCmd.Flags().StringSliceVar(&variablesToEdit, "edit-variable", []string{}, "Pass updated variables to schedule in format <key>:<value>")
-	scheduleEditCmd.Flags().StringSliceVar(&variablesToDelete, "delete-variable", []string{}, "Pass variables you want to delete from schedule in format <key>")
-	scheduleEditCmd.Flags().Lookup("active").DefValue = "to not change"
+	scheduleUpdateCmd.Flags().String("description", "", "Description of the schedule")
+	scheduleUpdateCmd.Flags().String("ref", "", "Target branch or tag")
+	scheduleUpdateCmd.Flags().String("cron", "", "Cron interval pattern")
+	scheduleUpdateCmd.Flags().String("cronTimeZone", "", "Cron timezone")
+	scheduleUpdateCmd.Flags().Bool("active", true, "Whether or not the schedule is active")
+	scheduleUpdateCmd.Flags().StringSliceVar(&variablesToCreate, "create-variable", []string{}, "Pass new variables to schedule in format <key>:<value>")
+	scheduleUpdateCmd.Flags().StringSliceVar(&variablesToUpdate, "update-variable", []string{}, "Pass updated variables to schedule in format <key>:<value>")
+	scheduleUpdateCmd.Flags().StringSliceVar(&variablesToDelete, "delete-variable", []string{}, "Pass variables you want to delete from schedule in format <key>")
+	scheduleUpdateCmd.Flags().Lookup("active").DefValue = "to not change"
 
-	return scheduleEditCmd
+	return scheduleUpdateCmd
 }
