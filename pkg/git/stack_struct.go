@@ -2,6 +2,7 @@ package git
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -46,15 +47,14 @@ func (s *Stack) RemoveRef(ref StackRef) error {
 		return fmt.Errorf("could not delete reference file %v:", err)
 	}
 
-	var gr GitRunner
-	s.RemoveBranch(ref, gr)
+	s.RemoveBranch(ref)
 
 	delete(s.Refs, ref.SHA)
 
 	return nil
 }
 
-func (s *Stack) RemoveBranch(ref StackRef, gr GitRunner) error {
+func (s *Stack) RemoveBranch(ref StackRef) error {
 	var branch string
 	var err error
 
@@ -179,5 +179,30 @@ func GatherStackRefs(title string) (Stack, error) {
 		}
 	}
 
+	err = validateStackRefs(stack)
+	if err != nil {
+		return Stack{}, err
+	}
+
 	return stack, nil
+}
+
+func validateStackRefs(s Stack) error {
+	endRefs := 0
+	startRefs := 0
+
+	for _, ref := range s.Refs {
+		if ref.Next == "" {
+			startRefs++
+		}
+
+		if ref.Prev == "" {
+			endRefs++
+		}
+
+		if endRefs > 1 || startRefs > 1 {
+			return errors.New("More than one end or start ref detected. Data could be corrupted")
+		}
+	}
+	return nil
 }
