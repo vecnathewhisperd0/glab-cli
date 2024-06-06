@@ -17,6 +17,11 @@ Save additional progress on a stacked diff
 
 Amend lets you add a change to an already created stack
 
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+
 ```plaintext
 glab stack amend [flags]
 ```

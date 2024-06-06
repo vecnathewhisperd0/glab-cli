@@ -22,6 +22,11 @@ Sync and submit progress on a stacked diff. This will do the following:
 - Rebase any changes that happened previously in the stack
 - Remove any branches that were already merged or where the MR has been closed
 
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+
 ```plaintext
 glab stack sync [flags]
 ```

@@ -18,7 +18,13 @@ func NewCmdAmendStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "amend",
 		Short: `Save additional progress on a stacked diff`,
-		Long:  "Amend lets you add a change to an already created stack\n",
+		Long: `Amend lets you add a change to an already created stack
+
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+`,
 		Example: heredoc.Doc(`glab stack amend modifiedfile
 			glab stack amend . -m "fixed a function"
 			glab stack amend newfile -d "forgot to add this"`),

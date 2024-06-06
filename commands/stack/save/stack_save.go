@@ -24,7 +24,13 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "save",
 		Short: `Save your progress within stacked diff`,
-		Long:  "\"save\" lets you save your current progress with a diff on the stack.\n",
+		Long: `"save" lets you save your current progress with a diff on the stack.
+
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+`,
 		Example: heredoc.Doc(`
 			glab stack save added_file
 			glab stack save . -m "added a function"

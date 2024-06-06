@@ -17,6 +17,11 @@ Save your progress within stacked diff
 
 "save" lets you save your current progress with a diff on the stack.
 
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+
 ```plaintext
 glab stack save [flags]
 ```

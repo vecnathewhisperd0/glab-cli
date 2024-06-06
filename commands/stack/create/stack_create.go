@@ -17,9 +17,15 @@ import (
 
 func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
 	stackCreateCmd := &cobra.Command{
-		Use:     "create",
-		Short:   `Create new stacked diff`,
-		Long:    ``,
+		Use:   "create",
+		Short: `Create new stacked diff`,
+		Long: `Create a new stacked diff (adds metadata to your "./.git/stacked" dir)
+
+This is an experimental feature that might be broken or removed without any prior notice.
+Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+
+This is an experimental feature. Use at your own risk.
+`,
 		Aliases: []string{"new"},
 		Example: heredoc.Doc(`
 			glab stack create cool-new-feature
