@@ -2,6 +2,8 @@ package sync
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -63,19 +65,6 @@ func NewCmdSyncStack(f *cmdutils.Factory) *cobra.Command {
 
 }
 
-func getStacks() (git.Stack, error) {
-	title, err := git.GetCurrentStackTitle()
-	if err != nil {
-		return git.Stack{}, fmt.Errorf("error getting current stack: %v", err)
-	}
-
-	stack, err := git.GatherStackRefs(title)
-	if err != nil {
-		return git.Stack{}, fmt.Errorf("error getting current stack references: %v", err)
-	}
-	return stack, nil
-}
-
 func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 	iostream.StartSpinner("Syncing")
 
@@ -95,7 +84,7 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 		return err
 	}
 
-	needsToSyncAgain := false
+	var needsToSyncAgain bool
 
 	for {
 		needsToSyncAgain = false
@@ -138,6 +127,8 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 					return fmt.Errorf("error pushing branches %v", err)
 				}
 
+				// since a branch diverged and we need to rebase, we're going to have
+				// to push all the subsequent stacks
 				needsToSyncAgain = true
 			}
 
@@ -145,39 +136,9 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				// no MR - lets create one!
 				fmt.Println(progressString(ref.Branch + " needs a merge request- Creating"))
 
-				_, err = gr.Git("push", "-u", git.DefaultRemote, ref.Branch)
+				mr, err := createMR(client, repo, stack, ref, gr)
 				if err != nil {
-					return fmt.Errorf("error pushing branch: %v", err)
-				}
-
-				var previousBranch string
-				if ref.Prev != "" {
-					// if we have a previous branch, let's point to that
-					previousBranch = stack.Refs[ref.Prev].Branch
-				} else {
-					// otherwise, we'll point to the default one
-					previousBranch, err = git.GetDefaultBranch("origin")
-					if err != nil {
-						return fmt.Errorf("error getting default branch: %v", err)
-					}
-				}
-
-				user, _, err := client.Users.CurrentUser()
-				if err != nil {
-					return err
-				}
-
-				l := &gitlab.CreateMergeRequestOptions{
-					Title:              gitlab.Ptr(ref.Description),
-					SourceBranch:       gitlab.Ptr(ref.Branch),
-					TargetBranch:       gitlab.Ptr(previousBranch),
-					AssigneeID:         gitlab.Ptr(user.ID),
-					RemoveSourceBranch: gitlab.Ptr(true),
-				}
-
-				mr, err := api.CreateMR(client, repo.FullName(), l)
-				if err != nil {
-					return fmt.Errorf("error creating MR with the API: %v", err)
+					return fmt.Errorf("error updating stack ref files: %v", err)
 				}
 
 				fmt.Println(progressString("MR created!"))
@@ -189,24 +150,15 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				if err != nil {
 					return fmt.Errorf("error updating stack ref files: %v", err)
 				}
+
 			} else {
+
 				// we have an MR. let's make sure it's still open.
 				mr, _, err := mrutils.MRFromArgsWithOpts(f, nil, nil, "opened")
 				if err != nil {
 					return fmt.Errorf("error getting MR from branch: %v", err)
 				}
-
-				if mr.State == "merged" {
-					string := fmt.Sprintf("MR !%v has merged, removing reference...", mr.IID)
-					fmt.Println(progressString(string))
-
-					stack.RemoveRef(ref)
-				} else if mr.State == "closed" {
-					string := fmt.Sprintf("MR !%v has closed, removing reference...", mr.IID)
-					fmt.Println(progressString(string))
-
-					stack.RemoveRef(ref)
-				}
+				mergeOldMr(ref, mr, &stack)
 			}
 
 			if ref.Next == "" {
@@ -223,38 +175,62 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 
 	iostream.StopSpinner("")
 
+	fmt.Printf(progressString("Sync finished!"))
+
 	return nil
 }
 
+func getStacks() (git.Stack, error) {
+	title, err := git.GetCurrentStackTitle()
+	if err != nil {
+		return git.Stack{}, fmt.Errorf("error getting current stack: %v", err)
+	}
+
+	stack, err := git.GatherStackRefs(title)
+	if err != nil {
+		return git.Stack{}, fmt.Errorf("error getting current stack references: %v", err)
+	}
+	return stack, nil
+}
+
 func gitPull(ref git.StackRef, gr git.GitRunner) (string, error) {
-	err := git.CheckoutBranch(ref.Branch)
+	checkout, err := gr.Git("checkout", ref.Branch)
 	if err != nil {
 		return "", err
 	}
+	debug("Checked out:", checkout)
 
-	_, err = gr.Git("branch", "--set-upstream-to", fmt.Sprintf("%s/%s", git.DefaultRemote, ref.Branch))
+	upstream, err := gr.Git(
+		"branch",
+		"--set-upstream-to",
+		fmt.Sprintf("%s/%s", git.DefaultRemote, ref.Branch),
+	)
 	if err != nil {
 		return "", err
 	}
+	debug("Set upstream:", upstream)
 
-	pullOutput, err := gr.Git("pull")
+	pull, err := gr.Git("pull")
 	if err != nil {
 		return "", err
 	}
+	debug("Pulled:", pull)
 
-	return pullOutput, nil
+	return pull, nil
 }
 
 func branchStatus(ref git.StackRef, gr git.GitRunner) (string, error) {
-	err := git.CheckoutBranch(ref.Branch)
+	checkout, err := gr.Git("checkout", ref.Branch)
 	if err != nil {
 		return "", err
 	}
+	debug("Checked out:", checkout)
 
 	output, err := gr.Git("status", "-uno")
 	if err != nil {
 		return "", err
 	}
+	debug("Git status:", output)
 
 	return output, nil
 }
@@ -265,14 +241,17 @@ func rebaseWithUpdateRefs(ref git.StackRef, stack git.Stack, gr git.GitRunner) e
 		return err
 	}
 
-	err = git.CheckoutBranch(lastRef.Branch)
+	checkout, err := gr.Git("checkout", lastRef.Branch)
 	if err != nil {
 		return err
 	}
+	debug("Checked out:", checkout)
 
-	_, err = gr.Git("rebase", "--fork-point", "--update-refs", ref.Branch)
+	rebase, err := gr.Git("rebase", "--fork-point", "--update-refs", ref.Branch)
 	if err != nil {
+		return err
 	}
+	debug("Rebased:", rebase)
 
 	return nil
 }
@@ -296,14 +275,67 @@ func forcePushAll(stack git.Stack, gr git.GitRunner) error {
 	return nil
 }
 
-func forcePush(gc git.GitRunner) error {
-	output, err := gc.Git("push", git.DefaultRemote, "--force-with-lease")
+func forcePush(gr git.GitRunner) error {
+	output, err := gr.Git("push", git.DefaultRemote, "--force-with-lease")
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf(progressString("Push succeeded: " + output))
 	return nil
+}
+
+func createMR(client *gitlab.Client, repo glrepo.Interface, stack git.Stack, ref git.StackRef, gr git.GitRunner) (*gitlab.MergeRequest, error) {
+	_, err := gr.Git("push", "-u", git.DefaultRemote, ref.Branch)
+	if err != nil {
+		return &gitlab.MergeRequest{}, fmt.Errorf("error pushing branch: %v", err)
+	}
+
+	var previousBranch string
+	if ref.Prev != "" {
+		// if we have a previous branch, let's point to that
+		previousBranch = stack.Refs[ref.Prev].Branch
+	} else {
+		// otherwise, we'll point to the default one
+		previousBranch, err = git.GetDefaultBranch("origin")
+		if err != nil {
+			return &gitlab.MergeRequest{}, fmt.Errorf("error getting default branch: %v", err)
+		}
+	}
+
+	user, _, err := client.Users.CurrentUser()
+	if err != nil {
+		return &gitlab.MergeRequest{}, err
+	}
+
+	l := &gitlab.CreateMergeRequestOptions{
+		Title:              gitlab.Ptr(ref.Description),
+		SourceBranch:       gitlab.Ptr(ref.Branch),
+		TargetBranch:       gitlab.Ptr(previousBranch),
+		AssigneeID:         gitlab.Ptr(user.ID),
+		RemoveSourceBranch: gitlab.Ptr(true),
+	}
+
+	mr, err := api.CreateMR(client, repo.FullName(), l)
+	if err != nil {
+		return &gitlab.MergeRequest{}, fmt.Errorf("error creating MR with the API: %v", err)
+	}
+
+	return mr, nil
+}
+
+func mergeOldMr(ref git.StackRef, mr *gitlab.MergeRequest, stack *git.Stack) {
+	if mr.State == "merged" {
+		string := fmt.Sprintf("MR !%v has merged, removing reference...", mr.IID)
+		fmt.Println(progressString(string))
+
+		stack.RemoveRef(ref)
+	} else if mr.State == "closed" {
+		string := fmt.Sprintf("MR !%v has closed, removing reference...", mr.IID)
+		fmt.Println(progressString(string))
+
+		stack.RemoveRef(ref)
+	}
 }
 
 func errorString(errors ...string) string {
@@ -317,9 +349,21 @@ func errorString(errors ...string) string {
 
 func progressString(lines ...string) string {
 	blueDot := iostream.Color().ProgressIcon()
-
 	title := lines[0]
-	body := strings.Join(lines[1:], "\n  ")
 
-	return fmt.Sprintf("\n%s %s \n  %s", blueDot, title, body)
+	var body string
+
+	if len(lines) > 1 {
+		body = strings.Join(lines[1:], "\n  ")
+		return fmt.Sprintf("\n%s %s \n  %s", blueDot, title, body)
+	} else {
+		return fmt.Sprintf("\n%s %s\n", blueDot, title)
+	}
+
+}
+
+func debug(output ...string) {
+	if os.Getenv("DEBUG") != "" {
+		log.Print(output)
+	}
 }
