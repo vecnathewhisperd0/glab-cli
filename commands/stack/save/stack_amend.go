@@ -17,13 +17,14 @@ import (
 func NewCmdAmendStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "amend",
-		Short: `Save additional progress on a stacked diff`,
-		Long: `Amend lets you add a change to an already created stack
+		Short: `Save more changes to a stacked diff`,
+		Long: `Add more changes to an existing stacked diff.
 
-This is an experimental feature that might be broken or removed without any prior notice.
-Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+This feature is experimental. It might be broken or removed without any prior notice.
+Read more about what experimental features mean at
+<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
-This is an experimental feature. Use at your own risk.
+Use experimental features at your own risk.
 `,
 		Example: heredoc.Doc(`glab stack amend modifiedfile
 			glab stack amend . -m "fixed a function"
@@ -42,7 +43,7 @@ This is an experimental feature. Use at your own risk.
 		},
 	}
 	stackSaveCmd.Flags().StringVarP(&description, "description", "d", "", "a description of the change")
-	stackSaveCmd.Flags().StringVarP(&description, "message", "m", "", "alias for description flag")
+	stackSaveCmd.Flags().StringVarP(&description, "message", "m", "", "alias for the description flag")
 	stackSaveCmd.MarkFlagsMutuallyExclusive("message", "description")
 
 	return stackSaveCmd
@@ -60,7 +61,7 @@ func amendFunc(f *cmdutils.Factory, args []string, description string) (string, 
 	// get stack title
 	title, err := git.GetCurrentStackTitle()
 	if err != nil {
-		return "", fmt.Errorf("error running git command: %v", err)
+		return "", fmt.Errorf("error running Git command: %v", err)
 	}
 
 	stack, err := checkForStack(title)
@@ -89,7 +90,7 @@ func amendFunc(f *cmdutils.Factory, args []string, description string) (string, 
 	// run the amend commit
 	err = gitAmend(description)
 	if err != nil {
-		return "", fmt.Errorf("error amending commit with git: %v", err)
+		return "", fmt.Errorf("error amending commit with Git: %v", err)
 	}
 
 	output := fmt.Sprintf("Amended stack item with description: \"%s\".\n", description)
@@ -105,7 +106,7 @@ func gitAmend(description string) error {
 	amendCmd := git.GitCommand("commit", "--amend", "-m", description)
 	output, err := run.PrepareCmd(amendCmd).Output()
 	if err != nil {
-		return fmt.Errorf("error running git command: %v", err)
+		return fmt.Errorf("error running Git command: %v", err)
 	}
 
 	fmt.Println("Amend commit: ", string(output))

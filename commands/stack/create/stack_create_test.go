@@ -73,7 +73,7 @@ func TestCreateNewStack(t *testing.T) {
 			require.Equal(t, "New stack created with title \""+tc.expectedBranch+"\".\n", output.String())
 
 			if tc.warning == true {
-				require.Equal(t, "! warning: non-usable characters have been replaced with dashes: "+tc.expectedBranch+"\n", output.Stderr())
+				require.Equal(t, "! warning: invalid characters have been replaced with dashes: "+tc.expectedBranch+"\n", output.Stderr())
 			} else {
 				require.Empty(t, output.Stderr())
 			}

@@ -41,17 +41,18 @@ func NewCmdSyncStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "sync",
 		Short: `Sync and submit progress on a stacked diff`,
-		Long: heredoc.Doc(`Sync and submit progress on a stacked diff. This will do the following:
+		Long: heredoc.Doc(`Sync and submit progress on a stacked diff. This command runs these steps:
 
-- Create a merge requet for any branches without one
-- Push any amended changes to their MRs
-- Rebase any changes that happened previously in the stack
-- Remove any branches that were already merged or where the MR has been closed
+1. Create a merge request for any branches without one.
+1. Push any amended changes to their merge requests.
+1. Rebase any changes that happened previously in the stack.
+1. Remove any branches that were already merged, or with a closed merge request.
 
-This is an experimental feature that might be broken or removed without any prior notice.
-Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+This feature is experimental. It might be broken or removed without any prior notice.
+Read more about what experimental features mean at
+<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
-This is an experimental feature. Use at your own risk.
+Use experimental features at your own risk.
 `),
 		Example: heredoc.Doc(`
 			glab sync
@@ -113,7 +114,7 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 
 				_, err = gitPull(ref, gr)
 				if err != nil {
-					return fmt.Errorf("error checking for running git pull: %v", err)
+					return fmt.Errorf("error checking for running Git pull: %v", err)
 				}
 
 			} else if strings.Contains(status, "have diverged") {
@@ -122,8 +123,8 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				err := rebaseWithUpdateRefs(ref, stack, gr)
 				if err != nil {
 					return fmt.Errorf(errorString(
-						"could not rebase - branch has a merge conflict",
-						"please correct any issues with git and run `glab sync stack` again",
+						"could not rebase due to a merge conflict.",
+						"Fix the issues with Git and run `glab sync stack` again.",
 					))
 				}
 
@@ -136,19 +137,19 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				// to push all the subsequent stacks
 				needsToSyncAgain = true
 			} else {
-				return fmt.Errorf("your git branch is ahead when it shouldn't be. you may need to squash your commits")
+				return fmt.Errorf("your Git branch is ahead when it shouldn't be. You might need to squash your commits.")
 			}
 
 			if ref.MR == "" {
 				// no MR - lets create one!
-				fmt.Println(progressString(ref.Branch + " needs a merge request- creating"))
+				fmt.Println(progressString(ref.Branch + " needs a merge request. Creating it now."))
 
 				mr, err := createMR(client, repo, stack, ref, gr)
 				if err != nil {
 					return fmt.Errorf("error updating stack ref files: %v", err)
 				}
 
-				fmt.Println(progressString("MR created!"))
+				fmt.Println(progressString("Merge request created!"))
 				fmt.Println(mrutils.DisplayMR(iostream.Color(), mr, true))
 
 				// update the ref
@@ -163,7 +164,7 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				// we have an MR. let's make sure it's still open.
 				mr, _, err := mrutils.MRFromArgsWithOpts(f, nil, nil, "opened")
 				if err != nil {
-					return fmt.Errorf("error getting MR from branch: %v", err)
+					return fmt.Errorf("error getting merge request from branch: %v", err)
 				}
 				mergeOldMr(ref, mr, &stack)
 			}
@@ -325,7 +326,7 @@ func createMR(client *gitlab.Client, repo glrepo.Interface, stack git.Stack, ref
 
 	mr, err := api.CreateMR(client, repo.FullName(), l)
 	if err != nil {
-		return &gitlab.MergeRequest{}, fmt.Errorf("error creating MR with the API: %v", err)
+		return &gitlab.MergeRequest{}, fmt.Errorf("error creating merge request with the API: %v", err)
 	}
 
 	return mr, nil

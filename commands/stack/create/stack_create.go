@@ -21,10 +21,11 @@ func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
 		Short: `Create new stacked diff`,
 		Long: `Create a new stacked diff (adds metadata to your "./.git/stacked" dir)
 
-This is an experimental feature that might be broken or removed without any prior notice.
-Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+This feature is experimental. It might be broken or removed without any prior notice.
+Read more about what experimental features mean at
+<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
-This is an experimental feature. Use at your own risk.
+Use experimental features at your own risk.
 `,
 		Aliases: []string{"new"},
 		Example: heredoc.Doc(`
@@ -51,14 +52,14 @@ This is an experimental feature. Use at your own risk.
 
 			title := utils.ReplaceNonAlphaNumericChars(titleString, "-")
 			if title != titleString {
-				fmt.Fprintf(f.IO.StdErr, "%s warning: non-usable characters have been replaced with dashes: %s\n",
+				fmt.Fprintf(f.IO.StdErr, "%s warning: invalid characters have been replaced with dashes: %s\n",
 					color.WarnIcon(),
 					color.Blue(title))
 			}
 
 			err := git.SetLocalConfig("glab.currentstack", title)
 			if err != nil {
-				return fmt.Errorf("error setting local git config: %v", err)
+				return fmt.Errorf("error setting local Git config: %v", err)
 			}
 
 			_, err = git.AddStackRefDir(title)

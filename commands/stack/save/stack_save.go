@@ -24,12 +24,13 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "save",
 		Short: `Save your progress within stacked diff`,
-		Long: `"save" lets you save your current progress with a diff on the stack.
+		Long: `Save your current progress with a diff on the stack.
 
-This is an experimental feature that might be broken or removed without any prior notice.
-Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+		This feature is experimental. It might be broken or removed without any prior notice.
+		Read more about what experimental features mean at
+		<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
-This is an experimental feature. Use at your own risk.
+		Use experimental features at your own risk.
 `,
 		Example: heredoc.Doc(`
 			glab stack save added_file
@@ -65,15 +66,15 @@ This is an experimental feature. Use at your own risk.
 			// get stack title
 			title, err := git.GetCurrentStackTitle()
 			if err != nil {
-				return fmt.Errorf("error running git command: %v", err)
+				return fmt.Errorf("error running Git command: %v", err)
 			}
 
 			author, err := git.GitUserName()
 			if err != nil {
-				return fmt.Errorf("error getting git author: %v", err)
+				return fmt.Errorf("error getting Git author: %v", err)
 			}
 
-			// generate a SHA based on: commit message, stack title, git author name
+			// generate a SHA based on: commit message, stack title, Git author name
 			sha, err := generateStackSha(description, title, string(author))
 			if err != nil {
 				return fmt.Errorf("error generating SHA command: %v", err)
@@ -150,7 +151,7 @@ This is an experimental feature. Use at your own risk.
 		},
 	}
 	stackSaveCmd.Flags().StringVarP(&description, "description", "d", "", "a description of the change")
-	stackSaveCmd.Flags().StringVarP(&description, "message", "m", "", "alias for description flag")
+	stackSaveCmd.Flags().StringVarP(&description, "message", "m", "", "alias for the description flag")
 
 	return stackSaveCmd
 }
@@ -159,7 +160,7 @@ func checkForChanges() error {
 	gitCmd := git.GitCommand("status", "--porcelain")
 	output, err := run.PrepareCmd(gitCmd).Output()
 	if err != nil {
-		return fmt.Errorf("error running git status: %v", err)
+		return fmt.Errorf("error running Git status: %v", err)
 	}
 
 	if string(output) == "" {
@@ -188,7 +189,7 @@ func addFiles(args []string) (files []string, err error) {
 
 	_, err = run.PrepareCmd(gitCmd).Output()
 	if err != nil {
-		return []string{}, fmt.Errorf("error running git add: %v", err)
+		return []string{}, fmt.Errorf("error running Git add: %v", err)
 	}
 
 	return files, err
@@ -198,7 +199,7 @@ func commitFiles(message string) (string, error) {
 	commitCmd := git.GitCommand("commit", "-m", message)
 	output, err := run.PrepareCmd(commitCmd).Output()
 	if err != nil {
-		return "", fmt.Errorf("error running git command: %v", err)
+		return "", fmt.Errorf("error running Git command: %v", err)
 	}
 
 	return string(output), nil
