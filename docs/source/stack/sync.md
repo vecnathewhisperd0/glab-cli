@@ -18,9 +18,9 @@ Sync and submit progress on a stacked diff.
 Sync and submit progress on a stacked diff. This command runs these steps:
 
 1. Creates a merge request for any branches without one.
-1. Pushes any amended changes to their merge requests.
-1. Rebases any changes that happened previously in the stack.
-1. Removes any branches that were already merged, or with a closed merge request.
+2. Pushes any amended changes to their merge requests.
+3. Rebases any changes that happened previously in the stack.
+4. Removes any branches that were already merged, or with a closed merge request.
 
 This feature is experimental. It might be broken or removed without any prior notice.
 Read more about what experimental features mean at

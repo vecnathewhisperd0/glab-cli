@@ -71,8 +71,8 @@ func NewCmdStackFirst(f *cmdutils.Factory) *cobra.Command {
 func NewCmdStackNext(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
 		Use:     "next",
-		Short:   "moves to the next diff",
-		Long:    "Moves to the next diff in the stack, and checks out that branch\n",
+		Short:   "Moves to the next diff in the stack.",
+		Long:    "Moves to the next diff in the stack, and checks out that branch.\n",
 		Example: "glab stack next",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
@@ -106,8 +106,8 @@ func NewCmdStackNext(f *cmdutils.Factory) *cobra.Command {
 func NewCmdStackPrev(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
 		Use:     "prev",
-		Short:   "moves to the previous diff",
-		Long:    "Moves to the previous diff in the stack, and checks out that branch\n",
+		Short:   "Moves to the previous diff in the stack.",
+		Long:    "Moves to the previous diff in the stack, and checks out that branch.\n",
 		Example: "glab stack prev",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
@@ -141,8 +141,8 @@ func NewCmdStackPrev(f *cmdutils.Factory) *cobra.Command {
 func NewCmdStackLast(f *cmdutils.Factory) *cobra.Command {
 	stackLastCmd := &cobra.Command{
 		Use:     "last",
-		Short:   "moves to the last diff",
-		Long:    "Moves to the last diff in the stack, and checks out that branch\n",
+		Short:   "Moves to the last diff in the stack.",
+		Long:    "Moves to the last diff in the stack, and checks out that branch.\n",
 		Example: "glab stack last",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)
@@ -177,7 +177,7 @@ type BranchChoice struct {
 func NewCmdStackMove(f *cmdutils.Factory) *cobra.Command {
 	stackLastCmd := &cobra.Command{
 		Use:     "move",
-		Short:   "moves to any selected entry in the stack",
+		Short:   "Moves to any selected entry in the stack.",
 		Long:    "Shows a menu with a fuzzy finder to select a stack.\n",
 		Example: "glab stack move",
 		RunE: func(cmd *cobra.Command, args []string) error {
