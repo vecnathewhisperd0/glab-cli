@@ -130,11 +130,13 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				// since a branch diverged and we need to rebase, we're going to have
 				// to push all the subsequent stacks
 				needsToSyncAgain = true
+			} else {
+				return fmt.Errorf("your git branch is ahead when it shouldn't be. you may need to squash your commits")
 			}
 
 			if ref.MR == "" {
 				// no MR - lets create one!
-				fmt.Println(progressString(ref.Branch + " needs a merge request- Creating"))
+				fmt.Println(progressString(ref.Branch + " needs a merge request- creating"))
 
 				mr, err := createMR(client, repo, stack, ref, gr)
 				if err != nil {
