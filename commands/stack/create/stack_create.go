@@ -15,18 +15,20 @@ import (
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
 
-func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
-	stackCreateCmd := &cobra.Command{
-		Use:   "create",
-		Short: `Create a new stacked diff.`,
-		Long: `Create a new stacked diff. Adds metadata to your "./.git/stacked" directory.
+var longString = `Create a new stacked diff. Adds metadata to your "./.git/stacked" directory.
 
 This feature is experimental. It might be broken or removed without any prior notice.
 Read more about what experimental features mean at
 <https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
 Use experimental features at your own risk.
-`,
+`
+
+func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
+	stackCreateCmd := &cobra.Command{
+		Use:     "create",
+		Short:   `Create a new stacked diff.`,
+		Long:    strings.Replace(longString, "\"./.git/stacked\"", "`./.git/stacked`", 1),
 		Aliases: []string{"new"},
 		Example: heredoc.Doc(`
 			glab stack create cool-new-feature

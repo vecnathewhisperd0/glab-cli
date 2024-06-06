@@ -15,7 +15,7 @@ Create a new stacked diff.
 
 ## Synopsis
 
-Create a new stacked diff. Adds metadata to your "./.git/stacked" directory.
+Create a new stacked diff. Adds metadata to your `./.git/stacked` directory.
 
 This feature is experimental. It might be broken or removed without any prior notice.
 Read more about what experimental features mean at
