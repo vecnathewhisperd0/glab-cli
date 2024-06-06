@@ -15,7 +15,7 @@ moves to any selected entry in the stack
 
 ## Synopsis
 
-Brings up a menu to select a stack with a fuzzy finder
+Shows a menu with a fuzzy finder to select a stack.
 
 ```plaintext
 glab stack move [flags]

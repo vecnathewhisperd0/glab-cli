@@ -15,7 +15,7 @@ moves to the previous diff
 
 ## Synopsis
 
-Moves to the previous diff in the stack and checks out that branch
+Moves to the previous diff in the stack, and checks out that branch
 
 ```plaintext
 glab stack prev [flags]
