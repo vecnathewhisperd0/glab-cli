@@ -17,6 +17,7 @@ import (
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
+	"gitlab.com/gitlab-org/cli/pkg/text"
 )
 
 type SyncOptions struct {
@@ -47,13 +48,7 @@ func NewCmdSyncStack(f *cmdutils.Factory) *cobra.Command {
 1. Pushes any amended changes to their merge requests.
 1. Rebases any changes that happened previously in the stack.
 1. Removes any branches that were already merged, or with a closed merge request.
-
-This feature is experimental. It might be broken or removed without any prior notice.
-Read more about what experimental features mean at
-<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
-
-Use experimental features at your own risk.
-`),
+` + text.ExperimentalString),
 		Example: heredoc.Doc(`
 			glab sync
 		`),

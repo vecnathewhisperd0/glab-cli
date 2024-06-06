@@ -9,6 +9,7 @@ import (
 	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
+	"gitlab.com/gitlab-org/cli/pkg/text"
 
 	"github.com/spf13/cobra"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
@@ -19,13 +20,7 @@ func NewCmdAmendStack(f *cmdutils.Factory) *cobra.Command {
 		Use:   "amend",
 		Short: `Save more changes to a stacked diff.`,
 		Long: `Add more changes to an existing stacked diff.
-
-This feature is experimental. It might be broken or removed without any prior notice.
-Read more about what experimental features mean at
-<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
-
-Use experimental features at your own risk.
-`,
+` + text.ExperimentalString,
 		Example: heredoc.Doc(`glab stack amend modifiedfile
 			glab stack amend . -m "fixed a function"
 			glab stack amend newfile -d "forgot to add this"`),

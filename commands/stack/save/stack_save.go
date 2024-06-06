@@ -13,6 +13,7 @@ import (
 	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
+	"gitlab.com/gitlab-org/cli/pkg/text"
 
 	"github.com/spf13/cobra"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
@@ -25,13 +26,7 @@ func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 		Use:   "save",
 		Short: `Save your progress within a stacked diff.`,
 		Long: `Save your current progress with a diff on the stack.
-
-This feature is experimental. It might be broken or removed without any prior notice.
-Read more about what experimental features mean at
-<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
-
-Use experimental features at your own risk.
-`,
+` + text.ExperimentalString,
 		Example: heredoc.Doc(`
 			glab stack save added_file
 			glab stack save . -m "added a function"

@@ -8,6 +8,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 	"gitlab.com/gitlab-org/cli/pkg/prompt"
+	"gitlab.com/gitlab-org/cli/pkg/text"
 	"gitlab.com/gitlab-org/cli/pkg/utils"
 
 	"github.com/briandowns/spinner"
@@ -16,13 +17,7 @@ import (
 )
 
 var longString = `Create a new stacked diff. Adds metadata to your "./.git/stacked" directory.
-
-This feature is experimental. It might be broken or removed without any prior notice.
-Read more about what experimental features mean at
-<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
-
-Use experimental features at your own risk.
-`
+` + text.ExperimentalString
 
 func NewCmdCreateStack(f *cmdutils.Factory) *cobra.Command {
 	stackCreateCmd := &cobra.Command{

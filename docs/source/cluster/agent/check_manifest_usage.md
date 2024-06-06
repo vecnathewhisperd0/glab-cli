@@ -18,10 +18,11 @@ Check agent configuration files for built-in GitOps manifests usage
 Checks a the descendants of a group for registered agents with configuration files that rely on the deprecated GitOps manifests settings.
 The output can be piped to a tab separated value file.
 
-This is an experimental feature that might be broken or removed without any prior notice. 
-Read more about what experimental features mean at <https://docs.gitlab.com/ee/policy/experiment-beta-support.html#experiment>
+This feature is experimental. It might be broken or removed without any prior notice.
+Read more about what experimental features mean at
+<https://docs.gitlab.com/ee/policy/experiment-beta-support.html>
 
-This is an experimental feature. Use at your own risk.
+Use experimental features at your own risk.
 
 ```plaintext
 glab cluster agent check_manifest_usage [flags]
