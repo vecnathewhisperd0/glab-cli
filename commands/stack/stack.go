@@ -13,7 +13,7 @@ import (
 func NewCmdStack(f *cmdutils.Factory) *cobra.Command {
 	stackCmd := &cobra.Command{
 		Use:     "stack <command> [flags]",
-		Short:   `Work with Stacked Diffs`,
+		Short:   `Work with stacked diffs.`,
 		Long:    ``,
 		Aliases: []string{"stacks"},
 	}

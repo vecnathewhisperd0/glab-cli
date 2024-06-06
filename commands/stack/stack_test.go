@@ -18,5 +18,5 @@ func TestStackCmd(t *testing.T) {
 
 	out := test.ReturnBuffer(old, r, w)
 
-	assert.Contains(t, out, "Work with Stacked Diffs")
+	assert.Contains(t, out, "Work with stacked diffs")
 }

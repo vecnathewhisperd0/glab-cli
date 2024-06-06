@@ -23,7 +23,7 @@ var description string
 func NewCmdSaveStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "save",
-		Short: `Save your progress within stacked diff`,
+		Short: `Save your progress within a stacked diff.`,
 		Long: `Save your current progress with a diff on the stack.
 
 		This feature is experimental. It might be broken or removed without any prior notice.

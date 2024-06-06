@@ -120,7 +120,7 @@ func (s *Stack) Last() (StackRef, error) {
 		}
 	}
 
-	return StackRef{}, fmt.Errorf("can't find the last ref in the chain. data might have been corrupted.")
+	return StackRef{}, fmt.Errorf("can't find the last ref in the chain. Data might be corrupted.")
 }
 
 func (s *Stack) First() (StackRef, error) {
@@ -130,7 +130,7 @@ func (s *Stack) First() (StackRef, error) {
 		}
 	}
 
-	return StackRef{}, fmt.Errorf("can't find the first ref in the chain. data might have been corrupted.")
+	return StackRef{}, fmt.Errorf("can't find the first ref in the chain. Data might be corrupted.")
 }
 
 func GatherStackRefs(title string) (Stack, error) {
@@ -201,7 +201,7 @@ func validateStackRefs(s Stack) error {
 		}
 
 		if endRefs > 1 || startRefs > 1 {
-			return errors.New("More than one end or start ref detected. Data could be corrupted")
+			return errors.New("More than one end or start ref detected. Data might be corrupted")
 		}
 	}
 	return nil

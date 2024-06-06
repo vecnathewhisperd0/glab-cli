@@ -30,7 +30,7 @@ func (gitc StandardGitCommand) Git(args ...string) (string, error) {
 func SetLocalConfig(key, value string) error {
 	found, err := configValueExists(key, value)
 	if err != nil {
-		return fmt.Errorf("git config value exists: %w", err)
+		return fmt.Errorf("Git config value exists: %w", err)
 	}
 
 	if found {
@@ -40,7 +40,7 @@ func SetLocalConfig(key, value string) error {
 	addCmd := GitCommand("config", "--local", key, value)
 	_, err = run.PrepareCmd(addCmd).Output()
 	if err != nil {
-		return fmt.Errorf("setting local git config: %w", err)
+		return fmt.Errorf("setting local Git config: %w", err)
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func GetCurrentStackTitle() (title string, err error) {
 func AddStackRefDir(dir string) (string, error) {
 	baseDir, err := ToplevelDir()
 	if err != nil {
-		return "", fmt.Errorf("finding top level git directory: %w", err)
+		return "", fmt.Errorf("finding top-level Git directory: %w", err)
 	}
 
 	createdDir := filepath.Join(baseDir, "/.git/refs/stacked/", dir)
@@ -78,7 +78,7 @@ func StackRootDir(title string) (string, error) {
 func AddStackRefFile(title string, stackRef StackRef) error {
 	refDir, err := StackRootDir(title)
 	if err != nil {
-		return fmt.Errorf("error determining git root: %v", err)
+		return fmt.Errorf("error determining Git root: %v", err)
 	}
 
 	initialJsonData, err := json.Marshal(stackRef)
@@ -106,7 +106,7 @@ func AddStackRefFile(title string, stackRef StackRef) error {
 func DeleteStackRefFile(title string, stackRef StackRef) error {
 	refDir, err := StackRootDir(title)
 	if err != nil {
-		return fmt.Errorf("error determining git root: %v", err)
+		return fmt.Errorf("error determining Git root: %v", err)
 	}
 
 	fullPath := filepath.Join(refDir, stackRef.SHA+".json")
@@ -122,7 +122,7 @@ func DeleteStackRefFile(title string, stackRef StackRef) error {
 func UpdateStackRefFile(title string, s StackRef) error {
 	refDir, err := StackRootDir(title)
 	if err != nil {
-		return fmt.Errorf("error determining git root: %v", err)
+		return fmt.Errorf("error determining Git root: %v", err)
 	}
 
 	fullPath := filepath.Join(refDir, s.SHA+".json")

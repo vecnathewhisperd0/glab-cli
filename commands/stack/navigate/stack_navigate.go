@@ -40,8 +40,8 @@ func baseCommand(f *cmdutils.Factory) (git.Stack, error) {
 func NewCmdStackFirst(f *cmdutils.Factory) *cobra.Command {
 	stackFirstCmd := &cobra.Command{
 		Use:     "first",
-		Short:   "moves to the first diff in the stack",
-		Long:    "Moves to the first diff in the stack, and checks out that branch\n",
+		Short:   "Moves to the first diff in the stack.",
+		Long:    "Moves to the first diff in the stack, and checks out that branch.\n",
 		Example: "glab stack first",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stack, err := baseCommand(f)

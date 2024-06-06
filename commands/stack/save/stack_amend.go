@@ -17,7 +17,7 @@ import (
 func NewCmdAmendStack(f *cmdutils.Factory) *cobra.Command {
 	stackSaveCmd := &cobra.Command{
 		Use:   "amend",
-		Short: `Save more changes to a stacked diff`,
+		Short: `Save more changes to a stacked diff.`,
 		Long: `Add more changes to an existing stacked diff.
 
 This feature is experimental. It might be broken or removed without any prior notice.
