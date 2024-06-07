@@ -118,7 +118,7 @@ func stackSync(f *cmdutils.Factory, opts *SyncOptions) error {
 				err := rebaseWithUpdateRefs(ref, stack, gr)
 				if err != nil {
 					return fmt.Errorf(errorString(
-						"could not rebase due to a merge conflict.",
+						"could not rebase, likely due to a merge conflict.",
 						"Fix the issues with Git and run `glab sync stack` again.",
 					))
 				}
