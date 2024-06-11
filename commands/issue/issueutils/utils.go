@@ -21,6 +21,13 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
+type LinkIssueOpts struct {
+	LinkedIssues  []int  `json:"linked_issues,omitempty"`
+	IssueLinkType string `json:"issue_link_type,omitempty"`
+
+	IO *iostreams.IOStreams `json:"-"`
+}
+
 func DisplayIssueList(streams *iostreams.IOStreams, issues []*gitlab.Issue, projectID string) string {
 	c := streams.Color()
 	table := tableprinter.NewTablePrinter()
@@ -179,4 +186,19 @@ func issueMetadataFromURL(s string) (int, glrepo.Interface) {
 
 func issueFromIID(apiClient *gitlab.Client, repo glrepo.Interface, issueIID int) (*gitlab.Issue, error) {
 	return api.GetIssue(apiClient, repo.FullName(), issueIID)
+}
+
+func linkIssues(apiClient *gitlab.Client, issue *gitlab.Issue, opts LinkIssueOpts, repo glrepo.Interface) error {
+	var err error
+	for _, targetIssueIID := range opts.LinkedIssues {
+		fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)
+		issue, _, err = api.LinkIssues(apiClient, repo.FullName(), issue.IID, &gitlab.CreateIssueLinkOptions{
+			TargetIssueIID: gitlab.Ptr(strconv.Itoa(targetIssueIID)),
+			LinkType:       gitlab.Ptr(opts.IssueLinkType),
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

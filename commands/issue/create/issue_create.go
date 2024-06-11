@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
@@ -397,15 +396,9 @@ func createRun(opts *CreateOpts) error {
 func postCreateActions(apiClient *gitlab.Client, issue *gitlab.Issue, opts *CreateOpts, repo glrepo.Interface) error {
 	if len(opts.LinkedIssues) > 0 {
 		var err error
-		for _, targetIssueIID := range opts.LinkedIssues {
-			fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)
-			issue, _, err = api.LinkIssues(apiClient, repo.FullName(), issue.IID, &gitlab.CreateIssueLinkOptions{
-				TargetIssueIID: gitlab.Ptr(strconv.Itoa(targetIssueIID)),
-				LinkType:       gitlab.Ptr(opts.IssueLinkType),
-			})
-			if err != nil {
-				return err
-			}
+		err = issueutils.linkIssues(apiClient, issue, opts, repo)
+		if err != nil {
+			return err
 		}
 	}
 	if opts.TimeEstimate != "" {
