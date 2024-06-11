@@ -3,30 +3,19 @@ package update
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
-
-	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/issue/issueutils"
-	"gitlab.com/gitlab-org/cli/internal/glrepo"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 )
 
-type LinkIssueOpts struct {
-	LinkedIssues  []int  `json:"linked_issues,omitempty"`
-	IssueLinkType string `json:"issue_link_type,omitempty"`
-
-	IO *iostreams.IOStreams `json:"-"`
-}
-
 func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
-	opts := &LinkIssueOpts{
+	opts := issueutils.LinkIssueOpts{
 		IO: f.IO,
 	}
 	issueUpdateCmd := &cobra.Command{
@@ -181,7 +170,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 
 			// If the linked-issues flag is passed call to update LinkedIssues
 			if len(opts.LinkedIssues) > 0 {
-				err = linkedIssueUpdate(apiClient, issue, opts, repo)
+				err = issueutils.linkIssues(apiClient, issue, opts, repo)
 				if err != nil {
 					return err
 				}
@@ -217,21 +206,4 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 	issueUpdateCmd.Flags().StringVarP(&opts.IssueLinkType, "link-type", "", "relates_to", "Type for the issue link")
 
 	return issueUpdateCmd
-}
-
-func linkedIssueUpdate(apiClient *gitlab.Client, issue *gitlab.Issue, opts *LinkIssueOpts, repo glrepo.Interface) error {
-	if len(opts.LinkedIssues) > 0 {
-		var err error
-		for _, targetIssueIID := range opts.LinkedIssues {
-			fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)
-			issue, _, err = api.LinkIssues(apiClient, repo.FullName(), issue.IID, &gitlab.CreateIssueLinkOptions{
-				TargetIssueIID: gitlab.Ptr(strconv.Itoa(targetIssueIID)),
-				LinkType:       gitlab.Ptr(opts.IssueLinkType),
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
