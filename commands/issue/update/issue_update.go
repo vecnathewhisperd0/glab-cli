@@ -170,7 +170,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 
 			// If the linked-issues flag is passed call to update LinkedIssues
 			if len(opts.LinkedIssues) > 0 {
-				err = issueutils.linkIssues(apiClient, issue, opts, repo)
+				err = issueutils.LinkIssues(apiClient, issue, opts, repo)
 				if err != nil {
 					return err
 				}
