@@ -12,6 +12,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
 
@@ -99,6 +100,7 @@ func NewCmdArchive(f *cmdutils.Factory) *cobra.Command {
 				return fmt.Errorf("failed to rename tmp repos: %v", err)
 			}
 			fmt.Fprintln(f.IO.StdOut, "Complete...", archiveName)
+			api.GetClient().HTTPClient().CloseIdleConnections()
 			return nil
 		},
 	}

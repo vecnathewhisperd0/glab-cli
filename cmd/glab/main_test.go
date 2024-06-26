@@ -104,8 +104,5 @@ func TestGlab(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	opts := []goleak.Option{
-		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
-	}
-	goleak.VerifyTestMain(m, opts...)
+	goleak.VerifyTestMain(m)
 }
