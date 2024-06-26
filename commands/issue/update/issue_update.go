@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/issue/issueutils"
@@ -14,8 +16,15 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
+type UpdateOpts struct {
+	LinkedIssues  []int  `json:"linked_issues,omitempty"`
+	IssueLinkType string `json:"issue_link_type,omitempty"`
+
+	IO *iostreams.IOStreams `json:"-"`
+}
+
 func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
-	opts := issueutils.LinkIssueOpts{
+	opts := &UpdateOpts{
 		IO: f.IO,
 	}
 	issueUpdateCmd := &cobra.Command{
