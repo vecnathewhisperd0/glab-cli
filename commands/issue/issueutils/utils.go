@@ -188,7 +188,7 @@ func issueFromIID(apiClient *gitlab.Client, repo glrepo.Interface, issueIID int)
 	return api.GetIssue(apiClient, repo.FullName(), issueIID)
 }
 
-func linkIssues(apiClient *gitlab.Client, issue *gitlab.Issue, opts LinkIssueOpts, repo glrepo.Interface) error {
+func LinkIssues(apiClient *gitlab.Client, issue *gitlab.Issue, opts LinkIssueOpts, repo glrepo.Interface) error {
 	var err error
 	for _, targetIssueIID := range opts.LinkedIssues {
 		fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)

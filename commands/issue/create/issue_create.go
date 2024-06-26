@@ -396,7 +396,7 @@ func createRun(opts *CreateOpts) error {
 func postCreateActions(apiClient *gitlab.Client, issue *gitlab.Issue, opts *CreateOpts, repo glrepo.Interface) error {
 	if len(opts.LinkedIssues) > 0 {
 		var err error
-		err = issueutils.linkIssues(apiClient, issue, opts, repo)
+		err = issueutils.LinkIssues(apiClient, issue, opts, repo)
 		if err != nil {
 			return err
 		}
