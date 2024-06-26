@@ -157,7 +157,8 @@ func NewClient(host, token string, allowInsecure bool, isGraphQL bool, isOAuth2 
 	if apiClient.httpClientOverride == nil {
 		apiClient.httpClient = &http.Client{
 			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
+				DisableKeepAlives: true,
+				Proxy:             http.ProxyFromEnvironment,
 				DialContext: (&net.Dialer{
 					Timeout:   5 * time.Second,
 					KeepAlive: 5 * time.Second,

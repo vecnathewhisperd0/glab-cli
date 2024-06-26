@@ -79,6 +79,7 @@ func Test_repoArchive_Integration(t *testing.T) {
 
 				if err != nil {
 					t.Log(err)
+					t.Log(string(b))
 					if !tt.wantErr {
 						t.Fatal(err)
 					}
