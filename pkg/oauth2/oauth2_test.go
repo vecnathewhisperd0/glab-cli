@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -38,17 +39,47 @@ func TestHandleAuthRedirect(t *testing.T) {
 
 	ios, _, _, _ := iostreams.Test()
 
-	tokenCh := handleAuthRedirect(ios, "localhost", "123", hostname, "http", "abc")
+	tokenCh := handleAuthRedirect(ios, "localhost", "123", hostname, "http", "abc", "validstate")
 	defer close(tokenCh)
 	time.Sleep(1 * time.Second)
 
-	go func() {
-		_, err := http.Get("http://localhost:7171/auth/redirect?code=123")
-		require.Nil(t, err)
-	}()
+	tt := []struct {
+		description         string
+		state               string
+		expectedToken       bool
+		expectedAccessToken string
+	}{
+		{
+			description:         "when a valid request is passed, should return access token",
+			state:               "validstate",
+			expectedToken:       true,
+			expectedAccessToken: "at",
+		},
+		{
+			description:         "when an invalid state is passed, should not return a token",
+			state:               "invalidstate",
+			expectedToken:       false,
+			expectedAccessToken: "",
+		},
+	}
 
-	token := <-tokenCh
-	assert.Equal(t, "at", token.AccessToken)
+	for _, test := range tt {
+		t.Run(test.description, func(t *testing.T) {
+			go func() {
+				url := fmt.Sprintf("http://localhost:7171/auth/redirect?code=123&state=%s", test.state)
+				_, err := http.Get(url)
+				require.Nil(t, err)
+			}()
+
+			token := <-tokenCh
+			if !test.expectedToken {
+				require.Nil(t, token)
+				return
+			}
+
+			assert.Equal(t, test.expectedAccessToken, token.AccessToken)
+		})
+	}
 }
 
 func TestRefreshToken(t *testing.T) {
