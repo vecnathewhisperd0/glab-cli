@@ -40,6 +40,14 @@ To manually update the version available through Homebrew:
 
 1. When the pull request is merged, the update is complete.
 
+### Snapcraft
+
+The `latest/edge` channel for Snapcraft can be automatically built from a git repo, but it must be hosted on GitHub as of 2024-07-22. We have set up a fork at https://gitlab.com/gitlab-org/cli that has rules setup within the ["Mirroring Repositories" section of the `glab` project settings](https://gitlab.com/gitlab-org/cli/-/settings/repository).
+
+To release to the `latest/stable` release channel (which seems to be the default for most `snap` users). You must promote one of the `latest/edge` builds within the [releases page of the listing](https://snapcraft.io/glab/releases)
+
+Credentials for both snapcraft.io and the GitHub fork are avilable in 1Password.
+
 ### Scoop
 
 No manual action required.
