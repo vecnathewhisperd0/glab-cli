@@ -186,7 +186,7 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			// Only run the UpdateIssue function if flags are passed - FIXME
-			if cmd.Flags().Changed("linked-issues") && cmd.Flags().Changed("link-type") {
+			if (&gitlab.UpdateIssueOptions{}) != l {
 				issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
 				if err != nil {
 					return err
