@@ -16,7 +16,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-type UpdateOpts struct {
+type LinkIssueOpts struct {
 	LinkedIssues  []int  `json:"linked_issues,omitempty"`
 	IssueLinkType string `json:"issue_link_type,omitempty"`
 
@@ -24,7 +24,7 @@ type UpdateOpts struct {
 }
 
 func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
-	opts := &UpdateOpts{
+	opts := &LinkIssueOpts{
 		IO: f.IO,
 	}
 	issueUpdateCmd := &cobra.Command{
@@ -179,19 +179,22 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 
 			// If the linked-issues flag is passed call to update LinkedIssues
 			if len(opts.LinkedIssues) > 0 {
-				err = issueutils.LinkIssues(apiClient, issue, opts, repo)
+				err = issueutils.LinkIssues(apiClient, issue, opts.LinkedIssues, opts.IssueLinkType, repo)
 				if err != nil {
 					return err
 				}
 			}
 
-			issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
-			if err != nil {
-				return err
-			}
+			// Only run the UpdateIssue function if flags are passed - FIXME
+			if cmd.Flags().Changed("linked-issues") && cmd.Flags().Changed("link-type") {
+				issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
+				if err != nil {
+					return err
+				}
 
-			for _, s := range actions {
-				fmt.Fprintln(out, c.GreenCheck(), s)
+				for _, s := range actions {
+					fmt.Fprintln(out, c.GreenCheck(), s)
+				}
 			}
 
 			fmt.Fprintln(out, issueutils.DisplayIssue(c, issue, f.IO.IsaTTY))
