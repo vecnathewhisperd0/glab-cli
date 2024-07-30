@@ -12,6 +12,7 @@ import (
 
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
 
+	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
@@ -60,6 +61,15 @@ func LoadGitLabTemplate(tmplType, tmplName string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(tmpl)), nil
+}
+
+func ReturnHelpWhenNoArgs(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		err := cmd.Help()
+		if err != nil {
+			return
+		}
+	}
 }
 
 // TODO: properly handle errors in this function.

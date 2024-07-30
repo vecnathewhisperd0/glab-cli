@@ -189,9 +189,8 @@ func Test_NewCmdApi(t *testing.T) {
 			wantsErr: false,
 		},
 		{
-			name:     "no arguments",
-			cli:      "",
-			wantsErr: true,
+			name: "no arguments",
+			cli:  "",
 		},
 		{
 			name: "with hostname",

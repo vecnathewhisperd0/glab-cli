@@ -154,8 +154,16 @@ func NewCmdApi(f *cmdutils.Factory, runF func(*ApiOptions) error) *cobra.Command
 				GITLAB_HOST, GITLAB_URI, GITLAB_URL: specify a GitLab host to make request to.
 			`),
 		},
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				err := c.Help()
+				if err != nil {
+					return err
+				}
+				return fmt.Errorf("error: must provide at least 1 argument")
+			}
+
 			opts.RequestPath = args[0]
 			opts.RequestMethodPassed = c.Flags().Changed("method")
 			opts.Config, _ = f.Config()
