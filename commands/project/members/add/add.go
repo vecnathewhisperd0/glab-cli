@@ -78,6 +78,9 @@ glab repo members add 123 -a reporter
 				AccessLevel: &accessLevelValue,
 			}
 			_, err = api.AddProjectMember(apiClient, repo.FullName(), c)
+			if err == nil {
+				fmt.Fprintf(f.IO.StdOut, "User %s has been added to %s\n", args[0], repo.FullName())
+			}
 
 			return err
 		},

@@ -1,6 +1,7 @@
 package remove
 
 import (
+	"fmt"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
@@ -38,6 +39,9 @@ glab repo members remove 123
 			}
 
 			_, err = api.RemoveProjectMember(apiClient, repo.FullName(), userID)
+			if err == nil {
+				fmt.Fprintf(f.IO.StdOut, "User %s has been removed from %s\n", args[0], repo.FullName())
+			}
 
 			return err
 		},
