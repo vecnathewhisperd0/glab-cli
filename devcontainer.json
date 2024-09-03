@@ -1,0 +1,11 @@
+{
+    "build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "Devcontainer.Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {}
+    },
+    // Use 'postStartCommand' to run commands after the container is created like starting minikube.
+	"postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1"
+}
