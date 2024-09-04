@@ -190,8 +190,26 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 			// First we check that some number of flags was passed. We then check that
 			// if the flags are `linked-issues` or `link-type`. If it is NOT a link flag
 			// we return nil and continue.
-			if cmd.Flags().NFlag() > 0 {
-				if !cmd.Flags().Changed("linked-issues") && !cmd.Flags().Changed("link-type") {
+			switch cmd.Flags().NFlag() {
+			case 1:
+				if cmd.Flags().Changed("linked-issues") {
+					return errors.New("cannot update issue when only --linked-issues is set")
+				}
+				if cmd.Flags().Changed("link-type") {
+					return errors.New("cannot update issue when only --link-type is set")
+				}
+
+				// continue execution to api.UpdateIssue
+				fallthrough
+			case 2:
+				if cmd.Flags().Changed("linked-issues") && cmd.Flags().Changed("link-type") {
+					return errors.New("cannot update issue when only --link-type and --linked-issues are set")
+				}
+
+				// continue execution to api.UpdateIssue
+				fallthrough
+			default:
+				if cmd.Flags().NFlag() < 0 {
 					return nil
 				}
 
