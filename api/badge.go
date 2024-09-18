@@ -7,11 +7,11 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-var CreateOrUpdateBadge(client *gitlab.Client, projectID int, badgeName, badgeValue string) (*gitlab.ProjectBadge, error) {
+func createOrUpdateBadge(client *gitlab.Client, projectID int, badgeName, badgeValue string) (*gitlab.ProjectBadge, error) {
 	// List existing badges
-	badges, _, err := client.ProjectBadges.ListProjectBadges(projectID, nil)
+	badges, _, err := client.ProjectBadges.ListProjectBadges(projectID, &gitlab.ListProjectBadgesOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("error listing project badges: %w", err)
+		return nil, fmt.Errorf("error listing badges: %v", err)
 	}
 
 	// Check if badge exists
@@ -23,32 +23,29 @@ var CreateOrUpdateBadge(client *gitlab.Client, projectID int, badgeName, badgeVa
 		}
 	}
 
-	// Prepare badge options
+	// Prepare badge data
 	imageURL := fmt.Sprintf("https://img.shields.io/badge/%s-%s-blue", url.PathEscape(badgeName), url.PathEscape(badgeValue))
-	badgeOptions := &gitlab.AddProjectBadgeOptions{
-		LinkURL:  gitlab.String("https://example.com"), // You might want to customize this
-		ImageURL: gitlab.String(imageURL),
-		Name:     gitlab.String(badgeName),
-	}
 
 	var badge *gitlab.ProjectBadge
-
 	if existingBadge == nil {
+		badgeOptions := &gitlab.AddProjectBadgeOptions{
+			Name:     gitlab.Ptr(badgeName),
+			ImageURL: gitlab.Ptr(imageURL),
+		}
 		// Create new badge
 		badge, _, err = client.ProjectBadges.AddProjectBadge(projectID, badgeOptions)
 		if err != nil {
-			return nil, fmt.Errorf("error creating project badge: %w", err)
+			return nil, fmt.Errorf("error creating badge: %v", err)
 		}
 	} else {
-		// Update existing badge
-		updateOptions := &gitlab.EditProjectBadgeOptions{
-			LinkURL:  badgeOptions.LinkURL,
-			ImageURL: badgeOptions.ImageURL,
-			Name:     badgeOptions.Name,
+		badgeOptions := &gitlab.EditProjectBadgeOptions{
+			Name:     gitlab.Ptr(badgeName),
+			ImageURL: gitlab.Ptr(imageURL),
 		}
-		badge, _, err = client.ProjectBadges.EditProjectBadge(projectID, existingBadge.ID, updateOptions)
+		// Update existing badge
+		badge, _, err = client.ProjectBadges.EditProjectBadge(projectID, existingBadge.ID, badgeOptions)
 		if err != nil {
-			return nil, fmt.Errorf("error updating project badge: %w", err)
+			return nil, fmt.Errorf("error updating badge: %v", err)
 		}
 	}
 
