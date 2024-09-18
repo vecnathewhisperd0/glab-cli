@@ -1,11 +1,3 @@
-// Create tests for the functions in set.go. Be sure to use the httpmock library for any external calls though. These are the libraries that should be imported:
-// 	"net/http"
-// "testing"
-// "github.com/stretchr/testify/assert"
-// "github.com/stretchr/testify/require"
-// "gitlab.com/gitlab-org/cli/commands/cmdtest"
-// "gitlab.com/gitlab-org/cli/pkg/httpmock"
-// "gitlab.com/gitlab-org/cli/test"
 package set
 
 import (
