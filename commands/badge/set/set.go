@@ -1,70 +1,48 @@
 package set
 
+import (
+	"fmt"
+	"strings"
+
+	"gitlab.com/gitlab-org/cli/api"
+	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/spf13/cobra"
+	"github.com/xanzy/go-gitlab"
+)
+
 func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 	badgeSetCmd := &cobra.Command{
-		Use:   "set <name> <value>",
-		Short: "Set or update a badge for a project",
-		Long: heredoc.Doc(`
-			Set or update a badge for a project. If the badge doesn't exist, it will be created.
-			If it already exists, it will be updated.
+		Use:   "set <project> <name> <value>",
+		Short: "Set a badge for a project",
+		Long: heredoc.Docf(`
+			Set a badge for a project.
+
+			The badge will be created if it doesn't exist, or updated if it already exists.
 		`),
-		Args: cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			apiClient, err := f.HttpClient()
 			if err != nil {
 				return err
 			}
 
-			project, err := f.BaseRepo()
+			project := args[0]
+			name := args[1]
+			value := args[2]
+
+			projectID, err := api.ProjectID(apiClient, project)
 			if err != nil {
 				return err
 			}
 
-			name := args[0]
-			value := args[1]
-
-			// Query existing badges
-			badges, _, err := apiClient.ProjectBadges.ListProjectBadges(project.FullName(), &gitlab.ListProjectBadgesOptions{})
+			badge, err := api.UpdateProjectBadge(apiClient, projectID, name, value)
 			if err != nil {
 				return err
 			}
 
-			var existingBadge *gitlab.ProjectBadge
-			for _, badge := range badges {
-				if badge.Name == name {
-					existingBadge = badge
-					break
-				}
-			}
-
-			imageURL := fmt.Sprintf("https://img.shields.io/badge/%s-%s-blue", name, value)
-
-			if existingBadge == nil {
-				// Create new badge
-				badgeOptions := &gitlab.AddProjectBadgeOptions{
-					LinkURL:  gitlab.String(""),
-					ImageURL: gitlab.String(imageURL),
-					Name:     gitlab.String(name),
-				}
-				_, _, err = apiClient.ProjectBadges.AddProjectBadge(project.FullName(), badgeOptions)
-			} else {
-				// Update existing badge
-				badgeOptions := &gitlab.EditProjectBadgeOptions{
-					LinkURL:  gitlab.String(""),
-					ImageURL: gitlab.String(imageURL),
-					Name:     gitlab.String(name),
-				}
-				_, _, err = apiClient.ProjectBadges.EditProjectBadge(project.FullName(), existingBadge.ID, badgeOptions)
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if existingBadge == nil {
-				fmt.Printf("Badge '%s' created successfully\n", name)
-			} else {
-				fmt.Printf("Badge '%s' updated successfully\n", name)
+			if badge != nil {
+				fmt.Fprintf(f.IO.StdOut, "Badge '%s' set for project '%s'\n", name, project)
 			}
 
 			return nil
@@ -73,4 +51,3 @@ func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 
 	return badgeSetCmd
 }
-
