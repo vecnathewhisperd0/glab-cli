@@ -1,3 +1,5 @@
+package set
+
 func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 	badgeSetCmd := &cobra.Command{
 		Use:   "set <name> <value>",
