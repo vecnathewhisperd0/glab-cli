@@ -7,7 +7,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func createOrUpdateBadge(client *gitlab.Client, projectID int, badgeName, badgeValue string) (*gitlab.ProjectBadge, error) {
+func CreateOrUpdateBadge(client *gitlab.Client, projectID int, badgeName, badgeValue string) (*gitlab.ProjectBadge, error) {
 	// List existing badges
 	badges, _, err := client.ProjectBadges.ListProjectBadges(projectID, &gitlab.ListProjectBadgesOptions{})
 	if err != nil {
