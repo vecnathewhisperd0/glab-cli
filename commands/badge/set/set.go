@@ -2,6 +2,7 @@ package set
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
