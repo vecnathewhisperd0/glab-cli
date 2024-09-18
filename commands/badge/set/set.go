@@ -2,13 +2,11 @@ package set
 
 import (
 	"fmt"
-	"strings"
 
-	"gitlab.com/gitlab-org/cli/api"
-	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
-	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/cli/api"
+	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
 
 func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
@@ -27,23 +25,16 @@ func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 				return err
 			}
 
-			project := args[0]
+			// rewrite project := args[0] so that args[0] is an int
+			projectID, err := cmdutils.ParseID(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to parse project ID: %w", err)
+			}
+
 			name := args[1]
 			value := args[2]
 
-			projectID, err := api.ProjectID(apiClient, project)
-			if err != nil {
-				return err
-			}
-
-			badge, err := api.UpdateProjectBadge(apiClient, projectID, name, value)
-			if err != nil {
-				return err
-			}
-
-			if badge != nil {
-				fmt.Fprintf(f.IO.StdOut, "Badge '%s' set for project '%s'\n", name, project)
-			}
+			api.UpdateProjectBadge(apiClient, projectID, name, value)
 
 			return nil
 		},

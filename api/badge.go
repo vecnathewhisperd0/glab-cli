@@ -39,5 +39,5 @@ func UpdateProjectBadge(client *gitlab.Client, projectID int, badgeName, badgeVa
         }
     }
 
-    return nil
+    return err
 }
