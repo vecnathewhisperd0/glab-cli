@@ -16,6 +16,7 @@ Manage project badges
 ## Synopsis
 
 Work with GitLab project badges
+
 ## Options inherited from parent commands
 
 ```plaintext
