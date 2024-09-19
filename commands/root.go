@@ -9,6 +9,7 @@ import (
 	aliasCmd "gitlab.com/gitlab-org/cli/commands/alias"
 	apiCmd "gitlab.com/gitlab-org/cli/commands/api"
 	authCmd "gitlab.com/gitlab-org/cli/commands/auth"
+	badgeCmd "gitlab.com/gitlab-org/cli/commands/badge"
 	changelogCmd "gitlab.com/gitlab-org/cli/commands/changelog"
 	pipelineCmd "gitlab.com/gitlab-org/cli/commands/ci"
 	clusterCmd "gitlab.com/gitlab-org/cli/commands/cluster"
@@ -105,6 +106,7 @@ func NewCmdRoot(f *cmdutils.Factory, version, buildDate string) *cobra.Command {
 
 	// Child commands
 	rootCmd.AddCommand(aliasCmd.NewCmdAlias(f))
+	rootCmd.AddCommand(badgeCmd.NewCmdBadge(f))
 	rootCmd.AddCommand(configCmd.NewCmdConfig(f))
 	rootCmd.AddCommand(completionCmd.NewCmdCompletion(f.IO))
 	rootCmd.AddCommand(versionCmd.NewCmdVersion(f.IO, version, buildDate))

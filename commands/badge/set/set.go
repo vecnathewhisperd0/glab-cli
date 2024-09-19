@@ -32,6 +32,13 @@ func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 
 			opts := &BadgeOptions{}
 
+			// Set the config file
+			if s, _ := cmd.Flags().GetInt("project-id"); s > 0 {
+				opts.ProjectID = s
+			} else {
+				return fmt.Errorf("error setting badge without --project-id")
+			}
+
 			badgeName := args[0]
 			badgeValue := args[1]
 
@@ -47,6 +54,10 @@ func NewCmdSet(f *cmdutils.Factory) *cobra.Command {
 			return nil
 		},
 	}
+
+	// changelogGenerateCmd.Flags().StringP("config-file", "", "", "Path of the changelog configuration file in the project's Git repository. Defaults to '.gitlab/changelog_config.yml'.")
+	// add a flag for project-id
+	badgeSetCmd.Flags().Int("project-id", 0, "The ID of the project")
 
 	return badgeSetCmd
 }
