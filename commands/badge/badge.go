@@ -11,7 +11,6 @@ func NewCmdBadge(f *cmdutils.Factory) *cobra.Command {
 	badgeCmd := &cobra.Command{
 		Use:   "badge",
 		Short: "Manage project badges",
-		Long:  `Work with GitLab project badges`,
 	}
 
 	badgeCmd.AddCommand(set.NewCmdSet(f))
