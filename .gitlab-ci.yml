@@ -134,9 +134,6 @@ run_tests:
 
 .release:
   stage: release
-  image: docker:stable
-  services:
-    - docker:dind
   variables:
     # Disable shallow cloning so that goreleaser can diff between tags to
     # generate a changelog.
@@ -154,13 +151,10 @@ release_test:
       when: never
     - changes:
         - .goreleaser.yml
+  before_script: |
+    go install github.com/goreleaser/goreleaser/v2@latest
   script: |
-    docker run --rm --privileged \
-      -v $PWD:/go/src/gitlab.com/gitlab-org/cli \
-      -e GO_VERSION="$GO_VERSION" \
-      -w /go/src/gitlab.com/gitlab-org/cli \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      goreleaser/goreleaser release --snapshot
+    goreleaser/goreleaser release --snapshot
 
 release:
   extends: .release
@@ -171,20 +165,13 @@ release:
     # we only want to build from the canonical project so we don't really
     # need to bother about this being compatible with forks.
     - 'saas-linux-2xlarge-amd64'
+  before_script: |
+    go install github.com/goreleaser/goreleaser/v2@latest
   script: |
-    docker run --rm --privileged \
-      -v $PWD:/go/src/gitlab.com/gitlab-org/cli \
-      -w /go/src/gitlab.com/gitlab-org/cli \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -e GO_VERSION="$GO_VERSION" \
-      -e GITLAB_TOKEN=$GITLAB_TOKEN_RELEASE \
-      --entrypoint "" \
-      goreleaser/goreleaser \
-      bash -c "
-        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-        docker login -u $DOCKER_IO_USER -p $DOCKER_IO_PASSWORD
-        goreleaser release
-      "
+    - goreleaser/goreleaser
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $DOCKER_IO_USER -p $DOCKER_IO_PASSWORD
+    - goreleaser release
 
 homebrew-release:
   image: homebrew/ubuntu22.04:latest
