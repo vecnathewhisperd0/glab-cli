@@ -155,7 +155,7 @@ release_test:
   before_script: |
     go install github.com/goreleaser/goreleaser/v2@latest
   script: |
-    goreleaser/goreleaser release --snapshot
+    goreleaser release --snapshot
 
 release:
   extends: .release
@@ -169,7 +169,7 @@ release:
   before_script: |
     go install github.com/goreleaser/goreleaser/v2@latest
   script: |
-    - goreleaser/goreleaser
+    - goreleaser
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $DOCKER_IO_USER -p $DOCKER_IO_PASSWORD
     - goreleaser release
