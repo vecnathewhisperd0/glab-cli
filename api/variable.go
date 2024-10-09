@@ -116,7 +116,7 @@ var GetGroupVariable = func(client *gitlab.Client, groupID interface{}, key stri
 	if client == nil {
 		client = apiClient.Lab()
 	}
-	vars, _, err := client.GroupVariables.GetVariable(groupID, key)
+	vars, _, err := client.GroupVariables.GetVariable(groupID, key, nil)
 	if err != nil {
 		return nil, err
 	}

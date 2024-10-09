@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	PipelineVarTypeEnv  = "env_var"
-	PipelineVarTypeFile = "file"
+	PipelineVarTypeEnv  = gitlab.VariableTypeValue("env_var")
+	PipelineVarTypeFile = gitlab.VariableTypeValue("file")
 )
 
 var envVariables = []string{}
