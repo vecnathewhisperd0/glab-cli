@@ -60,6 +60,8 @@ type ListOptions struct {
 	HTTPClient func() (*gitlab.Client, error)
 
 	JSONOutput bool
+
+	IterationID int
 }
 
 func NewCmdList(f *cmdutils.Factory, runE func(opts *ListOptions) error, issueType issuable.IssueType) *cobra.Command {
@@ -236,6 +238,11 @@ func listRun(opts *ListOptions) error {
 	}
 	if opts.PerPage != 0 {
 		listOpts.PerPage = opts.PerPage
+		opts.ListType = "search"
+	}
+
+	if opts.IterationID != 0 {
+		listOpts.IterationID = gitlab.Ptr(opts.IterationID)
 		opts.ListType = "search"
 	}
 
