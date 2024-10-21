@@ -7,7 +7,6 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
-	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
 
@@ -29,35 +28,51 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 		`),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			apiClient, err := f.HttpClient()
+			// Retrieve the configuration object
+			cfg, err := f.Config()
 			if err != nil {
 				return err
 			}
 
-			l := &gitlab.ListGroupIterationsOptions{}
+			// Get the token from the configuration using the correct section and key
+			token, err := cfg.Get("auth", "token")
+			if err != nil || token == "" {
+				return fmt.Errorf("failed to retrieve GitLab token from configuration")
+			}
+
+			// Create a new GitLab client using the token
+			apiClient, err := gitlab.NewClient(token)
+			if err != nil {
+				return err
+			}
+
+			// Set up the options for listing iterations
+			listOptions := &gitlab.ListGroupIterationsOptions{}
 
 			if p, _ := cmd.Flags().GetInt("page"); p != 0 {
-				l.Page = p
+				listOptions.Page = p
 			}
 			if p, _ := cmd.Flags().GetInt("per-page"); p != 0 {
-				l.PerPage = p
+				listOptions.PerPage = p
 			}
 			if state != "" {
-				l.State = gitlab.Ptr(state)
+				listOptions.State = gitlab.String(state)
 			}
 
-			iterations, err := api.ListGroupIterations(apiClient, groupName, l)
+			// Fetch the iterations for the specified group
+			iterations, _, err := apiClient.GroupIterations.ListGroupIterations(groupName, listOptions)
 			if err != nil {
 				return err
 			}
 
+			// Output the result in the specified format
 			if outputFormat == "json" {
 				iterationsJSON, _ := json.Marshal(iterations)
 				fmt.Fprintln(f.IO.StdOut, string(iterationsJSON))
 			} else {
 				fmt.Fprintf(f.IO.StdOut, "Showing %d iterations for group %s.\n\n", len(iterations), groupName)
 				for _, iteration := range iterations {
-					fmt.Fprintf(f.IO.StdOut, "ID: %d, Title: %s, State: %s\n", iteration.ID, iteration.Title, iteration.State)
+					fmt.Fprintf(f.IO.StdOut, "ID: %d, Title: %s, State: %d\n", iteration.ID, iteration.Title, iteration.State)
 				}
 			}
 
