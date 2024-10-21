@@ -56,7 +56,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 				listOptions.PerPage = p
 			}
 			if state != "" {
-				listOptions.State = gitlab.String(state)
+				listOptions.State = gitlab.Ptr(state)
 			}
 
 			// Fetch the iterations for the specified group
