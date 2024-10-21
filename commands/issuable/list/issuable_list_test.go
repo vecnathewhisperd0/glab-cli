@@ -385,3 +385,24 @@ func TestIssueListMutualOutputFlags(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, "if any flags in the group [output output-format] are set none of the others can be; [output output-format] were all set")
 }
+
+func TestIssueList_List_With_IterationID(t *testing.T) {
+	t.Run("Issue_List_With_IterationID", func(t *testing.T) {
+		fakeHTTP := httpmock.New()
+		defer fakeHTTP.Verify(t)
+
+		fakeHTTP.RegisterResponder(
+			"GET",
+			"/api/v4/projects/OWNER/REPO/issues?iteration_id=1&state=opened",
+			httpmock.NewStringResponse(200, `[{"id":1}]`),
+		)
+
+		output, err := runCommand("issue", fakeHTTP, true, "list --iteration-id 1", nil, "")
+		if err != nil {
+			t.Errorf("error running command `issue list`: %v", err)
+		}
+
+		assert.Equal(t, "", output.String())
+		assert.Equal(t, "Showing 1 open issue\n\n", output.Stderr())
+	})
+}

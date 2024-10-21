@@ -8,5 +8,7 @@ import (
 )
 
 func NewCmdList(f *cmdutils.Factory, runE func(opts *issuableListCmd.ListOptions) error) *cobra.Command {
-	return issuableListCmd.NewCmdList(f, runE, issuable.TypeIssue)
+	cmd := issuableListCmd.NewCmdList(f, runE, issuable.TypeIssue)
+	cmd.Flags().Int("iteration", 0, "Filter issues by iteration ID")
+	return cmd
 }
