@@ -397,7 +397,6 @@ func TestIssueList_List_With_IterationID(t *testing.T) {
 	)
 
 	output, err := runCommand("issue", fakeHTTP, true, "list --iteration-id 1", nil, "")
-
 	if err != nil {
 		t.Errorf("error running command `issue list`: %v", err)
 	}
