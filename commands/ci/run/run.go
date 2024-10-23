@@ -151,21 +151,27 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 				c.Ref = gitlab.Ptr(ciutils.GetDefaultBranch(f))
 			}
 
-			mr, err := cmd.Flags().GetInt("mr")
+			mrID, err := cmd.Flags().GetInt("mr")
 			if err != nil {
 				return err
 			}
 
-			if mr != -1 {
+			if mrID != -1 {
 				pid, err := repo.Project(apiClient)
 				if err != nil {
 					return err
 				}
-				mrPipeline, _, err := apiClient.MergeRequests.CreateMergeRequestPipeline(pid.ID, mr)
+
+				mrPipeline, err := api.CreateMRPipeline(apiClient, pid.ID, mrID)
 				if err != nil {
 					return err
 				}
-				fmt.Println(f.IO.StdOut, "Created pipeline (id:", mrPipeline.ID, ")", "status:", mrPipeline.Status, ", ref:", mrPipeline.Ref, ", weburl: ", mrPipeline.WebURL, ")")
+
+				fmt.Fprintf(f.IO.StdOut, "Created pipeline (id: %d), status: %s, ref: %s, weburl: %s\n", mrPipeline.ID, mrPipeline.Status, mrPipeline.Ref, mrPipeline.WebURL)
+				// if branch flag is not provided, do not run branch pipeline and return from function
+				if branch == "" {
+					return nil
+				}
 			}
 
 			pipe, err := api.CreatePipeline(apiClient, repo.FullName(), c)
