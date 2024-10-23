@@ -1,0 +1,104 @@
+package job
+
+import (
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
+
+	"github.com/MakeNowJust/heredoc/v2"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	"gitlab.com/gitlab-org/cli/internal/glrepo"
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
+)
+
+const (
+	FlagDryRun = "dry-run"
+)
+
+func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
+	jobCancelCmd := &cobra.Command{
+		Use:   "job <id> [flags]",
+		Short: `Cancel CI/CD jobs.`,
+		Example: heredoc.Doc(`
+	glab ci cancel job 1504182795
+	glab ci cancel job 1504182795,1504182795
+	glab ci cancel job 1504182795,1504182795 --dry-run
+	`),
+		Long: ``,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("A job ID must be passed.")
+			}
+
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
+			c := f.IO.Color()
+			apiClient, err := f.HttpClient()
+			if err != nil {
+				return err
+			}
+
+			repo, err := f.BaseRepo()
+			if err != nil {
+				return err
+			}
+			dryRunMode, _ := cmd.Flags().GetBool(FlagDryRun)
+
+			var jobIDs []int
+
+			jobIDs, err = parserawJobIDs(args[0])
+			if err != nil {
+				return err
+			}
+			return runCancelation(jobIDs, dryRunMode, f.IO.StdOut, c, apiClient, repo)
+		},
+	}
+
+	SetupCommandFlags(jobCancelCmd.Flags())
+	return jobCancelCmd
+}
+
+func parserawJobIDs(rawJobIDs string) ([]int, error) {
+	var inputJobIDs []int
+	for _, stringID := range strings.Split(rawJobIDs, ",") {
+		id, err := strconv.Atoi(stringID)
+		if err != nil {
+			return nil, err
+		}
+		inputJobIDs = append(inputJobIDs, id)
+	}
+
+	return inputJobIDs, nil
+}
+
+func SetupCommandFlags(flags *pflag.FlagSet) {
+	flags.BoolP(FlagDryRun, "", false, "Simulate process, but does not cancel anything.")
+}
+
+func runCancelation(jobIDs []int, dryRunMode bool, w io.Writer, c *iostreams.ColorPalette, apiClient *gitlab.Client, repo glrepo.Interface) error {
+	for _, id := range jobIDs {
+		if dryRunMode {
+			fmt.Fprintf(w, "%s Job #%d will be canceled.\n", c.DotWarnIcon(), id)
+		} else {
+			pid, err := repo.Project(apiClient)
+			if err != nil {
+				return err
+			}
+			_, _, err = apiClient.Jobs.CancelJob(pid.ID, id)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(w, "%s Job #%d is cancelled successfully.\n", c.RedCheck(), id)
+		}
+	}
+	fmt.Println()
+
+	return nil
+}
