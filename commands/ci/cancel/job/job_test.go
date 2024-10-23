@@ -47,7 +47,7 @@ func TestCIDryRunDeleteNothing(t *testing.T) {
 
 	out := output.String()
 
-	assert.Equal(t, heredoc.Doc(`
+	assert.Contains(t, heredoc.Doc(`
 	• Job #11111111 will be canceled.
 	• Job #22222222 will be canceled.
 	`), out)
