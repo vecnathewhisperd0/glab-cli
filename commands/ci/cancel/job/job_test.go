@@ -51,6 +51,5 @@ func TestCIDryRunDeleteNothing(t *testing.T) {
 	• Job #11111111 will be canceled.
 	• Job #22222222 will be canceled.
 	`), out)
-	assert.Equal(t, heredoc.Doc("\x1b[0;33m•\x1b[0m Job #11111111 will be canceled.\n\x1b[0;33m•\x1b[0m Job #22222222 will be canceled.\n"), out)
 	assert.Empty(t, output.Stderr())
 }
