@@ -75,6 +75,8 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 	glab ci run -b main --variables-env key1:val1,key2:val2
 	glab ci run -b main --variables-env key1:val1 --variables-env key2:val2
 	glab ci run -b main --variables-file MYKEY:file1 --variables KEY2:some_value
+	glab ci run --mr <mrID>
+	glab ci run -m <mrID>
 	`),
 		Long: ``,
 		Args: cobra.ExactArgs(0),
@@ -149,6 +151,23 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 				c.Ref = gitlab.Ptr(ciutils.GetDefaultBranch(f))
 			}
 
+			mr, err := cmd.Flags().GetInt("mr")
+			if err != nil {
+				return err
+			}
+
+			if mr != -1 {
+				pid, err := repo.Project(apiClient)
+				if err != nil {
+					return err
+				}
+				mrPipeline, _, err := apiClient.MergeRequests.CreateMergeRequestPipeline(pid.ID, mr)
+				if err != nil {
+					return err
+				}
+				fmt.Println(f.IO.StdOut, "Created pipeline (id:", mrPipeline.ID, ")", "status:", mrPipeline.Status, ", ref:", mrPipeline.Ref, ", weburl: ", mrPipeline.WebURL, ")")
+			}
+
 			pipe, err := api.CreatePipeline(apiClient, repo.FullName(), c)
 			if err != nil {
 				return err
@@ -163,6 +182,7 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 	pipelineRunCmd.Flags().StringSliceVarP(&envVariables, "variables-env", "", []string{}, "Pass variables to pipeline in format <key>:<value>.")
 	pipelineRunCmd.Flags().StringSliceP("variables-file", "", []string{}, "Pass file contents as a file variable to pipeline in format <key>:<filename>.")
 	pipelineRunCmd.Flags().StringP("variables-from", "f", "", "JSON file containing variables for pipeline execution.")
+	pipelineRunCmd.Flags().IntP("mr", "m", -1, "Run merge request pipeline")
 
 	return pipelineRunCmd
 }
