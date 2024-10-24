@@ -50,6 +50,18 @@ func NewCmdNote(f *cmdutils.Factory) *cobra.Command {
 				return fmt.Errorf("aborted... Note has an empty message.")
 			}
 
+			noteId, _ := cmd.Flags().GetInt("note-id")
+			if noteId > 0 {
+				noteInfo, err := api.UpdateMRNotes(apiClient, repo.FullName(), mr.IID, noteId, &gitlab.UpdateMergeRequestNoteOptions{
+					Body: &body,
+				})
+				if err != nil {
+					return err
+				}
+				fmt.Fprintf(f.IO.StdOut, "%s#note_%d\n", mr.WebURL, noteInfo.ID)
+				return nil
+			}
+
 			uniqueNoteEnabled, _ := cmd.Flags().GetBool("unique")
 
 			if uniqueNoteEnabled {
@@ -80,5 +92,6 @@ func NewCmdNote(f *cmdutils.Factory) *cobra.Command {
 
 	mrCreateNoteCmd.Flags().StringP("message", "m", "", "Comment or note message.")
 	mrCreateNoteCmd.Flags().Bool("unique", false, "Don't create a comment or note if it already exists.")
+	mrCreateNoteCmd.Flags().Int("note-id", 0, "Existing note ID to update")
 	return mrCreateNoteCmd
 }

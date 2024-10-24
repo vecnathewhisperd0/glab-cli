@@ -81,6 +81,42 @@ func Test_NewCmdNote(t *testing.T) {
 	})
 }
 
+func Test_NewCmdNote_update(t *testing.T) {
+	fakeHTTP := httpmock.New()
+	defer fakeHTTP.Verify(t)
+
+	t.Run("--note-id flag specified", func(t *testing.T) {
+		fakeHTTP.RegisterResponder(http.MethodPut, "/projects/OWNER/REPO/merge_requests/1/notes/301",
+			httpmock.NewStringResponse(http.StatusOK, `
+		{
+			"id": 301,
+  			"created_at": "2013-10-02T08:57:14Z",
+  			"updated_at": "2013-10-02T08:57:14Z",
+  			"system": false,
+  			"noteable_id": 1,
+  			"noteable_type": "MergeRequest",
+  			"noteable_iid": 1
+		}
+	`))
+		fakeHTTP.RegisterResponder(http.MethodGet, "/projects/OWNER/REPO/merge_requests/1",
+			httpmock.NewStringResponse(http.StatusOK, `
+		{
+			"id": 1,
+			"iid": 1,
+			"web_url": "https://gitlab.com/OWNER/REPO/merge_requests/1"
+		}
+	`))
+		// glab mr note 1 --message "Here is my note"
+		output, err := runCommand(fakeHTTP, true, `1 --note-id 301 --message "Here is my note"`)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.Equal(t, output.Stderr(), "")
+		assert.Equal(t, output.String(), "https://gitlab.com/OWNER/REPO/merge_requests/1#note_301\n")
+	})
+}
+
 func Test_NewCmdNote_error(t *testing.T) {
 	fakeHTTP := httpmock.New()
 	defer fakeHTTP.Verify(t)
@@ -106,6 +142,27 @@ func Test_NewCmdNote_error(t *testing.T) {
 		_, err := runCommand(fakeHTTP, true, `1 -m "Some message"`)
 		assert.NotNil(t, err)
 		assert.Equal(t, "POST https://gitlab.com/api/v4/projects/OWNER/REPO/merge_requests/1/notes: 401 {message: Unauthorized}", err.Error())
+	})
+
+	t.Run("note could not be updated", func(t *testing.T) {
+		fakeHTTP.RegisterResponder(http.MethodPut, "/projects/OWNER/REPO/merge_requests/1/notes/301",
+			httpmock.NewStringResponse(http.StatusUnauthorized, `
+		{
+			"message": "note not found"
+		}
+	`))
+		fakeHTTP.RegisterResponder(http.MethodGet, "/projects/OWNER/REPO/merge_requests/1",
+			httpmock.NewStringResponse(http.StatusOK, `
+		{
+			"id": 1,
+			"iid": 1,
+			"web_url": "https://gitlab.com/OWNER/REPO/merge_requests/1"
+		}
+	`))
+		// glab mr note 1 --message "Here ismy note"
+		_, err := runCommand(fakeHTTP, true, `1 --note-id 301 --message "Here is my note"`)
+		assert.NotNil(t, err)
+		assert.Equal(t, "PUT https://gitlab.com/api/v4/projects/OWNER/REPO/merge_requests/1/notes/301: 401 {message: note not found}", err.Error())
 	})
 }
 

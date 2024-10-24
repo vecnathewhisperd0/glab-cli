@@ -339,6 +339,19 @@ var ListMRNotes = func(client *gitlab.Client, projectID interface{}, mrID int, o
 	return notes, nil
 }
 
+var UpdateMRNotes = func(client *gitlab.Client, projectID interface{}, mrID int, noteID int, opts *gitlab.UpdateMergeRequestNoteOptions) (*gitlab.Note, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+
+	note, _, err := client.Notes.UpdateMergeRequestNote(projectID, mrID, noteID, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return note, nil
+}
+
 var RebaseMR = func(client *gitlab.Client, projectID interface{}, mrID int, opts *gitlab.RebaseMergeRequestOptions) error {
 	if client == nil {
 		client = apiClient.Lab()
