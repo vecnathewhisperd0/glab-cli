@@ -3,13 +3,12 @@ package pipeline
 import (
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/cli/commands/ci/ciutils"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
@@ -52,7 +51,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 			var pipelineIDs []int
 
-			pipelineIDs, err = parseRawPipelineIDs(args[0])
+			pipelineIDs, err = ciutils.ParseStringToIDs(args[0])
 			if err != nil {
 				return err
 			}
@@ -62,19 +61,6 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 	SetupCommandFlags(pipelineCancelCmd.Flags())
 	return pipelineCancelCmd
-}
-
-func parseRawPipelineIDs(rawPipelineIDs string) ([]int, error) {
-	var inputPipelineID []int
-	for _, stringID := range strings.Split(rawPipelineIDs, ",") {
-		id, err := strconv.Atoi(stringID)
-		if err != nil {
-			return nil, err
-		}
-		inputPipelineID = append(inputPipelineID, id)
-	}
-
-	return inputPipelineID, nil
 }
 
 func SetupCommandFlags(flags *pflag.FlagSet) {

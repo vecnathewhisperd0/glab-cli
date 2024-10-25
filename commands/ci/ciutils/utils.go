@@ -6,6 +6,7 @@ import (
 	"io"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -320,4 +321,21 @@ func TraceJob(inputs *JobInputs, opts *JobOptions) error {
 	}
 	fmt.Fprintln(opts.IO.StdOut)
 	return runTrace(context.Background(), opts.ApiClient, opts.IO.StdOut, opts.Repo.FullName(), jobID)
+}
+
+// ParseStringToIDs parses comma separated values to slice of int
+func ParseStringToIDs(input string) ([]int, error) {
+	var parsedValues []int
+	if len(input) == 0 {
+		return parsedValues, nil
+	}
+	for _, v := range strings.Split(input, ",") {
+		id, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, err
+		}
+		parsedValues = append(parsedValues, id)
+	}
+
+	return parsedValues, nil
 }

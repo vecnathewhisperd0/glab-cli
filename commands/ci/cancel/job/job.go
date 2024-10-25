@@ -3,13 +3,12 @@ package job
 import (
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/xanzy/go-gitlab"
+	"gitlab.com/gitlab-org/cli/commands/ci/ciutils"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
 	"gitlab.com/gitlab-org/cli/pkg/iostreams"
@@ -52,7 +51,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 			var jobIDs []int
 
-			jobIDs, err = parserawJobIDs(args[0])
+			jobIDs, err = ciutils.ParseStringToIDs(args[0])
 			if err != nil {
 				return err
 			}
@@ -62,19 +61,6 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 	SetupCommandFlags(jobCancelCmd.Flags())
 	return jobCancelCmd
-}
-
-func parserawJobIDs(rawJobIDs string) ([]int, error) {
-	var inputJobIDs []int
-	for _, stringID := range strings.Split(rawJobIDs, ",") {
-		id, err := strconv.Atoi(stringID)
-		if err != nil {
-			return nil, err
-		}
-		inputJobIDs = append(inputJobIDs, id)
-	}
-
-	return inputJobIDs, nil
 }
 
 func SetupCommandFlags(flags *pflag.FlagSet) {
