@@ -257,7 +257,7 @@ func TestParseCSVToIntSlice(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fmt.Printf("input: %v\n", tc.input)
 			fmt.Printf("output: %v\n", tc.expectedOut)
-			output, err := ParseStringToIDs(tc.input)
+			output, err := IDsFromArgs(tc.input)
 			if err != nil {
 				require.Nil(t, err)
 			}

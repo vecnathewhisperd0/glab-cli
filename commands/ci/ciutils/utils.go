@@ -323,8 +323,8 @@ func TraceJob(inputs *JobInputs, opts *JobOptions) error {
 	return runTrace(context.Background(), opts.ApiClient, opts.IO.StdOut, opts.Repo.FullName(), jobID)
 }
 
-// ParseStringToIDs parses comma separated values to slice of int
-func ParseStringToIDs(input string) ([]int, error) {
+// IDsFromArgs parses list of ints from comma separated values
+func IDsFromArgs(input string) ([]int, error) {
 	var parsedValues []int
 	if len(input) == 0 {
 		return parsedValues, nil

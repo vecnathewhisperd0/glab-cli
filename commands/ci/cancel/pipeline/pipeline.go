@@ -51,7 +51,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 			var pipelineIDs []int
 
-			pipelineIDs, err = ciutils.ParseStringToIDs(args[0])
+			pipelineIDs, err = ciutils.IDsFromArgs(args[0])
 			if err != nil {
 				return err
 			}
