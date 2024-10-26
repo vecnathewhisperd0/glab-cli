@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/gitlab-org/cli/internal/config"
 	"gitlab.com/gitlab-org/cli/internal/run"
+	"os/exec"
 )
 
 func Test_StackRemoveRef(t *testing.T) {
@@ -618,5 +619,83 @@ func createBranches(t *testing.T, refs map[string]StackRef) {
 	for _, ref := range refs {
 		err := CheckoutNewBranch(ref.Branch)
 		require.Nil(t, err)
+	}
+}
+
+func TestPushStackMetadata(t *testing.T) {
+	tests := []struct {
+		name    string
+		remote  string
+		wantErr bool
+	}{
+		{
+			name:    "push to origin",
+			remote:  "origin",
+			wantErr: false,
+		},
+		{
+			name:    "push to non-existent remote",
+			remote:  "non-existent",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			InitGitRepoWithCommit(t)
+
+			if tt.remote == "origin" {
+				cmd := exec.Command("git", "remote", "add", "origin", "https://gitlab.com/test/repo.git")
+				err := cmd.Run()
+				require.NoError(t, err)
+			}
+
+			err := PushStackMetadata(tt.remote)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestFetchStackMetadata(t *testing.T) {
+	tests := []struct {
+		name    string
+		remote  string
+		wantErr bool
+	}{
+		{
+			name:    "fetch from origin",
+			remote:  "origin",
+			wantErr: false,
+		},
+		{
+			name:    "fetch from non-existent remote",
+			remote:  "non-existent",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			InitGitRepoWithCommit(t)
+
+			if tt.remote == "origin" {
+				cmd := exec.Command("git", "remote", "add", "origin", "https://gitlab.com/test/repo.git")
+				err := cmd.Run()
+				require.NoError(t, err)
+			}
+
+			err := FetchStackMetadata(tt.remote)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

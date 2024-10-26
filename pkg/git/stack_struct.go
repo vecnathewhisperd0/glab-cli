@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"os/exec"
 )
 
 type StackRef struct {
@@ -31,6 +32,7 @@ type StackRef struct {
 type Stack struct {
 	Title string
 	Refs  map[string]StackRef
+	MetadataHash string `json:"metadata_hash,omitempty"`
 }
 
 func (s Stack) Empty() bool { return len(s.Refs) == 0 }
@@ -299,4 +301,14 @@ func (r StackRef) Subject() string {
 	}
 
 	return ls[0][:69] + "..."
+}
+
+func PushStackMetadata(remote string) error {
+	cmd := exec.Command("git", "push", remote, "+refs/stacked/*:refs/stacked/*")
+	return cmd.Run()
+}
+
+func FetchStackMetadata(remote string) error {
+	cmd := exec.Command("git", "fetch", remote, "+refs/stacked/*:refs/stacked/*")
+	return cmd.Run()
 }

@@ -1,10 +1,13 @@
 package git
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"gitlab.com/gitlab-org/cli/internal/run"
 )
@@ -157,4 +160,38 @@ func GetStacks() (stacks []Stack, err error) {
 		stacks = append(stacks, Stack{Title: v.Name()})
 	}
 	return
+}
+
+func CreateStack(name string, base string, head string) error {
+	stack := &Stack{
+		Title: name,
+		Refs: map[string]StackRef{
+			base: {SHA: base},
+			head: {SHA: head},
+		},
+	}
+
+	// Serialize stack to JSON
+	jsonData, err := json.Marshal(stack)
+	if err != nil {
+		return err
+	}
+
+	// Create Git object
+	cmd := exec.Command("git", "hash-object", "-w", "--stdin")
+	cmd.Stdin = bytes.NewReader(jsonData)
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	stack.MetadataHash = strings.TrimSpace(string(output))
+
+	// Write ref
+	gitDir, err := ToplevelDir()
+	if err != nil {
+		return err
+	}
+	refPath := filepath.Join(gitDir, "refs", "stacked", name)
+	return os.WriteFile(refPath, []byte(stack.MetadataHash), 0644)
 }

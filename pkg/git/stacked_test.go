@@ -246,3 +246,52 @@ func createRefFiles(refs map[string]StackRef, title string) error {
 
 	return nil
 }
+
+func TestCreateStack(t *testing.T) {
+	tests := []struct {
+		name    string
+		title   string
+		base    string
+		head    string
+		wantErr bool
+	}{
+		{
+			name:    "create valid stack",
+			title:   "test-stack",
+			base:    "main",
+			head:    "feature",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := InitGitRepoWithCommit(t)
+
+			err := CreateStack(tt.title, tt.base, tt.head)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+
+				// Check if the stack metadata file was created
+				metadataPath := filepath.Join(dir, ".git", "refs", "stacked", tt.title)
+				require.FileExists(t, metadataPath)
+
+				// Read the metadata file and verify its contents
+				content, err := os.ReadFile(metadataPath)
+				require.NoError(t, err)
+
+				var stack Stack
+				err = json.Unmarshal(content, &stack)
+				require.NoError(t, err)
+
+				require.Equal(t, tt.title, stack.Title)
+				require.Equal(t, tt.base, stack.Refs[tt.base].SHA)
+				require.Equal(t, tt.head, stack.Refs[tt.head].SHA)
+				require.NotEmpty(t, stack.MetadataHash)
+			}
+		})
+	}
+}
