@@ -7,9 +7,9 @@ import (
 	"io/fs"
 	"iter"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-	"os/exec"
 )
 
 type StackRef struct {
@@ -30,8 +30,8 @@ type StackRef struct {
 // All stacks must be created with GatherStackRefs
 // which validates the stack for consistency.
 type Stack struct {
-	Title string
-	Refs  map[string]StackRef
+	Title        string
+	Refs         map[string]StackRef
 	MetadataHash string `json:"metadata_hash,omitempty"`
 }
 

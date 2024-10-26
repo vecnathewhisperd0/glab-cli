@@ -193,5 +193,5 @@ func CreateStack(name string, base string, head string) error {
 		return err
 	}
 	refPath := filepath.Join(gitDir, "refs", "stacked", name)
-	return os.WriteFile(refPath, []byte(stack.MetadataHash), 0644)
+	return os.WriteFile(refPath, []byte(stack.MetadataHash), 0o644)
 }

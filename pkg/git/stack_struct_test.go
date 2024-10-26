@@ -1,6 +1,7 @@
 package git
 
 import (
+	"os/exec"
 	"path"
 	"slices"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/gitlab-org/cli/internal/config"
 	"gitlab.com/gitlab-org/cli/internal/run"
-	"os/exec"
 )
 
 func Test_StackRemoveRef(t *testing.T) {
