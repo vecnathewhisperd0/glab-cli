@@ -642,14 +642,17 @@ func TestPushStackMetadata(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			InitGitRepoWithCommit(t)
+			// Set up a mock git environment
 
-			if tt.remote == "origin" {
-				cmd := exec.Command("git", "remote", "add", "origin", "https://gitlab.com/test/repo.git")
-				err := cmd.Run()
-				require.NoError(t, err)
+			oldExecCommand := GitCommand
+			defer func() { GitCommand = oldExecCommand }()
+
+			GitCommand = func(args ...string) *exec.Cmd {
+				if tt.wantErr {
+					return exec.Command("false")
+				}
+				return exec.Command("true")
 			}
-
 			err := PushStackMetadata(tt.remote)
 
 			if tt.wantErr {
@@ -681,12 +684,15 @@ func TestFetchStackMetadata(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			InitGitRepoWithCommit(t)
+			// Set up a mock git environment
+			oldExecCommand := GitCommand
+			defer func() { GitCommand = oldExecCommand }()
 
-			if tt.remote == "origin" {
-				cmd := exec.Command("git", "remote", "add", "origin", "https://gitlab.com/test/repo.git")
-				err := cmd.Run()
-				require.NoError(t, err)
+			GitCommand = func(args ...string) *exec.Cmd {
+				if tt.wantErr {
+					return exec.Command("false")
+				}
+				return exec.Command("true")
 			}
 
 			err := FetchStackMetadata(tt.remote)

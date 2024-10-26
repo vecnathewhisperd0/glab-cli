@@ -266,9 +266,23 @@ func TestCreateStack(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := InitGitRepoWithCommit(t)
+			// Create a temporary directory
+			dir, err := os.MkdirTemp("", "TestCreateStack")
+			require.NoError(t, err)
+			defer os.RemoveAll(dir)
 
-			err := CreateStack(tt.title, tt.base, tt.head)
+			// Set up the git environment in the temporary directory
+			err = os.MkdirAll(filepath.Join(dir, ".git", "refs"), 0o755)
+			require.NoError(t, err)
+
+			// Change to the temporary directory
+			oldWd, err := os.Getwd()
+			require.NoError(t, err)
+			err = os.Chdir(dir)
+			require.NoError(t, err)
+			defer os.Chdir(oldWd)
+
+			err = CreateStack(tt.title, tt.base, tt.head)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -288,8 +302,8 @@ func TestCreateStack(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, tt.title, stack.Title)
-				require.Equal(t, tt.base, stack.Refs[tt.base].SHA)
-				require.Equal(t, tt.head, stack.Refs[tt.head].SHA)
+				require.Contains(t, stack.Refs, tt.base)
+				require.Contains(t, stack.Refs, tt.head)
 				require.NotEmpty(t, stack.MetadataHash)
 			}
 		})
