@@ -3,6 +3,7 @@ package git
 import (
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -250,16 +251,16 @@ func createRefFiles(refs map[string]StackRef, title string) error {
 func TestCreateStack(t *testing.T) {
 	tests := []struct {
 		name    string
-		title   string
-		base    string
-		head    string
+		stack   Stack
 		wantErr bool
 	}{
 		{
-			name:    "create valid stack",
-			title:   "test-stack",
-			base:    "main",
-			head:    "feature",
+			name: "create valid stack",
+			stack: Stack{
+				Name: "test-stack",
+				Base: "main",
+				Head: "feature",
+			},
 			wantErr: false,
 		},
 	}
@@ -271,26 +272,50 @@ func TestCreateStack(t *testing.T) {
 			require.NoError(t, err)
 			defer os.RemoveAll(dir)
 
-			// Set up the git environment in the temporary directory
-			err = os.MkdirAll(filepath.Join(dir, ".git", "refs"), 0o755)
-			require.NoError(t, err)
-
 			// Change to the temporary directory
 			oldWd, err := os.Getwd()
 			require.NoError(t, err)
 			err = os.Chdir(dir)
 			require.NoError(t, err)
-			defer os.Chdir(oldWd)
+			defer func() {
+				err := os.Chdir(oldWd)
+				require.NoError(t, err)
+			}()
 
-			err = CreateStack(tt.title, tt.base, tt.head)
+			// Initialize Git repository
+			cmd := exec.Command("git", "init")
+			output, err := cmd.CombinedOutput()
+			require.NoError(t, err, "Git init failed: %s", string(output))
 
+			// Create an initial commit
+			cmd = exec.Command("git", "commit", "--allow-empty", "-m", "Initial commit")
+			output, err = cmd.CombinedOutput()
+			require.NoError(t, err, "Initial commit failed: %s", string(output))
+
+			// Set up Git user configuration
+			cmd = exec.Command("git", "config", "user.name", "Test User")
+			output, err = cmd.CombinedOutput()
+			require.NoError(t, err, "Setting Git user.name failed: %s", string(output))
+
+			cmd = exec.Command("git", "config", "user.email", "test@example.com")
+			output, err = cmd.CombinedOutput()
+			require.NoError(t, err, "Setting Git user.email failed: %s", string(output))
+
+			// Log Git status before creating stack
+			cmd = exec.Command("git", "status")
+			output, err = cmd.CombinedOutput()
+			require.NoError(t, err, "Git status failed: %s", string(output))
+
+			err = CreateStack(tt.stack.Name, tt.stack.Base, tt.stack.Head)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("CreateStack failed: %v", err)
+				}
 
 				// Check if the stack metadata file was created
-				metadataPath := filepath.Join(dir, ".git", "refs", "stacked", tt.title)
+				metadataPath := filepath.Join(dir, ".git", "refs", "stacked", tt.stack.Name)
 				require.FileExists(t, metadataPath)
 
 				// Read the metadata file and verify its contents
@@ -301,9 +326,9 @@ func TestCreateStack(t *testing.T) {
 				err = json.Unmarshal(content, &stack)
 				require.NoError(t, err)
 
-				require.Equal(t, tt.title, stack.Title)
-				require.Contains(t, stack.Refs, tt.base)
-				require.Contains(t, stack.Refs, tt.head)
+				require.Equal(t, tt.stack.Name, stack.Name)
+				require.Equal(t, tt.stack.Base, stack.Base)
+				require.Equal(t, tt.stack.Head, stack.Head)
 				require.NotEmpty(t, stack.MetadataHash)
 			}
 		})

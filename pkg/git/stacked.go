@@ -170,28 +170,34 @@ func CreateStack(name string, base string, head string) error {
 			head: {SHA: head},
 		},
 	}
-
 	// Serialize stack to JSON
 	jsonData, err := json.Marshal(stack)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal stack: %w", err)
 	}
 
 	// Create Git object
 	cmd := exec.Command("git", "hash-object", "-w", "--stdin")
 	cmd.Stdin = bytes.NewReader(jsonData)
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create git object: %w, output: %s", err, string(output))
 	}
 
 	stack.MetadataHash = strings.TrimSpace(string(output))
 
-	// Write ref
-	gitDir, err := ToplevelDir()
-	if err != nil {
-		return err
+	// Ensure the refs/stacked directory exists
+	refDir := filepath.Join(".git", "refs", "stacked")
+	if err := os.MkdirAll(refDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create refs/stacked directory: %w", err)
 	}
-	refPath := filepath.Join(gitDir, "refs", "stacked", name)
-	return os.WriteFile(refPath, []byte(stack.MetadataHash), 0o644)
+
+	// Write ref
+	refPath := filepath.Join(refDir, name)
+	err = os.WriteFile(refPath, []byte(stack.MetadataHash), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write ref file: %w", err)
+	}
+
+	return nil
 }

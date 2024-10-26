@@ -33,6 +33,9 @@ type Stack struct {
 	Title        string
 	Refs         map[string]StackRef
 	MetadataHash string `json:"metadata_hash,omitempty"`
+	Name         string
+	Base         string
+	Head         string
 }
 
 func (s Stack) Empty() bool { return len(s.Refs) == 0 }
