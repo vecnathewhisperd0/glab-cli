@@ -1,7 +1,6 @@
 package ciutils
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -238,25 +237,28 @@ func TestGetJobId(t *testing.T) {
 func TestParseCSVToIntSlice(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       string
+		input       []string
 		expectedOut []int
 	}{
 		{
 			name:        "when input is empty",
-			input:       "",
+			input:       []string{},
 			expectedOut: nil,
 		},
 		{
 			name:        "when input is a comma-separated string",
-			input:       "111,222,333",
+			input:       []string{"111,222,333"},
 			expectedOut: []int{111, 222, 333},
+		},
+		{
+			name:        "when input is a space-separated string",
+			input:       []string{"111 222 333  4444"},
+			expectedOut: []int{111, 222, 333, 4444},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			fmt.Printf("input: %v\n", tc.input)
-			fmt.Printf("output: %v\n", tc.expectedOut)
 			output, err := IDsFromArgs(tc.input)
 			if err != nil {
 				require.Nil(t, err)

@@ -25,6 +25,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 		Example: heredoc.Doc(`
 	glab ci cancel job 1504182795
 	glab ci cancel job 1504182795,1504182795
+	glab ci cancel job "1504182795 1504182795"
 	glab ci cancel job 1504182795,1504182795 --dry-run
 	`),
 		Long: ``,
@@ -51,7 +52,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 
 			var jobIDs []int
 
-			jobIDs, err = ciutils.IDsFromArgs(args[0])
+			jobIDs, err = ciutils.IDsFromArgs(args)
 			if err != nil {
 				return err
 			}

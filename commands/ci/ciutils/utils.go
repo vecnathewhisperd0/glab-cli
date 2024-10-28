@@ -323,19 +323,21 @@ func TraceJob(inputs *JobInputs, opts *JobOptions) error {
 	return runTrace(context.Background(), opts.ApiClient, opts.IO.StdOut, opts.Repo.FullName(), jobID)
 }
 
-// IDsFromArgs parses list of ints from comma separated values
-func IDsFromArgs(input string) ([]int, error) {
+// IDsFromArgs parses list of IDs from space or comma-separated values
+func IDsFromArgs(args []string) ([]int, error) {
 	var parsedValues []int
-	if len(input) == 0 {
-		return parsedValues, nil
+
+	f := func(r rune) bool {
+		return r == ',' || r == ' '
 	}
-	for _, v := range strings.Split(input, ",") {
+	processed := strings.FieldsFunc(strings.Join(args, ""), f)
+
+	for _, v := range processed {
 		id, err := strconv.Atoi(v)
 		if err != nil {
 			return nil, err
 		}
 		parsedValues = append(parsedValues, id)
 	}
-
 	return parsedValues, nil
 }
