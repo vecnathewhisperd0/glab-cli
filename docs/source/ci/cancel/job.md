@@ -22,6 +22,7 @@ glab ci cancel job <id> [flags]
 ```plaintext
 glab ci cancel job 1504182795
 glab ci cancel job 1504182795,1504182795
+glab ci cancel job "1504182795 1504182795"
 glab ci cancel job 1504182795,1504182795 --dry-run
 
 ```
