@@ -30,7 +30,7 @@ glab ci cancel job 1504182795,1504182795 --dry-run
 ## Options
 
 ```plaintext
-      --dry-run   Simulate process, but does not cancel anything.
+      --dry-run   Simulates process, but does not cancel anything.
 ```
 
 ## Options inherited from parent commands

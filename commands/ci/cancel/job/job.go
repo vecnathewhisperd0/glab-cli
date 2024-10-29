@@ -31,7 +31,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 		Long: ``,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				return fmt.Errorf("A job ID must be passed.")
+				return fmt.Errorf("You must pass a job ID.")
 			}
 
 			return nil
@@ -65,7 +65,7 @@ func NewCmdCancel(f *cmdutils.Factory) *cobra.Command {
 }
 
 func SetupCommandFlags(flags *pflag.FlagSet) {
-	flags.BoolP(FlagDryRun, "", false, "Simulate process, but does not cancel anything.")
+	flags.BoolP(FlagDryRun, "", false, "Simulates process, but does not cancel anything.")
 }
 
 func runCancelation(jobIDs []int, dryRunMode bool, w io.Writer, c *iostreams.ColorPalette, apiClient *gitlab.Client, repo glrepo.Interface) error {
@@ -82,7 +82,7 @@ func runCancelation(jobIDs []int, dryRunMode bool, w io.Writer, c *iostreams.Col
 				return err
 			}
 
-			fmt.Fprintf(w, "%s Job #%d is cancelled successfully.\n", c.RedCheck(), id)
+			fmt.Fprintf(w, "%s Job #%d is canceled successfully.\n", c.RedCheck(), id)
 		}
 	}
 	fmt.Println()

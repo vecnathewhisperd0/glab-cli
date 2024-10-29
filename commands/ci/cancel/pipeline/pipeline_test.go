@@ -29,7 +29,7 @@ func TestCIPipelineCancelWithoutArgument(t *testing.T) {
 
 	pipelineId := ""
 	output, err := runCommand(fakeHTTP, pipelineId)
-	assert.EqualError(t, err, "A pipeline ID must be passed.")
+	assert.EqualError(t, err, "You must pass a pipeline ID.")
 
 	assert.Empty(t, output.String())
 	assert.Empty(t, output.Stderr())

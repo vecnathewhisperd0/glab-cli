@@ -29,7 +29,7 @@ func TestCIPipelineCancelWithoutArgument(t *testing.T) {
 
 	jobID := ""
 	output, err := runCommand(fakeHTTP, jobID)
-	assert.EqualError(t, err, "A job ID must be passed.")
+	assert.EqualError(t, err, "You must pass a job ID.")
 
 	assert.Empty(t, output.String())
 	assert.Empty(t, output.Stderr())
