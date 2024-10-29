@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/ci/ciutils"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
@@ -63,7 +65,12 @@ func extractFileVar(s string) (*gitlab.PipelineVariableOptions, error) {
 	return pvar, nil
 }
 
+type runOpts struct {
+	isMergeRequest bool
+}
+
 func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
+	opts := runOpts{}
 	pipelineRunCmd := &cobra.Command{
 		Use:     "run [flags]",
 		Short:   `Create or run a new CI/CD pipeline.`,
@@ -75,11 +82,10 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 	glab ci run -b main --variables-env key1:val1,key2:val2
 	glab ci run -b main --variables-env key1:val1 --variables-env key2:val2
 	glab ci run -b main --variables-file MYKEY:file1 --variables KEY2:some_value
-	glab ci run --mr <mrID>
-	glab ci run -m <mrID>
+	glab ci run --mr [mrID]
 	`),
 		Long: ``,
-		Args: cobra.ExactArgs(0),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
@@ -91,6 +97,21 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 			repo, err := f.BaseRepo()
 			if err != nil {
 				return err
+			}
+
+			if opts.isMergeRequest {
+				mrID, err := getMRIDFromArgs(cmd, args, f)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintln(f.IO.StdOut, "Creating pipeline for MR", mrID, "...")
+				mrPipeline, err := api.CreateMRPipeline(apiClient, repo.FullName(), mrID)
+				if err != nil {
+					return err
+				}
+
+				fmt.Fprintf(f.IO.StdOut, "Created pipeline (id: %d), status: %s, ref: %s, weburl: %s\n", mrPipeline.ID, mrPipeline.Status, mrPipeline.Ref, mrPipeline.WebURL)
+				return nil
 			}
 
 			pipelineVars := []*gitlab.PipelineVariableOptions{}
@@ -151,29 +172,6 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 				c.Ref = gitlab.Ptr(ciutils.GetDefaultBranch(f))
 			}
 
-			mrID, err := cmd.Flags().GetInt("mr")
-			if err != nil {
-				return err
-			}
-
-			if mrID != -1 {
-				pid, err := repo.Project(apiClient)
-				if err != nil {
-					return err
-				}
-
-				mrPipeline, err := api.CreateMRPipeline(apiClient, pid.ID, mrID)
-				if err != nil {
-					return err
-				}
-
-				fmt.Fprintf(f.IO.StdOut, "Created pipeline (id: %d), status: %s, ref: %s, weburl: %s\n", mrPipeline.ID, mrPipeline.Status, mrPipeline.Ref, mrPipeline.WebURL)
-				// if branch flag is not provided, do not run branch pipeline and return from function
-				if branch == "" {
-					return nil
-				}
-			}
-
 			pipe, err := api.CreatePipeline(apiClient, repo.FullName(), c)
 			if err != nil {
 				return err
@@ -188,7 +186,28 @@ func NewCmdRun(f *cmdutils.Factory) *cobra.Command {
 	pipelineRunCmd.Flags().StringSliceVarP(&envVariables, "variables-env", "", []string{}, "Pass variables to pipeline in format <key>:<value>.")
 	pipelineRunCmd.Flags().StringSliceP("variables-file", "", []string{}, "Pass file contents as a file variable to pipeline in format <key>:<filename>.")
 	pipelineRunCmd.Flags().StringP("variables-from", "f", "", "JSON file containing variables for pipeline execution.")
-	pipelineRunCmd.Flags().IntP("mr", "m", -1, "Run merge request pipeline")
+	pipelineRunCmd.Flags().BoolVarP(&opts.isMergeRequest, "mr", "", false, "Run a pipeline for merge request with ID or current branch.")
+	pipelineRunCmd.MarkFlagsMutuallyExclusive("branch", "mr")
 
 	return pipelineRunCmd
+}
+
+func getMRIDFromArgs(cmd *cobra.Command, args []string, f *cmdutils.Factory) (int, error) {
+	mrIDStr := cmd.Flags().Arg(0)
+	var mrID int
+	var err error
+	if len(mrIDStr) > 0 {
+		mrID, err = strconv.Atoi(mrIDStr)
+		if err != nil {
+			return 0, fmt.Errorf("MR ID id not an integer: %s (%w)", mrIDStr, err)
+		}
+	}
+	if mrID == 0 {
+		mr, _, err := mrutils.MRFromArgs(f, args, "any")
+		if err != nil {
+			return 0, err
+		}
+		mrID = mr.IID
+	}
+	return mrID, nil
 }

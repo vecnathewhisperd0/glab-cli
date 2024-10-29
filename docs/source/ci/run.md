@@ -32,8 +32,7 @@ glab ci run -b main --variables-env key1:val1
 glab ci run -b main --variables-env key1:val1,key2:val2
 glab ci run -b main --variables-env key1:val1 --variables-env key2:val2
 glab ci run -b main --variables-file MYKEY:file1 --variables KEY2:some_value
-glab ci run --mr <mrID>
-glab ci run -m <mrID>
+glab ci run --mr [mrID]
 
 ```
 
@@ -41,7 +40,7 @@ glab ci run -m <mrID>
 
 ```plaintext
   -b, --branch string            Create pipeline on branch/ref <string>.
-  -m, --mr int                   Run merge request pipeline (default -1)
+      --mr                       Run a pipeline for merge request with ID or current branch.
       --variables strings        Pass variables to pipeline in format <key>:<value>.
       --variables-env strings    Pass variables to pipeline in format <key>:<value>.
       --variables-file strings   Pass file contents as a file variable to pipeline in format <key>:<filename>.

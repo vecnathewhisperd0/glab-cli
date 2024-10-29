@@ -40,6 +40,81 @@ func runCommand(rt http.RoundTripper, isTTY bool, cli string) (*test.CmdOut, err
 	return cmdtest.ExecuteCommand(cmd, cli, stdout, stderr)
 }
 
+func TestCIRunMR(t *testing.T) {
+	defer config.StubConfig(`---
+hosts:
+  gitlab.com:
+    username: monalisa
+    token: OTOKEN
+`, "")()
+
+	io, _, stdout, stderr := iostreams.Test()
+	stubFactory := cmdtest.StubFactory("")
+	stubFactory.IO = io
+	stubFactory.IO.IsaTTY = true
+	stubFactory.IO.IsErrTTY = true
+	oldCreateMRPipeline := api.CreateMRPipeline
+
+	api.CreateMRPipeline = func(client *gitlab.Client, projectID interface{}, mrID int) (*gitlab.PipelineInfo, error) {
+		if projectID == "" || projectID == "WRONG_REPO" || projectID == "expected_err" || mrID == 0 {
+			return nil, fmt.Errorf("error expected")
+		}
+
+		repo, err := stubFactory.BaseRepo()
+		if err != nil {
+			return nil, err
+		}
+
+		mrPipelineInfo := &gitlab.PipelineInfo{
+			ID:        1234,
+			IID:       1234,
+			ProjectID: 123,
+			Status:    "created",
+			Ref:       "branch-name",
+			WebURL:    "https://" + repo.RepoHost() + "/" + "OWNER/REPO" + "/-/pipelines/1234",
+		}
+		return mrPipelineInfo, nil
+	}
+
+	tests := []struct {
+		name string
+		args string
+
+		expectedPOSTBody string
+		expectedOut      string
+	}{
+		{
+			name:             "when running `ci run` with --mr parameter, run CI at merge request",
+			args:             "--mr 1234",
+			expectedPOSTBody: "",
+			expectedOut:      "Creating pipeline for MR 1234 ...\nCreated pipeline (id: 1234), status: created, ref: branch-name, weburl: https://gitlab.com/OWNER/REPO/-/pipelines/1234\n",
+		},
+	}
+
+	cmd := NewCmdRun(stubFactory)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			argv, err := shlex.Split(tc.args)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cmd.SetArgs(argv)
+			_, err = cmd.ExecuteC()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			out := stripansi.Strip(stdout.String())
+			fmt.Println(out)
+			assert.Equal(t, tc.expectedOut, out)
+			assert.Equal(t, "", stderr.String())
+		})
+	}
+
+	api.CreateMRPipeline = oldCreateMRPipeline
+}
+
 func TestCIRun(t *testing.T) {
 	tests := []struct {
 		name string
@@ -100,78 +175,4 @@ func TestCIRun(t *testing.T) {
 			assert.Empty(t, output.Stderr())
 		})
 	}
-}
-
-func TestCIRunMR(t *testing.T) {
-	defer config.StubConfig(`---
-hosts:
-  gitlab.com:
-    username: monalisa
-    token: OTOKEN
-`, "")()
-
-	io, _, stdout, stderr := iostreams.Test()
-	stubFactory := cmdtest.StubFactory("")
-	stubFactory.IO = io
-	stubFactory.IO.IsaTTY = true
-	stubFactory.IO.IsErrTTY = true
-	oldCreateMRPipeline := api.CreateMRPipeline
-
-	api.CreateMRPipeline = func(client *gitlab.Client, projectID interface{}, mrID int) (*gitlab.PipelineInfo, error) {
-		if projectID == "" || projectID == "WRONG_REPO" || projectID == "expected_err" || mrID == 0 {
-			return nil, fmt.Errorf("error expected")
-		}
-		repo, err := stubFactory.BaseRepo()
-		if err != nil {
-			return nil, err
-		}
-
-		mrPipelineInfo := &gitlab.PipelineInfo{
-			ID:        1234,
-			IID:       1234,
-			ProjectID: 123,
-			Status:    "created",
-			Ref:       "branch-name",
-			WebURL:    "https://" + repo.RepoHost() + "/" + repo.FullName() + "/-/pipelines/1234",
-		}
-		return mrPipelineInfo, nil
-	}
-
-	tests := []struct {
-		name string
-		args string
-
-		expectedPOSTBody string
-		expectedOut      string
-	}{
-		{
-			name:             "when running `ci run` with --mr parameter, run CI at merge request",
-			args:             "--mr 1234",
-			expectedPOSTBody: "",
-			expectedOut:      "Created pipeline (id: 1234), status: created, ref: branch-name, weburl: https://gitlab.com/gitlab-org/cli/-/pipelines/1234\n",
-		},
-	}
-
-	cmd := NewCmdRun(stubFactory)
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			argv, err := shlex.Split(tc.args)
-			if err != nil {
-				t.Fatal(err)
-			}
-			cmd.SetArgs(argv)
-			_, err = cmd.ExecuteC()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			out := stripansi.Strip(stdout.String())
-			fmt.Println(out)
-			assert.Equal(t, tc.expectedOut, out)
-			assert.Equal(t, "", stderr.String())
-		})
-	}
-
-	api.CreateMRPipeline = oldCreateMRPipeline
 }
