@@ -18,7 +18,7 @@ builds:
       env:
         - CGO_ENABLED=0
       ldflags:
-        - -s -w -X main.version=v{{.Version}} -X main.build={{time "2006-01-02"}}
+        - -s -w -X main.version=v{{.Version}} -X main.build={{time "2006-01-02"}} -X "main.goversion={{.Env.GO_VERSION}}"
     id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
@@ -26,12 +26,17 @@ builds:
   - <<: *build_defaults
     id: linux
     goos: [linux]
-    goarch: ["386", arm, amd64, arm64]
+    goarch: ["386", arm, amd64, arm64, ppc64le]
 
   - <<: *build_defaults
     id: windows
     goos: [windows]
     goarch: ["386", amd64]
+
+  - <<: *build_defaults
+    id: freebsd
+    goos: [freebsd]
+    goarch: ["386", amd64, arm]
 
 gitlab_urls:
   use_job_token: true
@@ -51,8 +56,6 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/amd64"
-    extra_files:
-      - scripts/entrypoint.sh
   - image_templates:
       - "registry.gitlab.com/gitlab-org/cli:{{ .Tag }}-arm64"
       - "gitlab/glab:{{ .Tag }}-arm64"
@@ -67,8 +70,6 @@ dockers:
       - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/arm64"
     goarch: arm64
-    extra_files:
-      - scripts/entrypoint.sh
 docker_manifests:
   - name_template: "registry.gitlab.com/gitlab-org/cli:{{ .Tag }}"
     image_templates:
@@ -89,37 +90,20 @@ docker_manifests:
 archives:
   - id: nix
     builds: [macos, linux]
-    <<: &archive_defaults
-      name_template: >-
-        {{ .ProjectName }}_
-        {{- .Version }}_
-        {{- if eq .Os "darwin" }}macOS
-        {{- else if eq .Os "linux" }}Linux
-        {{- else if eq .Os "windows" }}Windows{{ end }}_
-        {{- if eq .Arch "386" }}i386
-        {{- else if eq .Arch "amd64" }}x86_64
-        {{- else if eq .Arch "arm" }}arm
-        {{- else }}{{ .Arch }}{{ end }}
-        {{- if .Arm }}v{{ .Arm }}{{ end }}
-      wrap_in_directory: false
+    wrap_in_directory: false
     format: tar.gz
+
+  - id: freebsd
+    wrap_in_directory: false
+    builds: [freebsd]
 
   - id: windows
     builds: [windows]
-    <<: *archive_defaults
     format: zip
 
 nfpms:
   - id: foo
     package_name: glab
-    file_name_template: >-
-      {{ .ProjectName }}_
-      {{- .Version }}_
-      {{- if eq .Os "darwin" }}macOS
-      {{- else if eq .Os "linux" }}Linux{{ end }}_
-      {{- if eq .Arch "386" }}i386
-      {{- else if eq .Arch "amd64" }}x86_64
-      {{- else }}{{ .Arch }}{{ end }}
 
     # Build IDs for the builds you want to create NFPM packages for.
     # Defaults to all builds.
@@ -144,7 +128,7 @@ nfpms:
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}"
 changelog:
   sort: asc
   filters:
