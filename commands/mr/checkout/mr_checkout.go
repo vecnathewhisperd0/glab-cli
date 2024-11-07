@@ -2,6 +2,7 @@ package checkout
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -10,6 +11,7 @@ import (
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
+	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 )
 
@@ -96,9 +98,28 @@ func NewCmdCheckout(f *cmdutils.Factory) *cobra.Command {
 			// .remote is needed for `git pull` to work
 			// .pushRemote is needed for `git push` to work, if user has set `remote.pushDefault`.
 			// see https://git-scm.com/docs/git-config#Documentation/git-config.txt-branchltnamegtremote
-			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch), mrProject.SSHURLToRepo}); err != nil {
-				return err
+			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch)}); err != nil {
+				// It is not configured
+				branchRemoteURL := mrProject.SSHURLToRepo
+
+				remoteUrlCmd := git.GitCommand("remote", "get-url", git.DefaultRemote)
+				originRemoteURLByte, err := run.PrepareCmd(remoteUrlCmd).Output()
+				if err == nil {
+					// in SSHURLToRepo we trust
+					url1, _ := git.ParseURL(mrProject.SSHURLToRepo)
+					url2, err := git.ParseURL(strings.TrimSpace(string(originRemoteURLByte)))
+					if err == nil && strings.Contains(url1.String(), url2.String()) {
+						branchRemoteURL = git.DefaultRemote
+					}
+
+				}
+
+				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch), branchRemoteURL}); err != nil {
+					return err
+				}
+
 			}
+
 			if mr.AllowCollaboration {
 				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.pushRemote", mrCheckoutCfg.branch), mrProject.SSHURLToRepo}); err != nil {
 					return err
