@@ -2,7 +2,6 @@ package checkout
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
