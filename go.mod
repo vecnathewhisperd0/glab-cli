@@ -9,6 +9,7 @@ require (
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/briandowns/spinner v1.23.1
 	github.com/charmbracelet/glamour v0.8.0
+	github.com/coder/websocket v1.8.12
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/google/renameio/v2 v2.0.0
