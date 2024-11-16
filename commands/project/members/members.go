@@ -14,10 +14,10 @@ func NewCmdMembers(f *cmdutils.Factory) *cobra.Command {
 		Short: `Manage project members.`,
 		Long:  ``,
 		Example: heredoc.Doc(`
-glab members add john.doe --access-level=maintainer
-glab members add 123 -a reporter
-glab members remove john.doe
-glab members remove 123`),
+glab repo members add john.doe --access-level=maintainer
+glab repo members add 123 -a reporter
+glab repo members remove john.doe
+glab repo members remove 123`),
 	}
 
 	cmdutils.EnableRepoOverride(membersCmd, f)
