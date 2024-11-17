@@ -2,9 +2,10 @@ package members
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
-	"testing"
 )
 
 var tests = []struct {
@@ -20,7 +21,6 @@ var tests = []struct {
 }
 
 func TestNewCmdMembers(t *testing.T) {
-
 	cmd := NewCmdMembers(&cmdutils.Factory{})
 	assert.Equal(t, tests[0].expectedUse, cmd.Use)
 	assert.Equal(t, tests[0].expectedShort, cmd.Short)

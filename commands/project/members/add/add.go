@@ -2,6 +2,10 @@ package add
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -9,9 +13,6 @@ import (
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"golang.org/x/exp/maps"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 const (
