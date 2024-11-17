@@ -2,12 +2,13 @@ package remove
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
-	"strconv"
 )
 
 func NewCmdRemove(f *cmdutils.Factory) *cobra.Command {
