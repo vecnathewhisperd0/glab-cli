@@ -29,7 +29,7 @@ glab repo members add 123 -a reporter
 ## Options
 
 ```plaintext
-  -a, --access-level string   Access level of the user. Possible values are: maintainer, owner, admin, no-access, minimal, guest, reporter, developer
+  -a, --access-level string   Access level of the user. Possible values are: admin, developer, guest, maintainer, minimal, no-access, owner, reporter
 ```
 
 ## Options inherited from parent commands
