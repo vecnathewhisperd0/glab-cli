@@ -9,6 +9,7 @@ import (
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"golang.org/x/exp/maps"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -91,7 +92,9 @@ glab repo members add 123 -a reporter
 }
 
 func SetupCommandFlags(flags *pflag.FlagSet) {
-	flags.StringP(FlagAccessLevel, "a", "", fmt.Sprintf("Access level of the user. Possible values are: %s", strings.Join(maps.Keys(AccessLevelMap), ", ")))
+	keys := maps.Keys(AccessLevelMap)
+	sort.Strings(keys)
+	flags.StringP(FlagAccessLevel, "a", "", fmt.Sprintf("Access level of the user. Possible values are: %s", strings.Join(keys, ", ")))
 }
 
 func userIdFromArgs(client *gitlab.Client, args []string) (int, error) {
