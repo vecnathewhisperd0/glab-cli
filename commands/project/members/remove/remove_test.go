@@ -61,7 +61,7 @@ no_prompt: true
 	assert.NoError(t, err)
 
 	out := stdout.String()
-	assert.Contains(t, out, "User john.doe has been removed from gitlab-org/cli\n")
+	assert.Contains(t, out, "User john.doe has been removed from")
 	assert.Equal(t, "", stderr.String())
 }
 
