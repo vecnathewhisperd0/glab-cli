@@ -128,13 +128,14 @@ func NewCmdCheckout(f *cmdutils.Factory) *cobra.Command {
 					return err
 				}
 
+				if mr.AllowCollaboration {
+					if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.pushRemote", mrCheckoutCfg.branch), branchRemoteURL}); err != nil {
+						return err
+					}
+				}
+
 			}
 
-			if mr.AllowCollaboration {
-				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.pushRemote", mrCheckoutCfg.branch), mrProject.SSHURLToRepo}); err != nil {
-					return err
-				}
-			}
 			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.merge", mrCheckoutCfg.branch), mrRef}); err != nil {
 				return err
 			}
