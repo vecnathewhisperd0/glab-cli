@@ -101,16 +101,27 @@ func NewCmdCheckout(f *cmdutils.Factory) *cobra.Command {
 				// It is not configured
 				branchRemoteURL := mrProject.SSHURLToRepo
 
-				remoteUrlCmd := git.GitCommand("remote", "get-url", git.DefaultRemote)
-				originRemoteURLByte, err := run.PrepareCmd(remoteUrlCmd).Output()
-				if err == nil {
-					// in SSHURLToRepo we trust
-					url1, _ := git.ParseURL(mrProject.SSHURLToRepo)
-					url2, err := git.ParseURL(strings.TrimSpace(string(originRemoteURLByte)))
-					if err == nil && strings.Contains(url1.String(), url2.String()) {
-						branchRemoteURL = git.DefaultRemote
-					}
+				listRemoteCmd := git.GitCommand("remote")
 
+				listRemoteByte, err := run.PrepareCmd(listRemoteCmd).Output()
+
+				if err == nil {
+					remotes := strings.Split(string(listRemoteByte), "\n")
+
+					for _, remote := range remotes {
+						remoteUrlCmd := git.GitCommand("remote", "get-url", remote)
+						remoteURLByte, err := run.PrepareCmd(remoteUrlCmd).Output()
+						if err == nil {
+							// in SSHURLToRepo we trust
+							url1, _ := git.ParseURL(mrProject.SSHURLToRepo)
+							url2, err := git.ParseURL(strings.TrimSpace(string(remoteURLByte)))
+							if err == nil && strings.Contains(url1.String(), url2.String()) {
+								branchRemoteURL = remote
+								break
+							}
+
+						}
+					}
 				}
 
 				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch), branchRemoteURL}); err != nil {
