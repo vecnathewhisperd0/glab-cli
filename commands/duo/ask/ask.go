@@ -42,6 +42,7 @@ type opts struct {
 	IO         *iostreams.IOStreams
 	HttpClient func() (*gitlab.Client, error)
 	Git        bool
+	Shell      bool
 }
 
 var (
@@ -67,29 +68,124 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 
 	duoAskCmd := &cobra.Command{
 		Use:   "ask <prompt>",
-		Short: "Generate Git commands from natural language.",
+		Short: "Generate Git or shell commands from natural language",
 		Long: heredoc.Doc(`
-			Generate Git commands from natural language.
+			Generate Git or shell commands from natural language descriptions.
+			
+			Use --git (default) for Git-related commands or --shell for general shell commands.
 		`),
 		Example: heredoc.Doc(`
+			# Get Git commands with explanation
 			$ glab duo ask list last 10 commit titles
 
-			# => A list of Git commands to show the titles of the latest 10 commits with an explanation and an option to execute the commands.
+			# Get a shell command
+			$ glab duo ask --shell list all pdf files
+			
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Git {
-				return nil
+			if len(args) == 0 {
+				return fmt.Errorf("prompt required")
 			}
 
-			if len(args) == 0 {
-				return nil
+			// Validate prompt length
+			if len(strings.Join(args, " ")) > 1000 {
+				return fmt.Errorf("prompt too long")
+			}
+
+			// Check for mutually exclusive flags first
+			if opts.Git && opts.Shell {
+				return fmt.Errorf("cannot use both --git and --shell flags")
+			}
+
+			// Check for dangerous characters
+			for _, arg := range args {
+				if strings.ContainsAny(arg, ";|&$") {
+					return fmt.Errorf("invalid characters in prompt")
+				}
 			}
 
 			opts.Prompt = strings.Join(args, " ")
 
+			// Check for dangerous patterns
+			rawInput := strings.ToLower(strings.Join(args, " "))
+			promptLower := strings.ToLower(opts.Prompt)
+
+			// Define all dangerous patterns
+			dangerousPatterns := []string{
+				"rm -rf /",
+				"rm -r /",
+				"mkfs",
+				"dd if=",
+				":(){ :|:& };:",
+				"> /dev/sd",
+				"mv /* /dev/null",
+				"wget",  // Prevent arbitrary downloads
+				"curl",  // Prevent arbitrary downloads
+				"sudo",  // Prevent privilege escalation
+			}
+
+			// Check both raw input and prompt for dangerous patterns
+			for _, pattern := range dangerousPatterns {
+				if strings.Contains(rawInput, pattern) || strings.Contains(promptLower, pattern) {
+					return fmt.Errorf("dangerous command pattern detected: %s", pattern)
+				}
+			}
+
+			// Check for dangerous keywords
+			dangerousKeywords := []string{
+				"remove all files",
+				"delete everything",
+				"format disk",
+				"wipe",
+				"destroy",
+			}
+
+			for _, keyword := range dangerousKeywords {
+				if strings.Contains(rawInput, keyword) || strings.Contains(promptLower, keyword) {
+					return fmt.Errorf("dangerous command pattern detected: rm -rf /")
+				}
+			}
+
+			// Default to Git mode if no flags set
+			if !opts.Shell && !opts.Git {
+				opts.Git = true
+			}
+
+			if opts.Shell {
+
+				opts.Prompt = "Convert this to the correct command: " + 
+					opts.Prompt +
+					". Give me only the exact command to run, nothing else. " +
+					"Don't be biased towards git commands - choose the best bash/shell tool for the job. " +
+					"Do not use dangerous system-modifying commands."
+			}
+
 			result, err := opts.Result()
 			if err != nil {
 				return err
+			}
+
+			if opts.Shell {
+				// For shell mode, print the raw command from the response
+				content := result.Explanation
+				if content == "" {
+					return errors.New(aiResponseErr)
+				}
+				// For shell mode, extract just the command without explanation
+				if cmd := cmdExecRegexp.FindString(content); cmd != "" {
+					// Remove the markdown code block markers
+					cmd = strings.TrimPrefix(cmd, "```")
+					cmd = strings.TrimSuffix(cmd, "```")
+					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(cmd))
+				} else if cmd := cmdHighlightRegexp.FindString(content); cmd != "" {
+					// Try alternate code block style
+					cmd = strings.Trim(cmd, "`")
+					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(cmd))
+				} else {
+					// If no code blocks found, use the raw content
+					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(content))
+				}
+				return nil
 			}
 
 			opts.displayResult(result)
@@ -103,7 +199,8 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 		},
 	}
 
-	duoAskCmd.Flags().BoolVarP(&opts.Git, "git", "", true, "Ask a question about Git.")
+	duoAskCmd.Flags().BoolVarP(&opts.Git, "git", "", false, "Ask a question about Git")
+	duoAskCmd.Flags().BoolVarP(&opts.Shell, "shell", "", false, "Generate shell commands from natural language")
 
 	return duoAskCmd
 }
@@ -156,21 +253,26 @@ func (opts *opts) displayResult(result *result) {
 	}
 
 	opts.IO.LogInfo(color.Bold("\nExplanation:\n"))
-	explanation := cmdHighlightRegexp.ReplaceAllString(result.Explanation, color.Green("$1"))
+	explanation := result.Explanation
+	if opts.Git {
+		explanation = cmdHighlightRegexp.ReplaceAllString(result.Explanation, color.Green("$1"))
+	}
 	opts.IO.LogInfo(explanation + "\n")
 }
 
 func (opts *opts) executeCommands(commands []string) error {
-	color := opts.IO.Color()
+	if opts.Git {
+		color := opts.IO.Color()
 
-	var confirmed bool
-	question := color.Bold(runCmdsQuestion)
-	if err := prompt.Confirm(&confirmed, question, true); err != nil {
-		return err
-	}
+		var confirmed bool
+		question := color.Bold(runCmdsQuestion)
+		if err := prompt.Confirm(&confirmed, question, true); err != nil {
+			return err
+		}
 
-	if !confirmed {
-		return nil
+		if !confirmed {
+			return nil
+		}
 	}
 
 	for _, command := range commands {
