@@ -120,9 +120,9 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 				":(){ :|:& };:",
 				"> /dev/sd",
 				"mv /* /dev/null",
-				"wget",  // Prevent arbitrary downloads
-				"curl",  // Prevent arbitrary downloads
-				"sudo",  // Prevent privilege escalation
+				"wget", // Prevent arbitrary downloads
+				"curl", // Prevent arbitrary downloads
+				"sudo", // Prevent privilege escalation
 			}
 
 			// Check both raw input and prompt for dangerous patterns

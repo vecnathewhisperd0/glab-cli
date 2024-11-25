@@ -220,7 +220,7 @@ func TestFlagCombinations(t *testing.T) {
 		},
 		{
 			desc:           "no flags provided",
-			args:          "list files",
+			args:           "list files",
 			expectedOutput: "Commands:", // Just checking start of output since default is git mode
 		},
 	}
@@ -239,7 +239,7 @@ func TestFlagCombinations(t *testing.T) {
 			}
 
 			output, err := runCommand(fakeHTTP, false, tc.args)
-			
+
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
