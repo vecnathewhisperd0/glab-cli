@@ -279,7 +279,7 @@ func TestInputValidation(t *testing.T) {
 		},
 		{
 			desc:        "dangerous sudo command",
-			input:       "--shell \"sudo apt-get update\"", 
+			input:       "--shell \"sudo apt-get update\"",
 			expectedErr: "dangerous command pattern detected: sudo",
 		},
 		{
