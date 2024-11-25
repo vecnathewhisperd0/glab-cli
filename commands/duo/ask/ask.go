@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-	"os"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/run"
@@ -159,7 +159,7 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 					shellType = "zsh"
 				}
 
-				opts.Prompt = "Convert this to the correct command for " + shellType + ": " + 
+				opts.Prompt = "Convert this to the correct command for " + shellType + ": " +
 					opts.Prompt +
 					". Give me only the exact command to run, nothing else. " +
 					"Choose the best " + shellType + " tool for the job. " +
