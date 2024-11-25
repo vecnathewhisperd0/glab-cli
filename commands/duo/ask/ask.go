@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"os"
 
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/run"
@@ -152,12 +153,18 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			if opts.Shell {
+				shell := os.Getenv("SHELL")
+				shellType := "bash"
+				if strings.Contains(shell, "zsh") {
+					shellType = "zsh"
+				}
 
-				opts.Prompt = "Convert this to the correct command: " + 
+				opts.Prompt = "Convert this to the correct command for " + shellType + ": " + 
 					opts.Prompt +
 					". Give me only the exact command to run, nothing else. " +
-					"Don't be biased towards git commands - choose the best bash/shell tool for the job. " +
-					"Do not use dangerous system-modifying commands."
+					"Choose the best " + shellType + " tool for the job. " +
+					"Do not use dangerous system-modifying commands. " +
+					"Use " + shellType + "-specific features when they would improve the command."
 			}
 
 			result, err := opts.Result()
