@@ -179,9 +179,9 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 				// Extract and clean up command, removing any shell prefixes
 				cmd := content
 				if extracted := cmdExecRegexp.FindString(content); extracted != "" {
-					cmd = strings.Trim(extracted, "```")
+					cmd = strings.ReplaceAll(extracted, "```", "")
 				} else if extracted := cmdHighlightRegexp.FindString(content); extracted != "" {
-					cmd = strings.Trim(extracted, "`")
+					cmd = strings.ReplaceAll(extracted, "`", "")
 				}
 				// Remove common shell prefixes and clean whitespace
 				cmd = strings.TrimSpace(cmd)
