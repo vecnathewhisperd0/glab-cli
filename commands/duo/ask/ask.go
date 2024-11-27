@@ -81,7 +81,7 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 			# Get Git commands with explanation
 			$ glab duo ask list last 10 commit titles
 
-			# Get a shell command
+			# Get a shell command with explanation
 			$ glab duo ask --shell list all pdf files
 			
 		`),
