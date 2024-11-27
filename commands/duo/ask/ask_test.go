@@ -43,9 +43,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": [{ "candidates": [ {"content": "ls -la"} ]}]}`
+		body := `"ls -la"`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		expectedOutput := "ls -la"
 		output, err := runCommand(fakeHTTP, false, "--shell --git=false list files")
@@ -59,9 +59,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": [{ "candidates": [ {"content": "find . -type f -name '*.txt' -mtime -7 | xargs grep 'pattern'"} ]}]}`
+		body := `"find . -type f -name '*.txt' -mtime -7 | xargs grep 'pattern'"`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		expectedOutput := "find . -type f -name '*.txt' -mtime -7 | xargs grep 'pattern'"
 		output, err := runCommand(fakeHTTP, false, "--shell --git=false find text files modified in last week containing pattern")
@@ -75,9 +75,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": [{ "candidates": [ {"content": "echo \"Hello, World!\" > output.txt && sed -i 's/World/Everyone/g' output.txt"} ]}]}`
+		body := `"echo \"Hello, World!\" > output.txt && sed -i 's/World/Everyone/g' output.txt"`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		expectedOutput := "echo \"Hello, World!\" > output.txt && sed -i 's/World/Everyone/g' output.txt"
 		output, err := runCommand(fakeHTTP, false, "--shell --git=false create file saying Hello World and replace World with Everyone")
@@ -91,9 +91,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": []}`
+		body := `""`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		_, err := runCommand(fakeHTTP, false, "--shell --git=false list files")
 		require.Error(t, err)
@@ -106,9 +106,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": [{ "candidates": [{}]}]}`
+		body := `""`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		_, err := runCommand(fakeHTTP, false, "--shell --git=false list files")
 		require.Error(t, err)
@@ -121,9 +121,9 @@ func runShellCommandTests(t *testing.T) {
 		}
 		defer fakeHTTP.Verify(t)
 
-		body := `{"predictions": [{ "candidates": [{"content": ""}]}]}`
+		body := `""`
 		response := httpmock.NewStringResponse(http.StatusOK, body)
-		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/ai/llm/git_command", response)
+		fakeHTTP.RegisterResponder(http.MethodPost, "/api/v4/chat/completions", response)
 
 		_, err := runCommand(fakeHTTP, false, "--shell --git=false list files")
 		require.Error(t, err)

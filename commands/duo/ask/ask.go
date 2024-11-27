@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -25,13 +24,15 @@ type request struct {
 	Model  string `json:"model"`
 }
 
-type response struct {
+type gitResponse struct {
 	Predictions []struct {
 		Candidates []struct {
 			Content string `json:"content"`
 		} `json:"candidates"`
 	} `json:"predictions"`
 }
+
+type chatResponse string
 
 type result struct {
 	Commands    []string `json:"commands"`
@@ -56,6 +57,7 @@ const (
 	runCmdsQuestion   = "Would you like to run these Git commands?"
 	gitCmd            = "git"
 	gitCmdAPIPath     = "ai/llm/git_command"
+	chatAPIPath       = "chat/completions"
 	spinnerText       = "Generating Git commands..."
 	aiResponseErr     = "Error: AI response has not been generated correctly."
 	apiUnreachableErr = "Error: API is unreachable."
@@ -153,13 +155,8 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 			}
 
 			if opts.Shell {
-				shell := os.Getenv("SHELL")
-				shellType := "bash"
-				if strings.Contains(shell, "zsh") {
-					shellType = "zsh"
-				}
-
-				opts.Prompt = "Convert this to the correct command for " + shellType + ": " +
+				shellType := "shell"
+				opts.Prompt = "Convert this to a command: " +
 					opts.Prompt +
 					". Give me only the exact command to run, nothing else. " +
 					"Choose the best " + shellType + " tool for the job. " +
@@ -179,19 +176,19 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 					return errors.New(aiResponseErr)
 				}
 				// For shell mode, extract just the command without explanation
-				if cmd := cmdExecRegexp.FindString(content); cmd != "" {
-					// Remove the markdown code block markers
-					cmd = strings.TrimPrefix(cmd, "```")
-					cmd = strings.TrimSuffix(cmd, "```")
-					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(cmd))
-				} else if cmd := cmdHighlightRegexp.FindString(content); cmd != "" {
-					// Try alternate code block style
-					cmd = strings.Trim(cmd, "`")
-					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(cmd))
-				} else {
-					// If no code blocks found, use the raw content
-					fmt.Fprint(opts.IO.StdOut, strings.TrimSpace(content))
+				// Extract and clean up command, removing any shell prefixes
+				cmd := content
+				if extracted := cmdExecRegexp.FindString(content); extracted != "" {
+					cmd = strings.Trim(extracted, "```")
+				} else if extracted := cmdHighlightRegexp.FindString(content); extracted != "" {
+					cmd = strings.Trim(extracted, "`")
 				}
+				// Remove common shell prefixes and clean whitespace
+				cmd = strings.TrimSpace(cmd)
+				cmd = strings.TrimPrefix(cmd, "bash")
+				cmd = strings.TrimPrefix(cmd, "sh")
+				cmd = strings.TrimPrefix(cmd, "$")
+				fmt.Fprint(opts.IO.StdOut, cmd) // Changed from Fprintln to Fprint
 				return nil
 			}
 
@@ -221,23 +218,45 @@ func (opts *opts) Result() (*result, error) {
 		return nil, cmdutils.WrapError(err, "failed to get HTTP client.")
 	}
 
-	body := request{Prompt: opts.Prompt, Model: vertexAI}
-	request, err := client.NewRequest(http.MethodPost, gitCmdAPIPath, body, nil)
+	apiPath := gitCmdAPIPath
+	if opts.Shell {
+		apiPath = chatAPIPath
+	}
+	var apiReq interface{}
+	if opts.Shell {
+		// For chat endpoint
+		apiReq = map[string]string{
+			"content": opts.Prompt,
+		}
+	} else {
+		// For git command endpoint
+		apiReq = request{Prompt: opts.Prompt, Model: vertexAI}
+	}
+
+	req, err := client.NewRequest(http.MethodPost, apiPath, apiReq, nil)
 	if err != nil {
 		return nil, cmdutils.WrapError(err, "failed to create a request.")
 	}
 
-	var r response
-	_, err = client.Do(request, &r)
-	if err != nil {
-		return nil, cmdutils.WrapError(err, apiUnreachableErr)
+	var content string
+	if opts.Shell {
+		var r chatResponse
+		_, err = client.Do(req, &r)
+		if err != nil {
+			return nil, cmdutils.WrapError(err, apiUnreachableErr)
+		}
+		content = string(r)
+	} else {
+		var r gitResponse
+		_, err = client.Do(req, &r)
+		if err != nil {
+			return nil, cmdutils.WrapError(err, apiUnreachableErr)
+		}
+		if len(r.Predictions) == 0 || len(r.Predictions[0].Candidates) == 0 {
+			return nil, errors.New(aiResponseErr)
+		}
+		content = r.Predictions[0].Candidates[0].Content
 	}
-
-	if len(r.Predictions) == 0 || len(r.Predictions[0].Candidates) == 0 {
-		return nil, errors.New(aiResponseErr)
-	}
-
-	content := r.Predictions[0].Candidates[0].Content
 
 	var cmds []string
 	for _, cmd := range cmdExecRegexp.FindAllString(content, -1) {
