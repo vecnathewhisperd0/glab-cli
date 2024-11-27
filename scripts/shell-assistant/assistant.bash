@@ -2,7 +2,7 @@ _glab_duo_bash() {
     if [[ -n "$READLINE_LINE" ]]; then
         echo -en "\rGenerating command...\r"
         
-        local command=$(glab duo ask --shell "$READLINE_LINE" | head -n1 | tr -d '\r\n')
+        local command=$(glab duo ask --shell "$READLINE_LINE" 2>/dev/null | head -n1 | tr -d '\r\n')
             
         echo -en "\r                      \r"
             

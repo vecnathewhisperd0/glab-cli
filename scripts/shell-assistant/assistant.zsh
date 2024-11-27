@@ -3,7 +3,7 @@ function _glab_duo_zsh() {
     echo -en "\rGenerating command...\r"
     
     # Get command suggestion using shell command
-    local command=$(glab duo ask --shell "$BUFFER" | head -n1 | tr -d '\r\n')
+    local command=$(glab duo ask --shell "$BUFFER" 2>/dev/null | head -n1 | tr -d '\r\n')
         
     # Clear the status message with spaces and reset cursor
     echo -en "\r                      \r"
