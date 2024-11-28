@@ -47,6 +47,64 @@ type opts struct {
 	Shell      bool
 }
 
+func validateInput(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("prompt required")
+	}
+
+	// Validate prompt length
+	if len(strings.Join(args, " ")) > 1000 {
+		return fmt.Errorf("prompt too long")
+	}
+
+	// Check for dangerous characters
+	for _, arg := range args {
+		if strings.ContainsAny(arg, ";|&$") {
+			return fmt.Errorf("invalid characters in prompt")
+		}
+	}
+
+	rawInput := strings.ToLower(strings.Join(args, " "))
+
+	// Define all dangerous patterns
+	dangerousPatterns := []string{
+		"rm -rf /",
+		"rm -r /",
+		"mkfs",
+		"dd if=",
+		":(){ :|:& };:",
+		"> /dev/sd",
+		"mv /* /dev/null",
+		"wget", // Prevent arbitrary downloads
+		"curl", // Prevent arbitrary downloads
+		"sudo", // Prevent privilege escalation
+	}
+
+	// Check for dangerous patterns
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(rawInput, pattern) {
+			return fmt.Errorf("dangerous command pattern detected: %s", pattern)
+		}
+	}
+
+	// Check for dangerous keywords
+	dangerousKeywords := []string{
+		"remove all files",
+		"delete everything",
+		"format disk",
+		"wipe",
+		"destroy",
+	}
+
+	for _, keyword := range dangerousKeywords {
+		if strings.Contains(rawInput, keyword) {
+			return fmt.Errorf("dangerous command pattern detected: rm -rf /")
+		}
+	}
+
+	return nil
+}
+
 var (
 	cmdHighlightRegexp = regexp.MustCompile("`+\n?([^`]*)\n?`+\n?")
 	cmdExecRegexp      = regexp.MustCompile("```([^`]*)```")
@@ -58,7 +116,8 @@ const (
 	gitCmd            = "git"
 	gitCmdAPIPath     = "ai/llm/git_command"
 	chatAPIPath       = "chat/completions"
-	spinnerText       = "Generating Git commands..."
+	gitSpinnerText    = "Generating Git commands..."
+	shellSpinnerText  = "Generating shell command..."
 	aiResponseErr     = "Error: AI response has not been generated correctly."
 	apiUnreachableErr = "Error: API is unreachable."
 )
@@ -86,67 +145,9 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 			
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("prompt required")
-			}
-
-			// Validate prompt length
-			if len(strings.Join(args, " ")) > 1000 {
-				return fmt.Errorf("prompt too long")
-			}
-
 			// Check for mutually exclusive flags first
 			if opts.Git && opts.Shell {
 				return fmt.Errorf("cannot use both --git and --shell flags")
-			}
-
-			// Check for dangerous characters
-			for _, arg := range args {
-				if strings.ContainsAny(arg, ";|&$") {
-					return fmt.Errorf("invalid characters in prompt")
-				}
-			}
-
-			opts.Prompt = strings.Join(args, " ")
-
-			// Check for dangerous patterns
-			rawInput := strings.ToLower(strings.Join(args, " "))
-			promptLower := strings.ToLower(opts.Prompt)
-
-			// Define all dangerous patterns
-			dangerousPatterns := []string{
-				"rm -rf /",
-				"rm -r /",
-				"mkfs",
-				"dd if=",
-				":(){ :|:& };:",
-				"> /dev/sd",
-				"mv /* /dev/null",
-				"wget", // Prevent arbitrary downloads
-				"curl", // Prevent arbitrary downloads
-				"sudo", // Prevent privilege escalation
-			}
-
-			// Check both raw input and prompt for dangerous patterns
-			for _, pattern := range dangerousPatterns {
-				if strings.Contains(rawInput, pattern) || strings.Contains(promptLower, pattern) {
-					return fmt.Errorf("dangerous command pattern detected: %s", pattern)
-				}
-			}
-
-			// Check for dangerous keywords
-			dangerousKeywords := []string{
-				"remove all files",
-				"delete everything",
-				"format disk",
-				"wipe",
-				"destroy",
-			}
-
-			for _, keyword := range dangerousKeywords {
-				if strings.Contains(rawInput, keyword) || strings.Contains(promptLower, keyword) {
-					return fmt.Errorf("dangerous command pattern detected: rm -rf /")
-				}
 			}
 
 			// Default to Git mode if no flags set
@@ -154,42 +155,20 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 				opts.Git = true
 			}
 
+			// Validate input after flag checks
+			if err := validateInput(args); err != nil {
+				return err
+			}
+
+			opts.Prompt = strings.Join(args, " ")
+
 			if opts.Shell {
-				shellType := "shell"
-				opts.Prompt = "Convert this to a command: " +
-					opts.Prompt +
-					". Give me only the exact command to run, nothing else. " +
-					"Choose the best " + shellType + " tool for the job. " +
-					"Do not use dangerous system-modifying commands. " +
-					"Use " + shellType + "-specific features when they would improve the command."
+				return opts.executeShellCommand(args)
 			}
 
 			result, err := opts.Result()
 			if err != nil {
 				return err
-			}
-
-			if opts.Shell {
-				// For shell mode, print the raw command from the response
-				content := result.Explanation
-				if content == "" {
-					return errors.New(aiResponseErr)
-				}
-				// For shell mode, extract just the command without explanation
-				// Extract and clean up command, removing any shell prefixes
-				cmd := content
-				if extracted := cmdExecRegexp.FindString(content); extracted != "" {
-					cmd = strings.ReplaceAll(extracted, "```", "")
-				} else if extracted := cmdHighlightRegexp.FindString(content); extracted != "" {
-					cmd = strings.ReplaceAll(extracted, "`", "")
-				}
-				// Remove common shell prefixes and clean whitespace
-				cmd = strings.TrimSpace(cmd)
-				cmd = strings.TrimPrefix(cmd, "bash")
-				cmd = strings.TrimPrefix(cmd, "sh")
-				cmd = strings.TrimPrefix(cmd, "$")
-				fmt.Fprint(opts.IO.StdOut, cmd) // Changed from Fprintln to Fprint
-				return nil
 			}
 
 			opts.displayResult(result)
@@ -210,7 +189,11 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 }
 
 func (opts *opts) Result() (*result, error) {
-	opts.IO.StartSpinner(spinnerText)
+	spinnerMsg := gitSpinnerText
+	if opts.Shell {
+		spinnerMsg = shellSpinnerText
+	}
+	opts.IO.StartSpinner(spinnerMsg)
 	defer opts.IO.StopSpinner("")
 
 	client, err := opts.HttpClient()
@@ -307,6 +290,42 @@ func (opts *opts) executeCommands(commands []string) error {
 		}
 	}
 
+	return nil
+}
+
+func (opts *opts) executeShellCommand(args []string) error {
+	shellType := "shell"
+	opts.Prompt = "Convert this to a command: " +
+		strings.Join(args, " ") +
+		". Give me only the exact command to run, nothing else. " +
+		"Choose the best " + shellType + " tool for the job. " +
+		"Do not use dangerous system-modifying commands. " +
+		"Use " + shellType + "-specific features when they would improve the command."
+
+	result, err := opts.Result()
+	if err != nil {
+		return err
+	}
+	content := result.Explanation
+	if content == "" {
+		return errors.New(aiResponseErr)
+	}
+
+	// Extract and clean up command, removing any shell prefixes
+	cmd := content
+	if extracted := cmdExecRegexp.FindString(content); extracted != "" {
+		cmd = strings.ReplaceAll(extracted, "```", "")
+	} else if extracted := cmdHighlightRegexp.FindString(content); extracted != "" {
+		cmd = strings.ReplaceAll(extracted, "`", "")
+	}
+
+	// Remove common shell prefixes and clean whitespace
+	cmd = strings.TrimSpace(cmd)
+	cmd = strings.TrimPrefix(cmd, "bash")
+	cmd = strings.TrimPrefix(cmd, "sh")
+	cmd = strings.TrimPrefix(cmd, "$")
+
+	fmt.Fprint(opts.IO.StdOut, cmd)
 	return nil
 }
 
