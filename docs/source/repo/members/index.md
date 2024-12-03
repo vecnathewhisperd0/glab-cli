@@ -16,10 +16,17 @@ Manage project members.
 ## Examples
 
 ```plaintext
-glab repo members add john.doe --access-level=maintainer
-glab repo members add 123 -a reporter
-glab repo members remove john.doe
-glab repo members remove 123
+# Add user by name and specify a role, long form
+$ glab repo members add john.doe --access-level=maintainer
+
+# Add user by name and specify a role, short form
+$ glab repo members add 123 -a reporter
+
+# Remove a user by name from a project
+$ glab repo members remove john.doe
+
+# Remove a user by ID from a project
+$ glab repo members remove 123
 ```
 
 ## Options

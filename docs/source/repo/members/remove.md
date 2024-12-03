@@ -20,8 +20,12 @@ glab repo members remove [username | ID] [flags]
 ## Examples
 
 ```plaintext
-glab repo members remove john.doe
-glab repo members remove 123
+# Remove a user by name
+$ glab repo members remove john.doe
+
+# Remove a user by ID
+$ glab repo members remove 123
+
 
 ```
 
