@@ -69,7 +69,7 @@ no_prompt: true
 	assert.NoError(t, err)
 
 	out := stdout.String()
-	assert.Contains(t, out, "User john.doe has been added to")
+	assert.Contains(t, out, "Added user john.doe to")
 	assert.Equal(t, "", stderr.String())
 }
 
