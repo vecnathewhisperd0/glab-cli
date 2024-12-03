@@ -20,9 +20,15 @@ glab repo members add [username | ID] [flags]
 ## Examples
 
 ```plaintext
-glab repo members add john.doe
-glab repo members add john.doe --access-level=developer
-glab repo members add 123 -a reporter
+# Add a user by name
+$ glab repo members add john.doe
+
+# Add a user and specify a role, long form
+$ glab repo members add john.doe --access-level=developer
+
+# Add a user and specify a role, short form
+$ glab repo members add 123 -a reporter
+
 
 ```
 
