@@ -42,9 +42,15 @@ func NewCmdAdd(f *cmdutils.Factory) *cobra.Command {
 		Use:   "add [username | ID] [flags]",
 		Short: `Add a user to a project`,
 		Example: heredoc.Doc(`
-glab repo members add john.doe
-glab repo members add john.doe --access-level=developer
-glab repo members add 123 -a reporter
+# Add a user by name
+$ glab repo members add john.doe
+
+# Add a user and specify a role, long form
+$ glab repo members add john.doe --access-level=developer
+
+# Add a user and specify a role, short form
+$ glab repo members add 123 -a reporter
+
 `),
 		Long: ``,
 		Args: cobra.ExactArgs(1),
@@ -81,7 +87,7 @@ glab repo members add 123 -a reporter
 			}
 			_, err = api.AddProjectMember(apiClient, repo.FullName(), c)
 			if err == nil {
-				fmt.Fprintf(f.IO.StdOut, "User %s has been added to %s\n", args[0], repo.FullName())
+				fmt.Fprintf(f.IO.StdOut, "Added user %s to %s\n", args[0], repo.FullName())
 			}
 
 			return err

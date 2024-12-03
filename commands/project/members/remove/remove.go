@@ -16,8 +16,12 @@ func NewCmdRemove(f *cmdutils.Factory) *cobra.Command {
 		Use:   "remove [username | ID]",
 		Short: `Remove a user from a project`,
 		Example: heredoc.Doc(`
-glab repo members remove john.doe
-glab repo members remove 123
+# Remove a user by name
+$ glab repo members remove john.doe
+
+# Remove a user by ID
+$ glab repo members remove 123
+
 `),
 		Long: ``,
 		Args: cobra.ExactArgs(1),
@@ -41,7 +45,7 @@ glab repo members remove 123
 
 			_, err = api.RemoveProjectMember(apiClient, repo.FullName(), userID)
 			if err == nil {
-				fmt.Fprintf(f.IO.StdOut, "User %s has been removed from %s\n", args[0], repo.FullName())
+				fmt.Fprintf(f.IO.StdOut, "Removed user %s from %s\n", args[0], repo.FullName())
 			}
 
 			return err
