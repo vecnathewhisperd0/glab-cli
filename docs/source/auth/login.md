@@ -27,26 +27,33 @@ glab auth login [flags]
 ## Examples
 
 ```plaintext
-# start interactive setup
+# Start interactive setup
 $ glab auth login
-# authenticate against `gitlab.com` by reading the token from a file
+
+# Authenticate against `gitlab.com` by reading the token from a file
 $ glab auth login --stdin < myaccesstoken.txt
-# authenticate with a self-hosted GitLab instance
+
+# Authenticate with a self-hosted GitLab instance
 $ glab auth login --hostname salsa.debian.org
-# non-interactive setup
+
+# Non-interactive setup
 $ glab auth login --hostname gitlab.example.org --token glpat-xxx --api-host gitlab.example.org:3443 --api-protocol https --git-protocol ssh
-# non-interactive setup reading token from a file
+
+# Non-interactive setup reading token from a file
 $ glab auth login --hostname gitlab.example.org --api-host gitlab.example.org:3443 --api-protocol https --git-protocol ssh  --stdin < myaccesstoken.txt
+# non-interactive job token setup
+$ glab auth login --hostname gitlab.example.org --job-token $CI_JOB_TOKEN
 
 ```
 
 ## Options
 
 ```plaintext
-  -a, --api-host string       API host url
+  -a, --api-host string       API host url.
   -p, --api-protocol string   API protocol: https, http
   -g, --git-protocol string   Git protocol: ssh, https, http
   -h, --hostname string       The hostname of the GitLab instance to authenticate with.
+  -j, --job-token string      CI job token.
       --stdin                 Read token from standard input.
   -t, --token string          Your GitLab access token.
       --use-keyring           Store token in your operating system's keyring.
