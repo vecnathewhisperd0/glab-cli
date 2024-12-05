@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"iter"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,6 +68,14 @@ func (s *Stack) RemoveRef(ref StackRef) error {
 	return nil
 }
 
+func (s *Stack) Branches() (branches []string) {
+	for _, v := range maps.All(s.Refs) {
+		branches = append(branches, v.Branch)
+	}
+
+	return branches
+}
+
 func (s *Stack) RemoveBranch(ref StackRef) error {
 	var branch string
 	var err error
@@ -126,6 +135,16 @@ func (s *Stack) adjustAdjacentRefs(ref StackRef) error {
 	return nil
 }
 
+func (s *Stack) IndexAt(ref StackRef) int {
+	for i, r := range s.Iter2() {
+		if r == ref {
+			return i
+		}
+	}
+
+	return -1
+}
+
 func (s *Stack) Last() StackRef {
 	if s.Empty() {
 		return StackRef{}
@@ -170,12 +189,18 @@ func (s *Stack) Iter() iter.Seq[StackRef] {
 	}
 }
 
-func (s *Stack) Branches() (branches []string) {
-	for ref := range s.Iter() {
-		branches = append(branches, ref.Branch)
-	}
+// Iter2 returns an iterator like Iter, but includes an index
+func (s *Stack) Iter2() iter.Seq2[int, StackRef] {
+	return func(yield func(int, StackRef) bool) {
+		ref := s.First()
+		i := 0
 
-	return
+		for !ref.Empty() {
+			if !yield(i, ref) {
+				return
+			}
+		}
+	}
 }
 
 func GatherStackRefs(title string) (Stack, error) {
@@ -264,7 +289,7 @@ func validateStackRefs(s Stack) error {
 	return nil
 }
 
-func CurrentStackRefFromBranch(title string) (StackRef, error) {
+func CurrentStackRefFromCurrentBranch(title string) (StackRef, error) {
 	stack, err := GatherStackRefs(title)
 	if err != nil {
 		return StackRef{}, err
@@ -275,13 +300,17 @@ func CurrentStackRefFromBranch(title string) (StackRef, error) {
 		return StackRef{}, err
 	}
 
-	for _, ref := range stack.Refs {
+	return stack.RefFromBranch(branch)
+}
+
+func (s Stack) RefFromBranch(branch string) (StackRef, error) {
+	for ref := range s.Iter() {
 		if ref.Branch == branch {
 			return ref, nil
 		}
 	}
 
-	return StackRef{}, nil
+	return StackRef{}, errors.New("Could not find stack ref for branch: " + branch)
 }
 
 // Empty returns true if the stack ref does not have an associated SHA (commit).
