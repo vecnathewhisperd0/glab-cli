@@ -198,6 +198,9 @@ func (s *Stack) Iter2() iter.Seq2[int, StackRef] {
 			if !yield(i, ref) {
 				return
 			}
+
+			i++
+			ref = s.Refs[ref.Next]
 		}
 	}
 }
