@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/fs"
 	"iter"
-	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,14 +65,6 @@ func (s *Stack) RemoveRef(ref StackRef) error {
 	delete(s.Refs, ref.SHA)
 
 	return nil
-}
-
-func (s *Stack) Branches() (branches []string) {
-	for _, v := range maps.All(s.Refs) {
-		branches = append(branches, v.Branch)
-	}
-
-	return branches
 }
 
 func (s *Stack) RemoveBranch(ref StackRef) error {
@@ -187,6 +178,14 @@ func (s *Stack) Iter() iter.Seq[StackRef] {
 			ref = s.Refs[ref.Next]
 		}
 	}
+}
+
+func (s *Stack) Branches() (branches []string) {
+	for ref := range s.Iter() {
+		branches = append(branches, ref.Branch)
+	}
+
+	return
 }
 
 // Iter2 returns an iterator like Iter, but includes an index
