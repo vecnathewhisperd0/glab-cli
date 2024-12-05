@@ -93,14 +93,16 @@ func Test_StackRemoveRef(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := InitGitRepoWithCommit(t)
 
-			err := createRefFiles(tt.args.stack.Refs, tt.args.stack.Title)
+			err := CreateRefFiles(tt.args.stack.Refs, tt.args.stack.Title)
 			require.Nil(t, err)
 
-			branches := map[string]StackRef{}
-			branches[tt.args.remove.SHA] = tt.args.remove
+			var branches []string
+
+			branches = append(branches, tt.args.remove.Branch)
 			if tt.args.remove.Prev != "" {
-				branches[tt.args.remove.Prev] = tt.args.stack.Refs[tt.args.remove.Prev]
+				branches = append(branches, tt.args.stack.Refs[tt.args.remove.Prev].Branch)
 			}
+
 			CreateBranches(t, branches)
 
 			err = CheckoutBranch("main")
@@ -252,7 +254,7 @@ func Test_StackRemoveBranch(t *testing.T) {
 			_, err := run.PrepareCmd(gitAddRemote).Output()
 			require.Nil(t, err)
 
-			CreateBranches(t, tt.stack.Refs)
+			CreateBranches(t, tt.stack.Branches())
 
 			err = tt.stack.RemoveBranch(tt.ref)
 
