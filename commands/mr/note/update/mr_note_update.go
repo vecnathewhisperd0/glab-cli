@@ -2,25 +2,23 @@ package note
 
 import (
 	"fmt"
-
-	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
+	"strconv"
 
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
+	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
 	"gitlab.com/gitlab-org/cli/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/xanzy/go-gitlab"
-	updateNoteCmd "gitlab.com/gitlab-org/cli/commands/mr/note/update"
 )
 
-func NewCmdNote(f *cmdutils.Factory) *cobra.Command {
+func UpdateCmdNote(f *cmdutils.Factory) *cobra.Command {
 	mrCreateNoteCmd := &cobra.Command{
-		Use:     "note [<id> | <branch>]",
-		Aliases: []string{"comment"},
-		Short:   "Add a comment or note to a merge request.",
-		Long:    ``,
-		Args:    cobra.MaximumNArgs(1),
+		Use:   "update [<id> | <branch>] [note-id]",
+		Short: "Update a comment or note on a merge request.",
+		Long:  ``,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			apiClient, err := f.HttpClient()
 			if err != nil {
@@ -51,36 +49,26 @@ func NewCmdNote(f *cmdutils.Factory) *cobra.Command {
 				return fmt.Errorf("aborted... Note has an empty message.")
 			}
 
-			uniqueNoteEnabled, _ := cmd.Flags().GetBool("unique")
-
-			if uniqueNoteEnabled {
-				opts := &gitlab.ListMergeRequestNotesOptions{}
-				notes, err := api.ListMRNotes(apiClient, repo.FullName(), mr.IID, opts)
-				if err != nil {
-					return fmt.Errorf("running merge request note deduplication: %v", err)
-				}
-				for _, noteInfo := range notes {
-					if noteInfo.Body == body {
-						fmt.Fprintf(f.IO.StdOut, "%s#note_%d\n", mr.WebURL, noteInfo.ID)
-						return nil
-					}
-				}
+			noteId, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
 			}
 
-			noteInfo, err := api.CreateMRNote(apiClient, repo.FullName(), mr.IID, &gitlab.CreateMergeRequestNoteOptions{
+			if noteId < 0 {
+				return fmt.Errorf("aborted... Note ID must not be negative.")
+			}
+
+			noteInfo, err := api.UpdateMRNotes(apiClient, repo.FullName(), mr.IID, noteId, &gitlab.UpdateMergeRequestNoteOptions{
 				Body: &body,
 			})
 			if err != nil {
 				return err
 			}
-
 			fmt.Fprintf(f.IO.StdOut, "%s#note_%d\n", mr.WebURL, noteInfo.ID)
 			return nil
 		},
 	}
 
-	mrCreateNoteCmd.AddCommand(updateNoteCmd.UpdateCmdNote(f))
 	mrCreateNoteCmd.Flags().StringP("message", "m", "", "Comment or note message.")
-	mrCreateNoteCmd.Flags().Bool("unique", false, "Don't create a comment or note if it already exists.")
 	return mrCreateNoteCmd
 }
