@@ -135,16 +135,6 @@ func (s *Stack) adjustAdjacentRefs(ref StackRef) error {
 	return nil
 }
 
-func (s *Stack) IndexAt(ref StackRef) int {
-	for i, r := range s.Iter2() {
-		if r == ref {
-			return i
-		}
-	}
-
-	return -1
-}
-
 func (s *Stack) Last() StackRef {
 	if s.Empty() {
 		return StackRef{}
@@ -189,38 +179,12 @@ func (s *Stack) Iter() iter.Seq[StackRef] {
 	}
 }
 
-// Iter2 returns an iterator like Iter, but includes an index
-func (s *Stack) Iter2() iter.Seq2[int, StackRef] {
-	return func(yield func(int, StackRef) bool) {
-		ref := s.First()
-		i := 0
-
-		for !ref.Empty() {
-			if !yield(i, ref) {
-				return
-			}
-
-			i++
-			ref = s.Refs[ref.Next]
-		}
+func (s *Stack) Branches() (branches []string) {
+	for ref := range s.Iter() {
+		branches = append(branches, ref.Branch)
 	}
-}
 
-// Iter2 returns an iterator like Iter, but includes an index
-func (s *Stack) Iter2() iter.Seq2[int, StackRef] {
-	return func(yield func(int, StackRef) bool) {
-		ref := s.First()
-		i := 0
-
-		for !ref.Empty() {
-			if !yield(i, ref) {
-				return
-			}
-
-			i++
-			ref = s.Refs[ref.Next]
-		}
-	}
+	return
 }
 
 // Iter2 returns an iterator like Iter, but includes an index
@@ -326,7 +290,7 @@ func validateStackRefs(s Stack) error {
 	return nil
 }
 
-func CurrentStackRefFromCurrentBranch(title string) (StackRef, error) {
+func CurrentStackRefFromBranch(title string) (StackRef, error) {
 	stack, err := GatherStackRefs(title)
 	if err != nil {
 		return StackRef{}, err
@@ -337,17 +301,13 @@ func CurrentStackRefFromCurrentBranch(title string) (StackRef, error) {
 		return StackRef{}, err
 	}
 
-	return stack.RefFromBranch(branch)
-}
-
-func (s Stack) RefFromBranch(branch string) (StackRef, error) {
-	for ref := range s.Iter() {
+	for _, ref := range stack.Refs {
 		if ref.Branch == branch {
 			return ref, nil
 		}
 	}
 
-	return StackRef{}, errors.New("Could not find stack ref for branch: " + branch)
+	return StackRef{}, nil
 }
 
 // Empty returns true if the stack ref does not have an associated SHA (commit).
