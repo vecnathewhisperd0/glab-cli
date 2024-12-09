@@ -53,7 +53,7 @@ func Test_stackAmendCmd(t *testing.T) {
 			files:        []string{"asdf"},
 			amendedFiles: []string{"otherfile"},
 			description:  "this is a commit message",
-			expected:     "could not find stack ref for branch",
+			expected:     "Could not find stack ref for branch",
 			wantErr:      true,
 		},
 	}
