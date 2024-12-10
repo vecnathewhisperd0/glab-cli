@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"iter"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -29,8 +30,12 @@ type StackRef struct {
 // All stacks must be created with GatherStackRefs
 // which validates the stack for consistency.
 type Stack struct {
-	Title string
-	Refs  map[string]StackRef
+	Title        string
+	Refs         map[string]StackRef
+	MetadataHash string `json:"metadata_hash,omitempty"`
+	Name         string
+	Base         string
+	Head         string
 }
 
 func (s Stack) Empty() bool { return len(s.Refs) == 0 }
@@ -307,4 +312,14 @@ func (r StackRef) Subject() string {
 	}
 
 	return ls[0][:69] + "..."
+}
+
+func PushStackMetadata(remote string) error {
+	cmd := exec.Command("git", "push", remote, "+refs/stacked/*:refs/stacked/*")
+	return cmd.Run()
+}
+
+func FetchStackMetadata(remote string) error {
+	cmd := exec.Command("git", "fetch", remote, "+refs/stacked/*:refs/stacked/*")
+	return cmd.Run()
 }

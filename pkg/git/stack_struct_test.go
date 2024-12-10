@@ -1,6 +1,7 @@
 package git
 
 import (
+	"os/exec"
 	"path"
 	"slices"
 	"testing"
@@ -618,5 +619,89 @@ func CreateBranches(t *testing.T, refs map[string]StackRef) {
 	for _, ref := range refs {
 		err := CheckoutNewBranch(ref.Branch)
 		require.Nil(t, err)
+	}
+}
+
+func TestPushStackMetadata(t *testing.T) {
+	tests := []struct {
+		name    string
+		remote  string
+		wantErr bool
+	}{
+		{
+			name:    "push to origin",
+			remote:  "origin",
+			wantErr: false,
+		},
+		{
+			name:    "push to non-existent remote",
+			remote:  "non-existent",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up a mock git environment
+
+			oldExecCommand := GitCommand
+			defer func() { GitCommand = oldExecCommand }()
+
+			GitCommand = func(args ...string) *exec.Cmd {
+				if tt.wantErr {
+					return exec.Command("false")
+				}
+				return exec.Command("true")
+			}
+			err := PushStackMetadata(tt.remote)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestFetchStackMetadata(t *testing.T) {
+	tests := []struct {
+		name    string
+		remote  string
+		wantErr bool
+	}{
+		{
+			name:    "fetch from origin",
+			remote:  "origin",
+			wantErr: false,
+		},
+		{
+			name:    "fetch from non-existent remote",
+			remote:  "non-existent",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up a mock git environment
+			oldExecCommand := GitCommand
+			defer func() { GitCommand = oldExecCommand }()
+
+			GitCommand = func(args ...string) *exec.Cmd {
+				if tt.wantErr {
+					return exec.Command("false")
+				}
+				return exec.Command("true")
+			}
+
+			err := FetchStackMetadata(tt.remote)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

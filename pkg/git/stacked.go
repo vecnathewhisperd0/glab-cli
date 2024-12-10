@@ -1,10 +1,13 @@
 package git
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"gitlab.com/gitlab-org/cli/internal/run"
 )
@@ -157,4 +160,44 @@ func GetStacks() (stacks []Stack, err error) {
 		stacks = append(stacks, Stack{Title: v.Name()})
 	}
 	return
+}
+
+func CreateStack(name string, base string, head string) error {
+	stack := &Stack{
+		Title: name,
+		Refs: map[string]StackRef{
+			base: {SHA: base},
+			head: {SHA: head},
+		},
+	}
+	// Serialize stack to JSON
+	jsonData, err := json.Marshal(stack)
+	if err != nil {
+		return fmt.Errorf("failed to marshal stack: %w", err)
+	}
+
+	// Create Git object
+	cmd := exec.Command("git", "hash-object", "-w", "--stdin")
+	cmd.Stdin = bytes.NewReader(jsonData)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to create git object: %w, output: %s", err, string(output))
+	}
+
+	stack.MetadataHash = strings.TrimSpace(string(output))
+
+	// Ensure the refs/stacked directory exists
+	refDir := filepath.Join(".git", "refs", "stacked")
+	if err := os.MkdirAll(refDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create refs/stacked directory: %w", err)
+	}
+
+	// Write ref
+	refPath := filepath.Join(refDir, name)
+	err = os.WriteFile(refPath, []byte(stack.MetadataHash), 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to write ref file: %w", err)
+	}
+
+	return nil
 }
