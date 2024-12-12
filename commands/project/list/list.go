@@ -139,10 +139,6 @@ func listAllProjects(apiClient *gitlab.Client, opts Options) ([]*gitlab.Project,
 		l.Archived = gitlab.Ptr(opts.Archived)
 	}
 
-	if opts.ArchivedSet {
-		l.Archived = gitlab.Ptr(opts.Archived)
-	}
-
 	if opts.Sort != "" {
 		l.Sort = gitlab.Ptr(opts.Sort)
 	}
