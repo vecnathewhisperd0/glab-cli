@@ -133,8 +133,6 @@ func listAllProjects(apiClient *gitlab.Client, opts Options) ([]*gitlab.Project,
 		if opts.FilterMember {
 			l.Membership = gitlab.Ptr(opts.FilterMember)
 		}
-	} else {
-		l.Owned = gitlab.Ptr(false)
 	}
 
 	if opts.ArchivedSet {
@@ -190,8 +188,6 @@ func listAllProjectsForGroup(apiClient *gitlab.Client, opts Options) ([]*gitlab.
 		if opts.IncludeSubgroups {
 			l.IncludeSubGroups = gitlab.Ptr(true)
 		}
-	} else {
-		l.Owned = gitlab.Ptr(false)
 	}
 
 	if opts.ArchivedSet {

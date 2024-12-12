@@ -152,7 +152,7 @@ func TestProjectList(t *testing.T) {
 			name: "view all projects, no filters",
 			httpMock: []httpMock{{
 				http.MethodGet,
-				"/api/v4/projects?order_by=last_activity_at&owned=false&page=1&per_page=30",
+				"/api/v4/projects?order_by=last_activity_at&page=1&per_page=30",
 				http.StatusOK,
 				projectResponse,
 			}},
@@ -219,7 +219,7 @@ func TestProjectList(t *testing.T) {
 				},
 				{
 					http.MethodGet,
-					"/api/v4/groups/456/projects?archived=false&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/groups/456/projects?archived=false&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
@@ -238,7 +238,7 @@ func TestProjectList(t *testing.T) {
 				},
 				{
 					http.MethodGet,
-					"/api/v4/groups/456/projects?archived=true&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/groups/456/projects?archived=true&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
@@ -251,7 +251,7 @@ func TestProjectList(t *testing.T) {
 			httpMock: []httpMock{
 				{
 					http.MethodGet,
-					"/api/v4/projects?archived=true&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/projects?archived=true&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
@@ -264,7 +264,7 @@ func TestProjectList(t *testing.T) {
 			httpMock: []httpMock{
 				{
 					http.MethodGet,
-					"/api/v4/projects?archived=false&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/projects?archived=false&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
