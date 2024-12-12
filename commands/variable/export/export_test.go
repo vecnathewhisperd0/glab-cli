@@ -8,7 +8,7 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/google/shlex"
 	"github.com/stretchr/testify/assert"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/internal/glrepo"
@@ -155,6 +155,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev",
                 "description": ""
@@ -165,6 +166,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "prod",
                 "description": ""
@@ -175,6 +177,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "*",
                 "description": ""
@@ -185,6 +188,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/a",
                 "description": ""
@@ -195,6 +199,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/b",
                 "description": ""
@@ -205,6 +210,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-1",
                 "description": ""
@@ -215,6 +221,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-2",
                 "description": ""
@@ -225,6 +232,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-*",
                 "description": ""
@@ -243,6 +251,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "*",
                 "description": ""
@@ -253,6 +262,7 @@ func Test_exportRun_project(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/b",
                 "description": ""
@@ -263,62 +273,62 @@ func Test_exportRun_project(t *testing.T) {
 		{
 			scope:          "*",
 			format:         "env",
-			expectedOutput: "VAR1=value1\nVAR2=value2.1\nVAR3=value3\nVAR4=value4.1\nVAR4=value4.2\nVAR4=value4.3\nVAR5=value5\n",
+			expectedOutput: "VAR1=\"value1\"\nVAR2=\"value2.1\"\nVAR3=\"value3\"\nVAR4=\"value4.1\"\nVAR4=\"value4.2\"\nVAR4=\"value4.3\"\nVAR5=\"value5\"\n",
 		},
 		{
 			scope:          "*",
 			format:         "export",
-			expectedOutput: "export VAR1=value1\nexport VAR2=value2.1\nexport VAR3=value3\nexport VAR4=value4.1\nexport VAR4=value4.2\nexport VAR4=value4.3\nexport VAR5=value5\n",
+			expectedOutput: "export VAR1=\"value1\"\nexport VAR2=\"value2.1\"\nexport VAR3=\"value3\"\nexport VAR4=\"value4.1\"\nexport VAR4=\"value4.2\"\nexport VAR4=\"value4.3\"\nexport VAR5=\"value5\"\n",
 		},
 		{
 			scope:          "dev",
 			format:         "env",
-			expectedOutput: "VAR1=value1\nVAR2=value2.2\n",
+			expectedOutput: "VAR1=\"value1\"\nVAR2=\"value2.2\"\n",
 		},
 		{
 			scope:          "dev",
 			format:         "export",
-			expectedOutput: "export VAR1=value1\nexport VAR2=value2.2\n",
+			expectedOutput: "export VAR1=\"value1\"\nexport VAR2=\"value2.2\"\n",
 		},
 		{
 			scope:          "prod",
 			format:         "env",
-			expectedOutput: "VAR2=value2.1\n",
+			expectedOutput: "VAR2=\"value2.1\"\n",
 		},
 		{
 			scope:          "prod",
 			format:         "export",
-			expectedOutput: "export VAR2=value2.1\n",
+			expectedOutput: "export VAR2=\"value2.1\"\n",
 		},
 		{
 			scope:          "dev/a",
 			format:         "env",
-			expectedOutput: "VAR3=value3\nVAR2=value2.2\n",
+			expectedOutput: "VAR3=\"value3\"\nVAR2=\"value2.2\"\n",
 		},
 		{
 			scope:          "dev/a",
 			format:         "export",
-			expectedOutput: "export VAR3=value3\nexport VAR2=value2.2\n",
+			expectedOutput: "export VAR3=\"value3\"\nexport VAR2=\"value2.2\"\n",
 		},
 		{
 			scope:          "feature-1",
 			format:         "env",
-			expectedOutput: "VAR4=value4.2\nVAR2=value2.2\nVAR5=value5\n",
+			expectedOutput: "VAR4=\"value4.2\"\nVAR2=\"value2.2\"\nVAR5=\"value5\"\n",
 		},
 		{
 			scope:          "feature-1",
 			format:         "export",
-			expectedOutput: "export VAR4=value4.2\nexport VAR2=value2.2\nexport VAR5=value5\n",
+			expectedOutput: "export VAR4=\"value4.2\"\nexport VAR2=\"value2.2\"\nexport VAR5=\"value5\"\n",
 		},
 		{
 			scope:          "feature-2",
 			format:         "env",
-			expectedOutput: "VAR4=value4.3\nVAR2=value2.2\nVAR5=value5\n",
+			expectedOutput: "VAR4=\"value4.3\"\nVAR2=\"value2.2\"\nVAR5=\"value5\"\n",
 		},
 		{
 			scope:          "feature-2",
 			format:         "export",
-			expectedOutput: "export VAR4=value4.3\nexport VAR2=value2.2\nexport VAR5=value5\n",
+			expectedOutput: "export VAR4=\"value4.3\"\nexport VAR2=\"value2.2\"\nexport VAR5=\"value5\"\n",
 		},
 	}
 
@@ -360,7 +370,7 @@ func Test_exportRun_group(t *testing.T) {
 	mockGroupVariables := []gitlab.GroupVariable{
 		{
 			Key:              "VAR1",
-			Value:            "value1",
+			Value:            "\"value1\"",
 			EnvironmentScope: "dev",
 		},
 		{
@@ -414,10 +424,11 @@ func Test_exportRun_group(t *testing.T) {
             [
               {
                 "key": "VAR1",
-                "value": "value1",
+                "value": "\"value1\"",
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev",
                 "description": ""
@@ -428,6 +439,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "prod",
                 "description": ""
@@ -438,6 +450,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "*",
                 "description": ""
@@ -448,6 +461,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/a",
                 "description": ""
@@ -458,6 +472,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/b",
                 "description": ""
@@ -468,6 +483,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-1",
                 "description": ""
@@ -478,6 +494,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-2",
                 "description": ""
@@ -488,6 +505,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "feature-*",
                 "description": ""
@@ -506,6 +524,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "*",
                 "description": ""
@@ -516,6 +535,7 @@ func Test_exportRun_group(t *testing.T) {
                 "variable_type": "",
                 "protected": false,
                 "masked": false,
+                "hidden": false,
                 "raw": false,
                 "environment_scope": "dev/b",
                 "description": ""
@@ -526,22 +546,22 @@ func Test_exportRun_group(t *testing.T) {
 		{
 			scope:          "*",
 			format:         "env",
-			expectedOutput: "VAR1=value1\nVAR2=value2.1\nVAR3=value3\nVAR4=value4.1\nVAR4=value4.2\nVAR4=value4.3\nVAR5=value5\n",
+			expectedOutput: "VAR1=\"value1\"\nVAR2=value2.1\nVAR3=value3\nVAR4=value4.1\nVAR4=value4.2\nVAR4=value4.3\nVAR5=value5\n",
 		},
 		{
 			scope:          "*",
 			format:         "export",
-			expectedOutput: "export VAR1=value1\nexport VAR2=value2.1\nexport VAR3=value3\nexport VAR4=value4.1\nexport VAR4=value4.2\nexport VAR4=value4.3\nexport VAR5=value5\n",
+			expectedOutput: "export VAR1=\"value1\"\nexport VAR2=value2.1\nexport VAR3=value3\nexport VAR4=value4.1\nexport VAR4=value4.2\nexport VAR4=value4.3\nexport VAR5=value5\n",
 		},
 		{
 			scope:          "dev",
 			format:         "env",
-			expectedOutput: "VAR1=value1\nVAR2=value2.2\n",
+			expectedOutput: "VAR1=\"value1\"\nVAR2=value2.2\n",
 		},
 		{
 			scope:          "dev",
 			format:         "export",
-			expectedOutput: "export VAR1=value1\nexport VAR2=value2.2\n",
+			expectedOutput: "export VAR1=\"value1\"\nexport VAR2=value2.2\n",
 		},
 		{
 			scope:          "prod",

@@ -10,7 +10,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/flag"
@@ -235,7 +235,7 @@ func printProjectVariables(variables []*gitlab.ProjectVariable, opts *ExportOpts
 		for _, variable := range variables {
 			if matchesScope(variable.EnvironmentScope, opts.Scope) {
 				if !strings.Contains(variable.EnvironmentScope, "*") {
-					fmt.Fprintf(out, "%s=%s\n", variable.Key, variable.Value)
+					fmt.Fprintf(out, "%s=\"%s\"\n", variable.Key, variable.Value)
 					writtenKeys = append(writtenKeys, variable.Key)
 				}
 			}
@@ -244,7 +244,7 @@ func printProjectVariables(variables []*gitlab.ProjectVariable, opts *ExportOpts
 		for _, variable := range variables {
 			if matchesScope(variable.EnvironmentScope, opts.Scope) {
 				if !(keysMap[variable.Key]) && (strings.Contains(variable.EnvironmentScope, "*")) {
-					fmt.Fprintf(out, "%s=%s\n", variable.Key, variable.Value)
+					fmt.Fprintf(out, "%s=\"%s\"\n", variable.Key, variable.Value)
 				}
 			}
 		}
@@ -252,7 +252,7 @@ func printProjectVariables(variables []*gitlab.ProjectVariable, opts *ExportOpts
 		for _, variable := range variables {
 			if matchesScope(variable.EnvironmentScope, opts.Scope) {
 				if !strings.Contains(variable.EnvironmentScope, "*") {
-					fmt.Fprintf(out, "export %s=%s\n", variable.Key, variable.Value)
+					fmt.Fprintf(out, "export %s=\"%s\"\n", variable.Key, variable.Value)
 					writtenKeys = append(writtenKeys, variable.Key)
 				}
 			}
@@ -261,7 +261,7 @@ func printProjectVariables(variables []*gitlab.ProjectVariable, opts *ExportOpts
 		for _, variable := range variables {
 			if matchesScope(variable.EnvironmentScope, opts.Scope) {
 				if !(keysMap[variable.Key]) && (strings.Contains(variable.EnvironmentScope, "*")) {
-					fmt.Fprintf(out, "export %s=%s\n", variable.Key, variable.Value)
+					fmt.Fprintf(out, "export %s=\"%s\"\n", variable.Key, variable.Value)
 				}
 			}
 		}
