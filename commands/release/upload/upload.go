@@ -107,7 +107,7 @@ func NewCmdUpload(f *cmdutils.Factory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.AssetLinksAsJson, "assets-links", "a", "", "`JSON` string representation of assets links, like: `--assets-links='[{\"name\": \"Asset1\", \"url\":\"https://<domain>/some/location/1\", \"link_type\": \"other\", \"direct_asset_path\": \"path/to/file\"}]'.`")
+	cmd.Flags().StringVarP(&opts.AssetLinksAsJson, "assets-links", "a", "", "JSON string representation of assets links, with these fields: name, URL, link_type, direct_asset_path.")
 
 	return cmd
 }
