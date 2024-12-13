@@ -208,7 +208,12 @@ func Test_IssuableNoteCreate_prompt(t *testing.T) {
 			}
 			assert.Equal(t, "", output.Stderr())
 			assert.Equal(t, "https://gitlab.com/OWNER/REPO/issues/1#note_301\n", output.String())
-			assert.Equal(t, os.Getenv("EDITOR"), actualEditor)
+
+			editor := os.Getenv("EDITOR")
+			if editor == "" {
+				editor = "vi"
+			}
+			assert.Equal(t, editor, actualEditor)
 		})
 
 		tests := []struct {
