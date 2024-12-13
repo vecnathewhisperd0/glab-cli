@@ -245,7 +245,7 @@ func TestProjectList(t *testing.T) {
 				},
 				{
 					http.MethodGet,
-					"/api/v4/groups/456/projects?archived=false&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/groups/456/projects?archived=false&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
@@ -264,12 +264,38 @@ func TestProjectList(t *testing.T) {
 				},
 				{
 					http.MethodGet,
-					"/api/v4/groups/456/projects?archived=true&order_by=last_activity_at&owned=false&page=1&per_page=30",
+					"/api/v4/groups/456/projects?archived=true&order_by=last_activity_at&page=1&per_page=30",
 					http.StatusOK,
 					projectResponse,
 				},
 			},
 			args:        "-a --group /me/group/subgroup --archived=true",
+			expectedOut: "Showing 1 of 0 projects (Page 0 of 0).\n\ngitlab-org/incubation-engineering/service-desk/meta\t\tThis is a test project\n\n",
+		},
+		{
+			name: "view all archived projects",
+			httpMock: []httpMock{
+				{
+					http.MethodGet,
+					"/api/v4/projects?archived=true&order_by=last_activity_at&page=1&per_page=30",
+					http.StatusOK,
+					projectResponse,
+				},
+			},
+			args:        "-a --archived=true",
+			expectedOut: "Showing 1 of 0 projects (Page 0 of 0).\n\ngitlab-org/incubation-engineering/service-desk/meta\t\tThis is a test project\n\n",
+		},
+		{
+			name: "view all not archived projects",
+			httpMock: []httpMock{
+				{
+					http.MethodGet,
+					"/api/v4/projects?archived=false&order_by=last_activity_at&page=1&per_page=30",
+					http.StatusOK,
+					projectResponse,
+				},
+			},
+			args:        "-a --archived=false",
 			expectedOut: "Showing 1 of 0 projects (Page 0 of 0).\n\ngitlab-org/incubation-engineering/service-desk/meta\t\tThis is a test project\n\n",
 		},
 	}
