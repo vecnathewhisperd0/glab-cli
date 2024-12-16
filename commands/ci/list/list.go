@@ -126,7 +126,7 @@ func NewCmdList(f *cmdutils.Factory) *cobra.Command {
 	pipelineListCmd.Flags().StringP("output", "F", "text", "Format output. Options: text, json.")
 	pipelineListCmd.Flags().StringP("ref", "r", "", "Return only pipelines for given ref.")
 	pipelineListCmd.Flags().String("scope", "", "Return only pipelines with the given scope: {running|pending|finished|branches|tags}")
-	pipelineListCmd.Flags().String("source", "", "Return only pipelines triggered via the given source: {pi|chat|external|external_pull_request_event|merge_request_event|ondemand_dast_scan|ondemand_dast_validation|parent_pipeline|pipeline|push|schedule|security_orchestration_policy|trigger|web|webide}")
+	pipelineListCmd.Flags().String("source", "", "Return only pipelines triggered via the given source. See https://docs.gitlab.com/ee/ci/jobs/job_rules.html#ci_pipeline_source-predefined-variable for full list. Commonly used options: {merge_request_event|parent_pipeline|pipeline|push|trigger}")
 	pipelineListCmd.Flags().String("sha", "", "Return only pipelines with the given SHA.")
 	pipelineListCmd.Flags().BoolP("yaml-errors", "y", false, "Return only pipelines with invalid configurations.")
 	pipelineListCmd.Flags().StringP("name", "n", "", "Return only pipelines with the given name.")
