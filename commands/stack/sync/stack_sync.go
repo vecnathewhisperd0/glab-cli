@@ -175,7 +175,7 @@ func stackSync(f *cmdutils.Factory, iostream *iostreams.IOStreams, opts *Options
 			// remove the MR from the stack if it's merged
 			// do not remove the MR from the stack if it is closed,
 			// but alert the user
-			err = removeOldMrs(&ref, mr, &stack)
+			err = removeOldMrs(&ref, mr, &stack, gr)
 			if err != nil {
 				return fmt.Errorf("error removing merged merge request: %v", err)
 			}
@@ -292,8 +292,8 @@ func createMR(client *gitlab.Client, opts *Options, ref *git.StackRef, gr git.Gi
 
 	var previousBranch string
 	if ref.IsFirst() {
-		// Point to the default one
-		previousBranch, err = getDefaultBranch(git.DefaultRemote, gr)
+		// Point to the base branch
+		previousBranch, err = opts.stack.BaseBranch(gr)
 		if err != nil {
 			return &gitlab.MergeRequest{}, fmt.Errorf("error getting default branch: %v", err)
 		}
@@ -326,12 +326,12 @@ func createMR(client *gitlab.Client, opts *Options, ref *git.StackRef, gr git.Gi
 	return mr, nil
 }
 
-func removeOldMrs(ref *git.StackRef, mr *gitlab.MergeRequest, stack *git.Stack) error {
+func removeOldMrs(ref *git.StackRef, mr *gitlab.MergeRequest, stack *git.Stack, gr git.GitRunner) error {
 	if mr.State == mergedStatus {
 		progress := fmt.Sprintf("Merge request !%v has merged. Removing reference...", mr.IID)
 		fmt.Println(progressString(progress))
 
-		err := stack.RemoveRef(*ref)
+		err := stack.RemoveRef(*ref, gr)
 		if err != nil {
 			return err
 		}

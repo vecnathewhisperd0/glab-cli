@@ -11,6 +11,8 @@ import (
 
 var StackLocation = filepath.Join(".git", "stacked")
 
+const BaseBranchFile = "BASE_BRANCH"
+
 type GitRunner interface {
 	Git(args ...string) (string, error)
 }

@@ -35,7 +35,7 @@ type Stack struct {
 
 func (s Stack) Empty() bool { return len(s.Refs) == 0 }
 
-func (s *Stack) RemoveRef(ref StackRef) error {
+func (s *Stack) RemoveRef(ref StackRef, gr GitRunner) error {
 	if ref.IsFirst() && ref.IsLast() {
 		// this is the only ref, so just remove it
 		err := DeleteStackRefFile(s.Title, ref)
@@ -57,7 +57,7 @@ func (s *Stack) RemoveRef(ref StackRef) error {
 		return fmt.Errorf("could not delete reference file %v:", err)
 	}
 
-	err = s.RemoveBranch(ref)
+	err = s.RemoveBranch(ref, gr)
 	if err != nil {
 		return fmt.Errorf("could not remove branch %v:", err)
 	}
@@ -67,12 +67,12 @@ func (s *Stack) RemoveRef(ref StackRef) error {
 	return nil
 }
 
-func (s *Stack) RemoveBranch(ref StackRef) error {
+func (s *Stack) RemoveBranch(ref StackRef, gr GitRunner) error {
 	var branch string
 	var err error
 
 	if ref.IsFirst() {
-		branch, err = GetDefaultBranch(DefaultRemote)
+		branch, err = s.BaseBranch(gr)
 		if err != nil {
 			return err
 		}
@@ -203,6 +203,55 @@ func (s *Stack) Iter2() iter.Seq2[int, StackRef] {
 			ref = s.Refs[ref.Next]
 		}
 	}
+}
+
+func (s *Stack) BaseBranch(gr GitRunner) (branch string, err error) {
+	root, err := StackRootDir(s.Title)
+	if err != nil {
+		return "", errors.New("could not determine stack root")
+	}
+
+	filename := filepath.Join(root, BaseBranchFile)
+
+	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
+		defBranchOutput, err := gr.Git("remote", "show", DefaultRemote)
+		if err != nil {
+			return "", errors.New("could not get remote data")
+		}
+
+		branch, err := ParseDefaultBranch([]byte(defBranchOutput))
+		if err != nil {
+			return "", errors.New("could not parse default branch from remote data")
+		}
+
+		return branch, nil
+
+	} else {
+		bytes, err := os.ReadFile(filename)
+		if err != nil {
+			return "", err
+		}
+
+		branch = string(bytes)
+	}
+
+	return
+}
+
+func AddStackBaseBranch(title string, branch string) error {
+	root, err := StackRootDir(title)
+	if err != nil {
+		return errors.New("could not determine stack root")
+	}
+
+	filename := filepath.Join(root, BaseBranchFile)
+
+	err = os.WriteFile(filename, []byte(branch), 0o644)
+	if err != nil {
+		return fmt.Errorf("error adding branch metadata file %v: %v", filename, err)
+	}
+
+	return nil
 }
 
 func GatherStackRefs(title string) (Stack, error) {
