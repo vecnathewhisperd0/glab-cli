@@ -179,7 +179,7 @@ func NewCmdCreate(f *cmdutils.Factory) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.NotesFile, "notes-file", "F", "", "Read release notes 'file'. Specify '-' as the value to read from stdin.")
 	cmd.Flags().StringVarP(&opts.ReleasedAt, "released-at", "D", "", "The 'date' when the release was ready. Defaults to the current datetime. Expects ISO 8601 format (2019-03-15T08:00:00Z).")
 	cmd.Flags().StringSliceVarP(&opts.Milestone, "milestone", "m", []string{}, "The title of each milestone the release is associated with.")
-	cmd.Flags().StringVarP(&opts.AssetLinksAsJson, "assets-links", "a", "", "'JSON' string representation of assets links, like `--assets-links='[{\"name\": \"Asset1\", \"url\":\"https://<domain>/some/location/1\", \"link_type\": \"other\", \"direct_asset_path\": \"path/to/file\"}]'.`")
+	cmd.Flags().StringVarP(&opts.AssetLinksAsJson, "assets-links", "a", "", "JSON string representation of assets links, with these fields: name, URL, link_type, direct_asset_path.")
 	cmd.Flags().BoolVar(&opts.PublishToCatalog, "publish-to-catalog", false, "[EXPERIMENTAL] Publish the release to the GitLab CI/CD catalog.")
 
 	return cmd

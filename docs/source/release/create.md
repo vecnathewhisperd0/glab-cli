@@ -89,15 +89,15 @@ $ glab release create v1.0.1 --publish-to-catalog
 ## Options
 
 ```plaintext
-  -a, --assets-links --assets-links='[{"name": "Asset1", "url":"https://<domain>/some/location/1", "link_type": "other", "direct_asset_path": "path/to/file"}]'.   'JSON' string representation of assets links, like --assets-links='[{"name": "Asset1", "url":"https://<domain>/some/location/1", "link_type": "other", "direct_asset_path": "path/to/file"}]'.
-  -m, --milestone strings                                                                                                                                          The title of each milestone the release is associated with.
-  -n, --name string                                                                                                                                                The release name or title.
-  -N, --notes string                                                                                                                                               The release notes or description. You can use Markdown.
-  -F, --notes-file string                                                                                                                                          Read release notes 'file'. Specify '-' as the value to read from stdin.
-      --publish-to-catalog                                                                                                                                         [EXPERIMENTAL] Publish the release to the GitLab CI/CD catalog.
-  -r, --ref string                                                                                                                                                 If the specified tag doesn't exist, the release is created from ref and tagged with the specified tag name. It can be a commit SHA, another tag name, or a branch name.
-  -D, --released-at string                                                                                                                                         The 'date' when the release was ready. Defaults to the current datetime. Expects ISO 8601 format (2019-03-15T08:00:00Z).
-  -T, --tag-message string                                                                                                                                         Message to use if creating a new annotated tag.
+  -a, --assets-links string   JSON string representation of assets links, with these fields: name, URL, link_type, direct_asset_path.
+  -m, --milestone strings     The title of each milestone the release is associated with.
+  -n, --name string           The release name or title.
+  -N, --notes string          The release notes or description. You can use Markdown.
+  -F, --notes-file string     Read release notes 'file'. Specify '-' as the value to read from stdin.
+      --publish-to-catalog    [EXPERIMENTAL] Publish the release to the GitLab CI/CD catalog.
+  -r, --ref string            If the specified tag doesn't exist, the release is created from ref and tagged with the specified tag name. It can be a commit SHA, another tag name, or a branch name.
+  -D, --released-at string    The 'date' when the release was ready. Defaults to the current datetime. Expects ISO 8601 format (2019-03-15T08:00:00Z).
+  -T, --tag-message string    Message to use if creating a new annotated tag.
 ```
 
 ## Options inherited from parent commands
