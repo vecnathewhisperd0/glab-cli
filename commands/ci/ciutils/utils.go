@@ -330,8 +330,8 @@ func IDsFromArgs(args []string) ([]int, error) {
 	f := func(r rune) bool {
 		return r == ',' || r == ' '
 	}
-	processed := strings.FieldsFunc(strings.Join(args, ""), f)
 
+	processed := strings.FieldsFunc(strings.Join(args, " "), f)
 	for _, v := range processed {
 		id, err := strconv.Atoi(v)
 		if err != nil {
