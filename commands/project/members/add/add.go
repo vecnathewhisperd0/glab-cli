@@ -4,7 +4,6 @@ import (
 	"fmt"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -73,7 +72,7 @@ $ glab repo members add 123 -a reporter
 				return err
 			}
 
-			userID, err := userIdFromArgs(apiClient, args)
+			userID, err := api.UserIdFromArgs(apiClient, args)
 			if err != nil {
 				return err
 			}
@@ -99,17 +98,4 @@ func SetupCommandFlags(flags *pflag.FlagSet) {
 	keys := maps.Keys(AccessLevelMap)
 	sort.Strings(keys)
 	flags.StringP(FlagAccessLevel, "a", "", fmt.Sprintf("Access level of the user. Possible values are: %s", strings.Join(keys, ", ")))
-}
-
-func userIdFromArgs(client *gitlab.Client, args []string) (int, error) {
-	user := args[0]
-	if userID, err := strconv.Atoi(user); err == nil {
-		return userID, nil
-	}
-
-	userByName, err := api.UserByName(client, user)
-	if err != nil {
-		return 0, err
-	}
-	return userByName.ID, nil
 }
