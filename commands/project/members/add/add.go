@@ -2,9 +2,10 @@ package add
 
 import (
 	"fmt"
-	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"sort"
 	"strings"
+
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
