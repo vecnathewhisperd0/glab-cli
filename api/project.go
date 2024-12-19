@@ -93,3 +93,25 @@ var ListProjectMembers = func(client *gitlab.Client, projectID interface{}, opts
 	}
 	return members, nil
 }
+
+var AddProjectMember = func(client *gitlab.Client, projectID interface{}, opts *gitlab.AddProjectMemberOptions) (*gitlab.ProjectMember, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+	member, _, err := client.ProjectMembers.AddProjectMember(projectID, opts)
+	if err != nil {
+		return nil, err
+	}
+	return member, nil
+}
+
+var RemoveProjectMember = func(client *gitlab.Client, projectID interface{}, user int) (*gitlab.Response, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+	member, err := client.ProjectMembers.DeleteProjectMember(projectID, user)
+	if err != nil {
+		return nil, err
+	}
+	return member, nil
+}

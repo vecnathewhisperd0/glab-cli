@@ -34,6 +34,7 @@ project
 - [`delete`](delete.md)
 - [`fork`](fork.md)
 - [`list`](list.md)
+- [`members`](members/index.md)
 - [`mirror`](mirror.md)
 - [`search`](search.md)
 - [`transfer`](transfer.md)
