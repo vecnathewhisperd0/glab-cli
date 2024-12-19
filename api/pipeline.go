@@ -438,6 +438,18 @@ var CreatePipeline = func(client *gitlab.Client, projectID interface{}, opts *gi
 	return pipe, err
 }
 
+var CreateMRPipeline = func(client *gitlab.Client, projectID interface{}, mrID int) (*gitlab.PipelineInfo, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+
+	pipe, _, err := client.MergeRequests.CreateMergeRequestPipeline(projectID, mrID)
+	if err != nil {
+		return nil, err
+	}
+	return pipe, nil
+}
+
 var RunPipelineTrigger = func(client *gitlab.Client, projectID interface{}, opts *gitlab.RunPipelineTriggerOptions) (*gitlab.Pipeline, error) {
 	if client == nil {
 		client = apiClient.Lab()
