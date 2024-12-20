@@ -1,6 +1,6 @@
 module gitlab.com/gitlab-org/cli
 
-go 1.23.2
+go 1.23.4
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -35,7 +35,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/zalando/go-keyring v0.2.6
-	gitlab.com/gitlab-org/api/client-go v0.116.0
+	gitlab.com/gitlab-org/api/client-go v0.118.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.31.0
