@@ -262,7 +262,7 @@ func projectPathFromArgs(args []string) (host, namespace, project string) {
 		pp, _ := glrepo.FromFullName(project)
 		host = pp.RepoHost()
 		project = pp.RepoName()
-		namespace = pp.RepoNamespace()
+		namespace = pp.RepoOwner()
 	}
 	return
 }
