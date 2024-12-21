@@ -60,6 +60,7 @@ type CreateOpts struct {
 	IsInteractive bool `json:"-"`
 	Yes           bool `json:"-"`
 	Web           bool `json:"-"`
+	OpenWeb       bool `json:"-"`
 	Recover       bool `json:"-"`
 	Signoff       bool `json:"-"`
 
@@ -183,6 +184,7 @@ func NewCmdCreate(f *cmdutils.Factory) *cobra.Command {
 	mrCreateCmd.Flags().StringP("head", "H", "", "Select another head repository using the `OWNER/REPO` or `GROUP/NAMESPACE/REPO` format, the project ID, or the full URL.")
 	mrCreateCmd.Flags().BoolVarP(&opts.Yes, "yes", "y", false, "Skip submission confirmation prompt. Use --fill to skip all optional prompts.")
 	mrCreateCmd.Flags().BoolVarP(&opts.Web, "web", "w", false, "Continue merge request creation in a browser.")
+	mrCreateCmd.Flags().BoolVarP(&opts.OpenWeb, "open-web", "o", false, "Open merge request in browser after creation.")
 	mrCreateCmd.Flags().BoolVarP(&opts.CopyIssueLabels, "copy-issue-labels", "", false, "Copy labels from issue to the merge request. Used with --related-issue.")
 	mrCreateCmd.Flags().StringVarP(&opts.RelatedIssue, "related-issue", "i", "", "Create a merge request for an issue. If --title is not provided, uses the issue title.")
 	mrCreateCmd.Flags().BoolVar(&opts.Recover, "recover", false, "Save the options to a file if the merge request creation fails. If the file exists, the options are loaded from the recovery file. (EXPERIMENTAL.)")
@@ -512,7 +514,7 @@ func createRun(opts *CreateOpts) error {
 
 	var action cmdutils.Action
 
-	// submit without prompting for non interactive mode
+	// submit without prompting for non-interactive mode
 	if !opts.IsInteractive || opts.Yes {
 		action = cmdutils.SubmitAction
 	}
@@ -637,6 +639,11 @@ func createRun(opts *CreateOpts) error {
 		}
 
 		fmt.Fprintln(out, mrutils.DisplayMR(c, mr, opts.IO.IsaTTY))
+
+		if opts.OpenWeb {
+			return openMrInBrowser(opts, mr.WebURL)
+		}
+
 		return nil
 	}
 
@@ -727,6 +734,23 @@ func handlePush(opts *CreateOpts, remote *glrepo.Remote) error {
 	}
 
 	return nil
+}
+
+func openMrInBrowser(opts *CreateOpts, mrURL string) error {
+	repo, err := opts.BaseRepo()
+	if err != nil {
+		return err
+	}
+
+	cfg, err := opts.Config()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(opts.IO.StdErr, "Opening %s in browser.\n\n", mrURL)
+
+	browser, _ := cfg.Get(repo.RepoHost(), "browser")
+	return utils.OpenInBrowser(mrURL, browser)
 }
 
 func previewMR(opts *CreateOpts) error {
