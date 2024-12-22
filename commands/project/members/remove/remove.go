@@ -2,11 +2,9 @@ package remove
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
-	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 )
@@ -38,7 +36,7 @@ $ glab repo members remove 123
 				return err
 			}
 
-			userID, err := userIdFromArgs(apiClient, args)
+			userID, err := api.UserIdFromArgs(apiClient, args)
 			if err != nil {
 				return err
 			}
@@ -52,17 +50,4 @@ $ glab repo members remove 123
 		},
 	}
 	return membersRemove
-}
-
-func userIdFromArgs(client *gitlab.Client, args []string) (int, error) {
-	user := args[0]
-	if userID, err := strconv.Atoi(user); err == nil {
-		return userID, nil
-	}
-
-	userByName, err := api.UserByName(client, user)
-	if err != nil {
-		return 0, err
-	}
-	return userByName.ID, nil
 }

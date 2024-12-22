@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 var CurrentUser = func(client *gitlab.Client) (*gitlab.User, error) {
@@ -44,6 +45,19 @@ var UserByName = func(client *gitlab.Client, name string) (*gitlab.User, error) 
 	}
 
 	return users[0], nil
+}
+
+var UserIdFromArgs = func(client *gitlab.Client, args []string) (int, error) {
+	user := args[0]
+	if userID, err := strconv.Atoi(user); err == nil {
+		return userID, nil
+	}
+
+	userByName, err := UserByName(client, user)
+	if err != nil {
+		return 0, err
+	}
+	return userByName.ID, nil
 }
 
 var UsersByNames = func(client *gitlab.Client, names []string) ([]*gitlab.User, error) {

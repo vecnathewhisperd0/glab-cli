@@ -3,13 +3,13 @@ package add
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
+
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/xanzy/go-gitlab"
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"golang.org/x/exp/maps"
@@ -42,13 +42,10 @@ func NewCmdAdd(f *cmdutils.Factory) *cobra.Command {
 		Use:   "add [username | ID] [flags]",
 		Short: `Add a user to a project`,
 		Example: heredoc.Doc(`
-# Add a user by name
-$ glab repo members add john.doe
-
 # Add a user and specify a role, long form
 $ glab repo members add john.doe --access-level=developer
 
-# Add a user and specify a role, short form
+# Add a user by ID and specify a role, short form
 $ glab repo members add 123 -a reporter
 
 `),
@@ -76,7 +73,7 @@ $ glab repo members add 123 -a reporter
 				return err
 			}
 
-			userID, err := userIdFromArgs(apiClient, args)
+			userID, err := api.UserIdFromArgs(apiClient, args)
 			if err != nil {
 				return err
 			}
@@ -102,17 +99,4 @@ func SetupCommandFlags(flags *pflag.FlagSet) {
 	keys := maps.Keys(AccessLevelMap)
 	sort.Strings(keys)
 	flags.StringP(FlagAccessLevel, "a", "", fmt.Sprintf("Access level of the user. Possible values are: %s", strings.Join(keys, ", ")))
-}
-
-func userIdFromArgs(client *gitlab.Client, args []string) (int, error) {
-	user := args[0]
-	if userID, err := strconv.Atoi(user); err == nil {
-		return userID, nil
-	}
-
-	userByName, err := api.UserByName(client, user)
-	if err != nil {
-		return 0, err
-	}
-	return userByName.ID, nil
 }
