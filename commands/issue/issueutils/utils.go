@@ -180,3 +180,18 @@ func issueMetadataFromURL(s string) (int, glrepo.Interface) {
 func issueFromIID(apiClient *gitlab.Client, repo glrepo.Interface, issueIID int) (*gitlab.Issue, error) {
 	return api.GetIssue(apiClient, repo.FullName(), issueIID)
 }
+
+func LinkIssues(apiClient *gitlab.Client, issue *gitlab.Issue, LinkedIssues []int, IssueLinkType string, repo glrepo.Interface) error {
+	var err error
+	for _, targetIssueIID := range LinkedIssues {
+		//fmt.Fprintln(opts.IO.StdErr, "- Linking to issue ", targetIssueIID)
+		issue, _, err = api.LinkIssues(apiClient, repo.FullName(), issue.IID, &gitlab.CreateIssueLinkOptions{
+			TargetIssueIID: gitlab.Ptr(strconv.Itoa(targetIssueIID)),
+			LinkType:       gitlab.Ptr(IssueLinkType),
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

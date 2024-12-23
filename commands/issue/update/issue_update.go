@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitlab.com/gitlab-org/cli/pkg/iostreams"
+
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/issue/issueutils"
@@ -14,7 +16,17 @@ import (
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
+type LinkIssueOpts struct {
+	LinkedIssues  []int  `json:"linked_issues,omitempty"`
+	IssueLinkType string `json:"issue_link_type,omitempty"`
+
+	IO *iostreams.IOStreams `json:"-"`
+}
+
 func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
+	opts := &LinkIssueOpts{
+		IO: f.IO,
+	}
 	issueUpdateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: `Update issue`,
@@ -165,13 +177,50 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 
 			fmt.Fprintf(out, "- Updating issue #%d\n", issue.IID)
 
-			issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
-			if err != nil {
-				return err
+			// If the linked-issues flag is passed call to update LinkedIssues
+			if len(opts.LinkedIssues) > 0 {
+				err = issueutils.LinkIssues(apiClient, issue, opts.LinkedIssues, opts.IssueLinkType, repo)
+				if err != nil {
+					return err
+				}
 			}
 
-			for _, s := range actions {
-				fmt.Fprintln(out, c.GreenCheck(), s)
+			// We want to only run the UpdateIssue function if flags are passed
+			// and the passed flags are not `linked-issues` or `link-type`.
+			// First we check that some number of flags was passed. We then check that
+			// if the flags are `linked-issues` or `link-type`. If it is NOT a link flag
+			// we return nil and continue.
+			switch cmd.Flags().NFlag() {
+			case 1:
+				if cmd.Flags().Changed("linked-issues") {
+					return errors.New("cannot update issue when only --linked-issues is set")
+				}
+				if cmd.Flags().Changed("link-type") {
+					return errors.New("cannot update issue when only --link-type is set")
+				}
+
+				// continue execution to api.UpdateIssue
+				fallthrough
+			case 2:
+				if cmd.Flags().Changed("linked-issues") && cmd.Flags().Changed("link-type") {
+					return errors.New("cannot update issue when only --link-type and --linked-issues are set")
+				}
+
+				// continue execution to api.UpdateIssue
+				fallthrough
+			default:
+				if cmd.Flags().NFlag() < 0 {
+					return nil
+				}
+
+				issue, err = api.UpdateIssue(apiClient, repo.FullName(), issue.IID, l)
+				if err != nil {
+					return err
+				}
+
+				for _, s := range actions {
+					fmt.Fprintln(out, c.GreenCheck(), s)
+				}
 			}
 
 			fmt.Fprintln(out, issueutils.DisplayIssue(c, issue, f.IO.IsaTTY))
@@ -191,6 +240,8 @@ func NewCmdUpdate(f *cmdutils.Factory) *cobra.Command {
 	issueUpdateCmd.Flags().
 		StringSliceP("assignee", "a", []string{}, "Assign users by username. Prefix with '!' or '-' to remove from existing assignees, or '+' to add new. Otherwise, replace existing assignees with these users.")
 	issueUpdateCmd.Flags().Bool("unassign", false, "Unassign all users.")
+	issueUpdateCmd.Flags().IntSliceVarP(&opts.LinkedIssues, "linked-issues", "", []int{}, "The IIDs of issues that this issue links to")
+	issueUpdateCmd.Flags().StringVarP(&opts.IssueLinkType, "link-type", "", "relates_to", "Type for the issue link")
 
 	return issueUpdateCmd
 }
