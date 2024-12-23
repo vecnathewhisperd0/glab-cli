@@ -39,6 +39,17 @@ var CreateProject = func(client *gitlab.Client, opts *gitlab.CreateProjectOption
 	return project, nil
 }
 
+var EditProject = func(client *gitlab.Client, projectID interface{}, opts *gitlab.EditProjectOptions) (*gitlab.Project, error) {
+	if client == nil {
+		client = apiClient.Lab()
+	}
+	project, _, err := client.Projects.EditProject(projectID, opts, nil)
+	if err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
 var ForkProject = func(client *gitlab.Client, projectID interface{}, opts *gitlab.ForkProjectOptions) (*gitlab.Project, error) {
 	if client == nil {
 		client = apiClient.Lab()
