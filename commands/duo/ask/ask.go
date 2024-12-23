@@ -24,13 +24,15 @@ type request struct {
 	Model  string `json:"model"`
 }
 
-type response struct {
+type gitResponse struct {
 	Predictions []struct {
 		Candidates []struct {
 			Content string `json:"content"`
 		} `json:"candidates"`
 	} `json:"predictions"`
 }
+
+type chatResponse string
 
 type result struct {
 	Commands    []string `json:"commands"`
@@ -42,6 +44,65 @@ type opts struct {
 	IO         *iostreams.IOStreams
 	HttpClient func() (*gitlab.Client, error)
 	Git        bool
+	Shell      bool
+}
+
+func validateInput(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("prompt required")
+	}
+
+	// Validate prompt length
+	if len(strings.Join(args, " ")) > 1000 {
+		return fmt.Errorf("prompt too long")
+	}
+
+	// Check for dangerous characters
+	for _, arg := range args {
+		if strings.ContainsAny(arg, ";|&$") {
+			return fmt.Errorf("invalid characters in prompt")
+		}
+	}
+
+	rawInput := strings.ToLower(strings.Join(args, " "))
+
+	// Define all dangerous patterns
+	dangerousPatterns := []string{
+		"rm -rf /",
+		"rm -r /",
+		"mkfs",
+		"dd if=",
+		":(){ :|:& };:",
+		"> /dev/sd",
+		"mv /* /dev/null",
+		"wget", // Prevent arbitrary downloads
+		"curl", // Prevent arbitrary downloads
+		"sudo", // Prevent privilege escalation
+	}
+
+	// Check for dangerous patterns
+	for _, pattern := range dangerousPatterns {
+		if strings.Contains(rawInput, pattern) {
+			return fmt.Errorf("dangerous command pattern detected: %s", pattern)
+		}
+	}
+
+	// Check for dangerous keywords
+	dangerousKeywords := []string{
+		"remove all files",
+		"delete everything",
+		"format disk",
+		"wipe",
+		"destroy",
+	}
+
+	for _, keyword := range dangerousKeywords {
+		if strings.Contains(rawInput, keyword) {
+			return fmt.Errorf("dangerous command pattern detected: rm -rf /")
+		}
+	}
+
+	return nil
 }
 
 var (
@@ -54,7 +115,9 @@ const (
 	runCmdsQuestion   = "Would you like to run these Git commands?"
 	gitCmd            = "git"
 	gitCmdAPIPath     = "ai/llm/git_command"
-	spinnerText       = "Generating Git commands..."
+	chatAPIPath       = "chat/completions"
+	gitSpinnerText    = "Generating Git commands..."
+	shellSpinnerText  = "Generating shell command..."
 	aiResponseErr     = "Error: AI response has not been generated correctly."
 	apiUnreachableErr = "Error: API is unreachable."
 )
@@ -67,25 +130,41 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 
 	duoAskCmd := &cobra.Command{
 		Use:   "ask <prompt>",
-		Short: "Generate Git commands from natural language.",
+		Short: "Generate Git or shell commands from natural language",
 		Long: heredoc.Doc(`
-			Generate Git commands from natural language.
+			Generate Git or shell commands from natural language descriptions.
+			
+			Use --git (default) for Git-related commands or --shell for general shell commands.
 		`),
 		Example: heredoc.Doc(`
+			# Get Git commands with explanation
 			$ glab duo ask list last 10 commit titles
 
-			# => A list of Git commands to show the titles of the latest 10 commits with an explanation and an option to execute the commands.
+			# Get a shell command with explanation
+			$ glab duo ask --shell list all pdf files
+			
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Git {
-				return nil
+			// Check for mutually exclusive flags first
+			if opts.Git && opts.Shell {
+				return fmt.Errorf("cannot use both --git and --shell flags")
 			}
 
-			if len(args) == 0 {
-				return nil
+			// Default to Git mode if no flags set
+			if !opts.Shell && !opts.Git {
+				opts.Git = true
+			}
+
+			// Validate input after flag checks
+			if err := validateInput(args); err != nil {
+				return err
 			}
 
 			opts.Prompt = strings.Join(args, " ")
+
+			if opts.Shell {
+				return opts.executeShellCommand(args)
+			}
 
 			result, err := opts.Result()
 			if err != nil {
@@ -103,13 +182,18 @@ func NewCmdAsk(f *cmdutils.Factory) *cobra.Command {
 		},
 	}
 
-	duoAskCmd.Flags().BoolVarP(&opts.Git, "git", "", true, "Ask a question about Git.")
+	duoAskCmd.Flags().BoolVarP(&opts.Git, "git", "", false, "Ask a question about Git")
+	duoAskCmd.Flags().BoolVarP(&opts.Shell, "shell", "", false, "Generate shell commands from natural language")
 
 	return duoAskCmd
 }
 
 func (opts *opts) Result() (*result, error) {
-	opts.IO.StartSpinner(spinnerText)
+	spinnerMsg := gitSpinnerText
+	if opts.Shell {
+		spinnerMsg = shellSpinnerText
+	}
+	opts.IO.StartSpinner(spinnerMsg)
 	defer opts.IO.StopSpinner("")
 
 	client, err := opts.HttpClient()
@@ -117,23 +201,45 @@ func (opts *opts) Result() (*result, error) {
 		return nil, cmdutils.WrapError(err, "failed to get HTTP client.")
 	}
 
-	body := request{Prompt: opts.Prompt, Model: vertexAI}
-	request, err := client.NewRequest(http.MethodPost, gitCmdAPIPath, body, nil)
+	apiPath := gitCmdAPIPath
+	if opts.Shell {
+		apiPath = chatAPIPath
+	}
+	var apiReq interface{}
+	if opts.Shell {
+		// For chat endpoint
+		apiReq = map[string]string{
+			"content": opts.Prompt,
+		}
+	} else {
+		// For git command endpoint
+		apiReq = request{Prompt: opts.Prompt, Model: vertexAI}
+	}
+
+	req, err := client.NewRequest(http.MethodPost, apiPath, apiReq, nil)
 	if err != nil {
 		return nil, cmdutils.WrapError(err, "failed to create a request.")
 	}
 
-	var r response
-	_, err = client.Do(request, &r)
-	if err != nil {
-		return nil, cmdutils.WrapError(err, apiUnreachableErr)
+	var content string
+	if opts.Shell {
+		var r chatResponse
+		_, err = client.Do(req, &r)
+		if err != nil {
+			return nil, cmdutils.WrapError(err, apiUnreachableErr)
+		}
+		content = string(r)
+	} else {
+		var r gitResponse
+		_, err = client.Do(req, &r)
+		if err != nil {
+			return nil, cmdutils.WrapError(err, apiUnreachableErr)
+		}
+		if len(r.Predictions) == 0 || len(r.Predictions[0].Candidates) == 0 {
+			return nil, errors.New(aiResponseErr)
+		}
+		content = r.Predictions[0].Candidates[0].Content
 	}
-
-	if len(r.Predictions) == 0 || len(r.Predictions[0].Candidates) == 0 {
-		return nil, errors.New(aiResponseErr)
-	}
-
-	content := r.Predictions[0].Candidates[0].Content
 
 	var cmds []string
 	for _, cmd := range cmdExecRegexp.FindAllString(content, -1) {
@@ -156,21 +262,26 @@ func (opts *opts) displayResult(result *result) {
 	}
 
 	opts.IO.LogInfo(color.Bold("\nExplanation:\n"))
-	explanation := cmdHighlightRegexp.ReplaceAllString(result.Explanation, color.Green("$1"))
+	explanation := result.Explanation
+	if opts.Git {
+		explanation = cmdHighlightRegexp.ReplaceAllString(result.Explanation, color.Green("$1"))
+	}
 	opts.IO.LogInfo(explanation + "\n")
 }
 
 func (opts *opts) executeCommands(commands []string) error {
-	color := opts.IO.Color()
+	if opts.Git {
+		color := opts.IO.Color()
 
-	var confirmed bool
-	question := color.Bold(runCmdsQuestion)
-	if err := prompt.Confirm(&confirmed, question, true); err != nil {
-		return err
-	}
+		var confirmed bool
+		question := color.Bold(runCmdsQuestion)
+		if err := prompt.Confirm(&confirmed, question, true); err != nil {
+			return err
+		}
 
-	if !confirmed {
-		return nil
+		if !confirmed {
+			return nil
+		}
 	}
 
 	for _, command := range commands {
@@ -179,6 +290,42 @@ func (opts *opts) executeCommands(commands []string) error {
 		}
 	}
 
+	return nil
+}
+
+func (opts *opts) executeShellCommand(args []string) error {
+	shellType := "shell"
+	opts.Prompt = "Convert this to a command: " +
+		strings.Join(args, " ") +
+		". Give me only the exact command to run, nothing else. " +
+		"Choose the best " + shellType + " tool for the job. " +
+		"Do not use dangerous system-modifying commands. " +
+		"Use " + shellType + "-specific features when they would improve the command."
+
+	result, err := opts.Result()
+	if err != nil {
+		return err
+	}
+	content := result.Explanation
+	if content == "" {
+		return errors.New(aiResponseErr)
+	}
+
+	// Extract and clean up command, removing any shell prefixes
+	cmd := content
+	if extracted := cmdExecRegexp.FindString(content); extracted != "" {
+		cmd = strings.ReplaceAll(extracted, "```", "")
+	} else if extracted := cmdHighlightRegexp.FindString(content); extracted != "" {
+		cmd = strings.ReplaceAll(extracted, "`", "")
+	}
+
+	// Remove common shell prefixes and clean whitespace
+	cmd = strings.TrimSpace(cmd)
+	cmd = strings.TrimPrefix(cmd, "bash")
+	cmd = strings.TrimPrefix(cmd, "sh")
+	cmd = strings.TrimPrefix(cmd, "$")
+
+	fmt.Fprint(opts.IO.StdOut, cmd)
 	return nil
 }
 
