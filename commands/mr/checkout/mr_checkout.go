@@ -10,6 +10,7 @@ import (
 	"gitlab.com/gitlab-org/cli/api"
 	"gitlab.com/gitlab-org/cli/commands/cmdutils"
 	"gitlab.com/gitlab-org/cli/commands/mr/mrutils"
+	"gitlab.com/gitlab-org/cli/internal/run"
 	"gitlab.com/gitlab-org/cli/pkg/git"
 )
 
@@ -96,14 +97,45 @@ func NewCmdCheckout(f *cmdutils.Factory) *cobra.Command {
 			// .remote is needed for `git pull` to work
 			// .pushRemote is needed for `git push` to work, if user has set `remote.pushDefault`.
 			// see https://git-scm.com/docs/git-config#Documentation/git-config.txt-branchltnamegtremote
-			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch), mrProject.SSHURLToRepo}); err != nil {
-				return err
-			}
-			if mr.AllowCollaboration {
-				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.pushRemote", mrCheckoutCfg.branch), mrProject.SSHURLToRepo}); err != nil {
+			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch)}); err != nil {
+				// It is not configured
+				branchRemoteURL := mrProject.SSHURLToRepo
+
+				listRemoteCmd := git.GitCommand("remote")
+
+				listRemoteByte, err := run.PrepareCmd(listRemoteCmd).Output()
+
+				if err == nil {
+					remotes := strings.Split(string(listRemoteByte), "\n")
+
+					for _, remote := range remotes {
+						remoteUrlCmd := git.GitCommand("remote", "get-url", remote)
+						remoteURLByte, err := run.PrepareCmd(remoteUrlCmd).Output()
+						if err == nil {
+							// in SSHURLToRepo we trust
+							url1, _ := git.ParseURL(mrProject.SSHURLToRepo)
+							url2, err := git.ParseURL(strings.TrimSpace(string(remoteURLByte)))
+							if err == nil && strings.Contains(url1.String(), url2.String()) {
+								branchRemoteURL = remote
+								break
+							}
+
+						}
+					}
+				}
+
+				if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.remote", mrCheckoutCfg.branch), branchRemoteURL}); err != nil {
 					return err
 				}
+
+				if mr.AllowCollaboration {
+					if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.pushRemote", mrCheckoutCfg.branch), branchRemoteURL}); err != nil {
+						return err
+					}
+				}
+
 			}
+
 			if err := git.RunCmd([]string{"config", fmt.Sprintf("branch.%s.merge", mrCheckoutCfg.branch), mrRef}); err != nil {
 				return err
 			}
